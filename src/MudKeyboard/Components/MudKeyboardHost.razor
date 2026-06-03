@@ -6,7 +6,7 @@
    transition animates whenever the --open class is toggled; the keyboard inside it renders once a
    field is focused. mousedown:preventDefault keeps the focused field focused while keys are tapped,
    so the caret stays put and the panel does not close on key presses. *@
-<div class="mudkeyboard-dock @(Interop.IsOpen ? "mudkeyboard-dock--open" : null)"
+<div class="mudkeyboard-dock @(Interop.IsOpen ? "mudkeyboard-dock--open" : null) @DockSizeClass"
      @onmousedown:preventDefault="true"
      role="group"
      aria-label="On-screen keyboard">
@@ -74,6 +74,14 @@
     [Parameter] public string? Style { get; set; }
 
     private string PanelStyle => $"border-radius:16px 16px 0 0;{Style}";
+
+    // The numeric/money keypads are the built-in numpad layouts; everything else (QWERTY, custom) is text.
+    private bool IsKeypad =>
+        ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.Numpad)
+        || ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.NumpadWithDecimal);
+
+    // Drives the dock width: a roomier panel for the full keyboard, a narrower one for keypads.
+    private string DockSizeClass => IsKeypad ? "mudkeyboard-dock--keypad" : "mudkeyboard-dock--text";
 
     protected override void OnInitialized() => Interop.StateChanged += OnStateChanged;
 

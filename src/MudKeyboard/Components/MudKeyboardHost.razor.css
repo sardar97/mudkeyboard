@@ -18,6 +18,20 @@
     pointer-events: auto;
 }
 
+/* Per-layout sizing: the full keyboard gets a wider panel; the numeric/money keypads are narrower. */
+.mudkeyboard-dock.mudkeyboard-dock--text {
+    width: min(960px, 120vw);
+}
+
+.mudkeyboard-dock.mudkeyboard-dock--keypad {
+    width: min(460px, 120vw);
+}
+
+/* Taller keys for the full keyboard (keys only, not the toolbar). Overrides KeyButton's inline min-height. */
+.mudkeyboard-dock--text ::deep .mudkeyboard-grid .mud-button-root {
+    min-height: 4rem !important;
+}
+
 .mudkeyboard-dock__bar {
     display: flex;
     align-items: center;
