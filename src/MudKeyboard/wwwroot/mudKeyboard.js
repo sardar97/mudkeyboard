@@ -139,16 +139,52 @@ export function enter() {
     const el = activeEl;
     if (!el) return;
 
-    if (el.tagName === 'TEXTAREA') {
-        insertText('\n');
-        return;
-    }
-
-    // Single-line: emulate a real Enter so forms can submit, and commit the value for
-    // non-immediate bindings.
+    // Emulate a real Enter so listeners/forms can react. The keyboard then closes (the host calls
+    // blurActive after this), which commits the value for non-immediate bindings.
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
     el.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', bubbles: true }));
+}
+
+// Empties the focused field.
+export function clear() {
+    const el = activeEl;
+    if (!el) return;
+    el.value = '';
+    setCaret(el, 0);
+    dispatchInput(el);
+}
+
+// Copies the current selection (or the whole value when nothing is selected) to the clipboard.
+export async function copy() {
+    const el = activeEl;
+    if (!el) return;
+    const value = el.value ?? '';
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+    const text = start !== end ? value.slice(start, end) : value;
+    try { await navigator.clipboard.writeText(text); } catch { /* clipboard unavailable/blocked */ }
+}
+
+// Reads the clipboard and inserts it at the caret.
+export async function paste() {
+    const el = activeEl;
+    if (!el) return;
+    let text = '';
+    try { text = await navigator.clipboard.readText(); } catch { return; }
+    if (text) insertText(text);
+}
+
+// Moves the caret left (delta < 0) or right (delta > 0); collapses a selection toward that side.
+export function moveCaret(delta) {
+    const el = activeEl;
+    if (!el) return;
+    const value = el.value ?? '';
+    const start = el.selectionStart ?? value.length;
+    const end = el.selectionEnd ?? value.length;
+    const pos = start !== end
+        ? (delta < 0 ? start : end)
+        : Math.max(0, Math.min(value.length, start + delta));
+    setCaret(el, pos);
 }
 
 export function blurActive() {

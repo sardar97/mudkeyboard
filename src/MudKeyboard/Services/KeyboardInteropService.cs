@@ -87,15 +87,32 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// <summary>Inserts <paramref name="text"/> at the focused field's caret.</summary>
     /// <param name="text">The text to insert.</param>
     public ValueTask InsertTextAsync(string text) =>
-        _module is null ? ValueTask.CompletedTask : _module.InvokeVoidAsync("insertText", text);
+        _module?.InvokeVoidAsync("insertText", text) ?? ValueTask.CompletedTask;
 
     /// <summary>Deletes the character before the focused field's caret.</summary>
     public ValueTask BackspaceAsync() =>
-        _module is null ? ValueTask.CompletedTask : _module.InvokeVoidAsync("backspace");
+        _module?.InvokeVoidAsync("backspace") ?? ValueTask.CompletedTask;
 
-    /// <summary>Emulates Enter on the focused field (newline for a textarea, otherwise a submit/commit).</summary>
+    /// <summary>Emulates Enter on the focused field. The host closes the keyboard afterwards.</summary>
     public ValueTask EnterAsync() =>
-        _module is null ? ValueTask.CompletedTask : _module.InvokeVoidAsync("enter");
+        _module?.InvokeVoidAsync("enter") ?? ValueTask.CompletedTask;
+
+    /// <summary>Empties the focused field.</summary>
+    public ValueTask ClearAsync() =>
+        _module?.InvokeVoidAsync("clear") ?? ValueTask.CompletedTask;
+
+    /// <summary>Copies the focused field's selection (or whole value) to the clipboard.</summary>
+    public ValueTask CopyAsync() =>
+        _module?.InvokeVoidAsync("copy") ?? ValueTask.CompletedTask;
+
+    /// <summary>Pastes the clipboard contents at the focused field's caret.</summary>
+    public ValueTask PasteAsync() =>
+        _module?.InvokeVoidAsync("paste") ?? ValueTask.CompletedTask;
+
+    /// <summary>Moves the focused field's caret one character left (<paramref name="delta"/> &lt; 0) or right (&gt; 0).</summary>
+    /// <param name="delta">Direction/amount to move the caret; typically <c>-1</c> or <c>1</c>.</param>
+    public ValueTask MoveCaretAsync(int delta) =>
+        _module?.InvokeVoidAsync("moveCaret", delta) ?? ValueTask.CompletedTask;
 
     /// <summary>Blurs the focused field and hides the keyboard.</summary>
     public async Task CloseAsync()

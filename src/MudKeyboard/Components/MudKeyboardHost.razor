@@ -16,8 +16,40 @@
                   Class="pa-2"
                   Style="@PanelStyle">
             <div class="mudkeyboard-dock__bar">
+                <div class="mudkeyboard-dock__tools">
+                    <MudTooltip Text="Clear">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Size="Size.Medium"
+                                       OnClick="@ClearAsync"
+                                       aria-label="Clear field" />
+                    </MudTooltip>
+                    <MudTooltip Text="Copy">
+                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                       Size="Size.Medium"
+                                       OnClick="@CopyAsync"
+                                       aria-label="Copy" />
+                    </MudTooltip>
+                    <MudTooltip Text="Paste">
+                        <MudIconButton Icon="@Icons.Material.Filled.ContentPaste"
+                                       Size="Size.Medium"
+                                       OnClick="@PasteAsync"
+                                       aria-label="Paste" />
+                    </MudTooltip>
+                    <MudTooltip Text="Move cursor left">
+                        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                                       Size="Size.Medium"
+                                       OnClick="@(() => MoveCaretAsync(-1))"
+                                       aria-label="Move cursor left" />
+                    </MudTooltip>
+                    <MudTooltip Text="Move cursor right">
+                        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                                       Size="Size.Medium"
+                                       OnClick="@(() => MoveCaretAsync(1))"
+                                       aria-label="Move cursor right" />
+                    </MudTooltip>
+                </div>
                 <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown"
-                               Size="Size.Small"
+                               Size="Size.Medium"
                                OnClick="@HideAsync"
                                aria-label="Hide keyboard" />
             </div>
@@ -65,7 +97,9 @@
                 await Interop.BackspaceAsync();
                 break;
             case KeyboardInputKind.Enter:
+                // Enter commits, then closes the keyboard for every layout.
                 await Interop.EnterAsync();
+                await Interop.CloseAsync();
                 break;
             case KeyboardInputKind.Escape:
                 await Interop.CloseAsync();
@@ -74,6 +108,14 @@
     }
 
     private Task HideAsync() => Interop.CloseAsync();
+
+    private Task ClearAsync() => Interop.ClearAsync().AsTask();
+
+    private Task CopyAsync() => Interop.CopyAsync().AsTask();
+
+    private Task PasteAsync() => Interop.PasteAsync().AsTask();
+
+    private Task MoveCaretAsync(int delta) => Interop.MoveCaretAsync(delta).AsTask();
 
     // Focus events arrive from JS; marshal the re-render onto the renderer's sync context.
     private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);

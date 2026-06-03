@@ -44,6 +44,30 @@ public class KeyboardInteropServiceTests
     }
 }
 
+public class LayoutLibraryTests
+{
+    [Fact]
+    public void Numpad_HasDoubleZeroNextToZero()
+    {
+        var lastRow = LayoutLibrary.Numpad.Rows[^1];
+        var zeroIndex = lastRow.ToList().IndexOf("0");
+
+        Assert.Contains("00", lastRow);
+        Assert.Equal("00", lastRow[zeroIndex + 1]);
+    }
+
+    [Fact]
+    public void NumpadWithDecimal_HasDoubleZeroNextToZero()
+    {
+        var decimalRow = LayoutLibrary.NumpadWithDecimal.Rows
+            .First(r => r.Contains("0"));
+        var zeroIndex = decimalRow.ToList().IndexOf("0");
+
+        Assert.Contains("00", decimalRow);
+        Assert.Equal("00", decimalRow[zeroIndex + 1]);
+    }
+}
+
 public class KeyboardInputTests
 {
     [Fact]
