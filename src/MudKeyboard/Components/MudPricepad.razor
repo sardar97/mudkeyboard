@@ -1,6 +1,6 @@
 @namespace MudKeyboard.Components
 
-<MudPaper Class="@Class" Style="@Style" Elevation="0">
+<MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0">
     <KeyGrid Keys="_keys" Disabled="Disabled" OnKeyPress="@HandleKeyPressAsync" />
 </MudPaper>
 
@@ -34,6 +34,12 @@
 
     /// <summary>Extra inline styles for the root element.</summary>
     [Parameter] public string? Style { get; set; }
+
+    /// <summary>
+    /// Optional colour overrides for this pricepad. Unset slots inherit the ambient MudBlazor
+    /// theme, so dark/light mode still applies automatically. See <see cref="KeyboardPalette"/>.
+    /// </summary>
+    [Parameter] public KeyboardPalette? Palette { get; set; }
 
     private async Task HandleKeyPressAsync(KeyboardKey key)
     {

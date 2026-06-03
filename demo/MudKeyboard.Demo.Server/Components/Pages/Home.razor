@@ -39,6 +39,16 @@
         <MudKeyboard @bind-Value="_custom" Variant="KeyboardVariant.Custom" Layout="CustomLayout" />
     </MudPaper>
 
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">KeyboardPalette · per-keyboard colour override</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
+            Only this keyboard is recoloured — unset slots still follow the theme, so the dark-mode
+            toggle keeps working on the surface and key text below.
+        </MudText>
+        <MudTextField @bind-Value="_branded" Label="Branded value" Variant="Variant.Outlined" Class="mb-3" Immediate="true" />
+        <MudKeyboard @bind-Value="_branded" Palette="BrandPalette" />
+    </MudPaper>
+
 </MudStack>
 
 @code {
@@ -46,8 +56,17 @@
     private string _number = string.Empty;
     private string _price = string.Empty;
     private string _custom = string.Empty;
+    private string _branded = string.Empty;
     private int _enterCount;
     private string _lastEnter = "(none yet)";
+
+    // Recolours only the accent (Enter) keys; every other slot is left to the MudBlazor theme so
+    // dark/light still cascades to this keyboard.
+    private static readonly KeyboardPalette BrandPalette = new()
+    {
+        AccentColor = "#00897b",      // teal 600
+        AccentTextColor = "#ffffff",
+    };
 
     private static readonly KeyboardLayout CustomLayout = new()
     {

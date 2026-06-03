@@ -1,6 +1,6 @@
 @namespace MudKeyboard.Components
 
-<MudPaper Class="@Class" Style="@Style" Elevation="0">
+<MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0">
     <KeyGrid Keys="@_displayKeys" Disabled="Disabled" DropShadow="@DropShadow" OnKeyPress="@HandleKeyPressAsync" OnKeyDoublePress="@HandleDoublePress" />
 </MudPaper>
 
@@ -45,6 +45,12 @@
 
     /// <summary>Extra inline styles for the root element.</summary>
     [Parameter] public string? Style { get; set; }
+
+    /// <summary>
+    /// Optional colour overrides for this keyboard. Unset slots inherit the ambient MudBlazor
+    /// theme, so dark/light mode still applies automatically. See <see cref="KeyboardPalette"/>.
+    /// </summary>
+    [Parameter] public KeyboardPalette? Palette { get; set; }
 
     /// <summary>Raised when the Enter key is pressed.</summary>
     [Parameter] public EventCallback OnEnter { get; set; }
