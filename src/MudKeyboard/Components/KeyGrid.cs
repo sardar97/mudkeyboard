@@ -20,6 +20,10 @@ public sealed class KeyGrid : ComponentBase
     [Parameter]
     public EventCallback<KeyboardKey> OnKeyPress { get; set; }
 
+    /// <summary>Raised with the key when it is double-clicked.</summary>
+    [Parameter]
+    public EventCallback<KeyboardKey> OnKeyDoublePress { get; set; }
+
     /// <summary>Whether every key is disabled.</summary>
     [Parameter]
     public bool Disabled { get; set; }
@@ -50,6 +54,7 @@ public sealed class KeyGrid : ComponentBase
                 builder.AddComponentParameter(8, nameof(KeyButton.Disabled), Disabled);
                 builder.AddComponentParameter(9, nameof(KeyButton.DropShadow), DropShadow);
                 builder.AddComponentParameter(10, nameof(KeyButton.OnKeyPress), OnKeyPress);
+                builder.AddComponentParameter(11, nameof(KeyButton.OnKeyDoublePress), OnKeyDoublePress);
                 builder.CloseComponent();
             }
 

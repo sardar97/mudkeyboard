@@ -24,6 +24,10 @@ internal sealed class KeyButton : ComponentBase
     [Parameter]
     public EventCallback<KeyboardKey> OnKeyPress { get; set; }
 
+    /// <summary>Raised with the key when the button is double-clicked (used for shift → caps lock).</summary>
+    [Parameter]
+    public EventCallback<KeyboardKey> OnKeyDoublePress { get; set; }
+
     /// <summary>Whether the key is disabled.</summary>
     [Parameter]
     public bool Disabled { get; set; }
@@ -33,14 +37,21 @@ internal sealed class KeyButton : ComponentBase
     public bool DropShadow { get; set; } = true;
 
     // Command keys (space, backspace, shift…) get the primary accent; literals stay neutral.
-    private Color KeyColor => Key.IsEnter ? Color.Primary : Color.Default;
+    private Color KeyColor => Key.IsEnter || Key.Highlighted ? Color.Primary : Color.Default;
     
 
     // Grow proportionally to the key's width multiplier within its flex row.
     private string KeyStyle =>
         $"flex:{Key.WidthMultiplier.ToString(CultureInfo.InvariantCulture)} 1 0;min-width:0;min-height:3rem;";
 
+    // Applied to the label itself so it wins over MudButton's own rules: cancel the Material
+    // uppercase transform, enlarge a touch, and bold shifted letters.
+    private string LabelStyle =>
+        $"text-transform:none !important;font-size:1.15rem !important;{(Key.Bold ? "font-weight:700 !important;" : string.Empty)}";
+
     private Task HandleClickAsync() => OnKeyPress.InvokeAsync(Key);
+
+    private Task HandleDoubleClickAsync() => OnKeyDoublePress.InvokeAsync(Key);
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
@@ -55,8 +66,16 @@ internal sealed class KeyButton : ComponentBase
             nameof(MudButton.OnClick),
             EventCallback.Factory.Create<MouseEventArgs>(this, HandleClickAsync));
         builder.AddComponentParameter(7, nameof(MudButton.ChildContent), (RenderFragment)BuildLabel);
+        // Native double-click (no JS interop) → caps lock; splatted onto MudButton's root button.
+        builder.AddAttribute(8, "ondblclick", EventCallback.Factory.Create<MouseEventArgs>(this, HandleDoubleClickAsync));
         builder.CloseComponent();
     }
 
-    private void BuildLabel(RenderTreeBuilder builder) => builder.AddContent(0, Key.DisplayLabel);
+    private void BuildLabel(RenderTreeBuilder builder)
+    {
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "style", LabelStyle);
+        builder.AddContent(2, Key.DisplayLabel);
+        builder.CloseElement();
+    }
 }

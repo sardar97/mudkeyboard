@@ -1,14 +1,13 @@
 @namespace MudKeyboard.Components
 
 <MudPaper Class="@Class" Style="@Style" Elevation="0">
-    <KeyGrid Keys="@_displayKeys" Disabled="Disabled" DropShadow="@DropShadow" OnKeyPress="@HandleKeyPressAsync" />
+    <KeyGrid Keys="@_displayKeys" Disabled="Disabled" DropShadow="@DropShadow" OnKeyPress="@HandleKeyPressAsync" OnKeyDoublePress="@HandleDoublePress" />
 </MudPaper>
 
 @code {
     private KeyboardLayout? _layout;
     private IReadOnlyList<IReadOnlyList<KeyboardKey>> _displayKeys = [];
-    private bool _shift;
-    private bool _caps;
+    private ShiftState _shiftState = ShiftState.Off;
 
     /// <summary>The current value, two-way bindable via <c>@bind-Value</c>.</summary>
     [Parameter] public string Value { get; set; } = string.Empty;
@@ -52,10 +51,17 @@
     private void RebuildKeys() =>
         _displayKeys = _layout is null
             ? []
-            : KeyboardEngine.BuildDisplayKeys(_layout, _shift ^ _caps);
+            : KeyboardEngine.BuildDisplayKeys(_layout, _shiftState);
 
     private async Task HandleKeyPressAsync(KeyboardKey key)
     {
+        // Shift is special: a single click arms a one-shot; a double-click (handled separately) locks caps.
+        if (key.ActionToken == KeyTokens.Shift)
+        {
+            HandleShiftClick();
+            return;
+        }
+
         switch (key.ActionToken)
         {
             case KeyTokens.Enter:
@@ -70,25 +76,40 @@
             case KeyTokens.Space:
                 await SetValueAsync(KeyboardEngine.Append(Value, " ", MaxLength));
                 break;
-            case KeyTokens.Shift:
-                _shift = !_shift;
-                RebuildKeys();
-                break;
-            case KeyTokens.Caps:
-                _caps = !_caps;
-                RebuildKeys();
-                break;
             default:
-                var text = KeyboardEngine.ApplyCase(key.ActionToken, _shift ^ _caps);
-                await SetValueAsync(KeyboardEngine.Append(Value, text, MaxLength));
-                if (_shift)
+                // Never type an unhandled command token (e.g. a stray {caps} in a custom layout).
+                if (KeyTokens.IsCommand(key.ActionToken))
                 {
-                    // Shift is one-shot: it applies to a single letter then releases.
-                    _shift = false;
-                    RebuildKeys();
+                    break;
                 }
 
+                var text = KeyboardEngine.ApplyCase(key.ActionToken, _shiftState != ShiftState.Off);
+                await SetValueAsync(KeyboardEngine.Append(Value, text, MaxLength));
                 break;
+        }
+
+        // A one-shot shift releases after any key press; caps lock stays on.
+        if (_shiftState == ShiftState.OneShot)
+        {
+            _shiftState = ShiftState.Off;
+            RebuildKeys();
+        }
+    }
+
+    // A single click arms a one-shot shift; clicking again while locked turns caps off.
+    private void HandleShiftClick()
+    {
+        _shiftState = _shiftState == ShiftState.Locked ? ShiftState.Off : ShiftState.OneShot;
+        RebuildKeys();
+    }
+
+    // A double-click on shift locks caps on (stays until shift is clicked again).
+    private void HandleDoublePress(KeyboardKey key)
+    {
+        if (key.ActionToken == KeyTokens.Shift)
+        {
+            _shiftState = ShiftState.Locked;
+            RebuildKeys();
         }
     }
 

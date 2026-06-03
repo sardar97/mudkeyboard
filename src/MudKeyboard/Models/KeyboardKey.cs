@@ -27,6 +27,12 @@ public sealed record KeyboardKey(string ActionToken, string DisplayLabel, double
     /// </summary>
     public bool IsEnter => KeyTokens.IsEnter(ActionToken);
 
+    /// <summary>When set, the key renders with the primary accent (for example an active shift).</summary>
+    public bool Highlighted { get; init; }
+
+    /// <summary>When set, the key's label renders in bold (for example shifted letters).</summary>
+    public bool Bold { get; init; }
+
     /// <summary>
     /// Creates a <see cref="KeyboardKey"/> from a layout token, resolving a sensible display
     /// label and width for the well-known command tokens and treating anything else as a

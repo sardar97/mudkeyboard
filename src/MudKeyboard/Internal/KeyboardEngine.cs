@@ -33,15 +33,17 @@ internal static class KeyboardEngine
         upper && IsLetterToken(token) ? token.ToUpperInvariant() : token;
 
     /// <summary>
-    /// Projects <paramref name="layout"/> into rendered key rows, upper-casing letter keys'
-    /// labels when <paramref name="upper"/> is set (shift/caps display). The action token is
-    /// left untouched — casing of the emitted character is decided at press time via
+    /// Projects <paramref name="layout"/> into rendered key rows for the given shift
+    /// <paramref name="state"/>: letter keys are upper-cased and bolded while shift is active,
+    /// and the shift key is highlighted (showing the caps-lock glyph when locked). The action
+    /// token is left untouched — casing of the emitted character is decided at press time via
     /// <see cref="ApplyCase"/>.
     /// </summary>
-    public static IReadOnlyList<IReadOnlyList<KeyboardKey>> BuildDisplayKeys(KeyboardLayout layout, bool upper)
+    public static IReadOnlyList<IReadOnlyList<KeyboardKey>> BuildDisplayKeys(KeyboardLayout layout, ShiftState state)
     {
         ArgumentNullException.ThrowIfNull(layout);
 
+        var upper = state != ShiftState.Off;
         var rows = new IReadOnlyList<KeyboardKey>[layout.Rows.Count];
         for (var r = 0; r < layout.Rows.Count; r++)
         {
@@ -51,9 +53,20 @@ internal static class KeyboardEngine
             {
                 var token = src[c];
                 var key = KeyboardKey.FromToken(token);
-                if (upper && IsLetterToken(token))
+
+                if (token == KeyTokens.Shift)
                 {
-                    key = key with { DisplayLabel = token.ToUpperInvariant() };
+                    // The shift key reflects its own state: highlighted when armed, caps glyph when locked.
+                    key = state switch
+                    {
+                        ShiftState.Locked => key with { DisplayLabel = "⇪", Highlighted = true },
+                        ShiftState.OneShot => key with { Highlighted = true },
+                        _ => key,
+                    };
+                }
+                else if (upper && IsLetterToken(token))
+                {
+                    key = key with { DisplayLabel = token.ToUpperInvariant(), Bold = true };
                 }
 
                 keys[c] = key;
