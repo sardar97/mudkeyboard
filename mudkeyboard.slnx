@@ -12,5 +12,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/MudKeyboard.Tests/MudKeyboard.Tests.csproj" />
   </Folder>
+  <Project Path="src/MudKeyboard.Docs/MudKeyboard.Docs.csproj" />
   
 </Solution>
