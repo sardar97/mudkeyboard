@@ -1,7 +1,7 @@
 @namespace MudKeyboard.Components
 
 <MudPaper Class="@Class" Style="@Style" Elevation="0">
-    <KeyGrid Keys="_displayKeys" Disabled="Disabled" OnKeyPress="@HandleKeyPressAsync" />
+    <KeyGrid Keys="@_displayKeys" Disabled="Disabled" OnKeyPress="@HandleKeyPressAsync" />
 </MudPaper>
 
 @code {

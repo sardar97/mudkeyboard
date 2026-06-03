@@ -1,7 +1,67 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>MudKeyboard Demo</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudText Typo="Typo.h4" GutterBottom="true">MudKeyboard</MudText>
+<MudText Typo="Typo.body1" Class="mb-6" Color="Color.Secondary">
+    Pure-Blazor on-screen keyboard. Zero JavaScript in the library, themed entirely by MudBlazor —
+    toggle dark mode in the top bar and every key follows.
+</MudText>
 
-Welcome to your new app.
+<MudStack Spacing="6">
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Full QWERTY · two-way binding + OnEnter</MudText>
+        <MudTextField @bind-Value="_text" Label="Bound value" Variant="Variant.Outlined" Class="mb-3" Immediate="true" />
+        <MudKeyboard @bind-Value="_text" OnEnter="OnEnterPressed" MaxLength="40" />
+        <MudText Typo="Typo.caption" Class="mt-2">Last Enter: <b>@_lastEnter</b></MudText>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Numpad · AllowDecimal</MudText>
+        <MudTextField @bind-Value="_number" Label="Number" Variant="Variant.Outlined" Class="mb-3" Immediate="true" />
+        <div style="max-width: 320px">
+            <MudNumpad @bind-Value="_number" AllowDecimal="true" />
+        </div>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Pricepad · £, 2 decimals (pence-first)</MudText>
+        <MudTextField @bind-Value="_price" Label="Price" Variant="Variant.Outlined" Class="mb-3" Immediate="true" />
+        <div style="max-width: 320px">
+            <MudPricepad @bind-Value="_price" />
+        </div>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Custom layout</MudText>
+        <MudTextField @bind-Value="_custom" Label="Custom" Variant="Variant.Outlined" Class="mb-3" Immediate="true" />
+        <MudKeyboard @bind-Value="_custom" Variant="KeyboardVariant.Custom" Layout="CustomLayout" />
+    </MudPaper>
+
+</MudStack>
+
+@code {
+    private string _text = string.Empty;
+    private string _number = string.Empty;
+    private string _price = string.Empty;
+    private string _custom = string.Empty;
+    private int _enterCount;
+    private string _lastEnter = "(none yet)";
+
+    private static readonly KeyboardLayout CustomLayout = new()
+    {
+        Rows = new string[][]
+        {
+            ["m", "u", "d"],
+            ["k", "e", "y"],
+            [KeyTokens.Space, KeyTokens.Backspace, KeyTokens.Enter],
+        },
+    };
+
+    private void OnEnterPressed()
+    {
+        _enterCount++;
+        _lastEnter = $"\"{_text}\" (press #{_enterCount})";
+    }
+}

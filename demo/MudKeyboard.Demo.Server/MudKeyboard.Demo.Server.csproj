@@ -7,4 +7,12 @@
         <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     </PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="MudBlazor" Version="9.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\MudKeyboard\MudKeyboard.csproj" />
+    </ItemGroup>
+
 </Project>
