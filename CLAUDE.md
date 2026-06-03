@@ -3,8 +3,8 @@
 ## Important!! never commit i do commit myself
 
 ## What is this project?
-MudKeyboard is an open-source pure Blazor virtual on-screen keyboard library.
-- Zero JavaScript — pure C# and Blazor only
+MudKeyboard is an open-source Blazor virtual on-screen keyboard library.
+- Keyboard core is JavaScript-free — pure C# and Blazor. A single optional JS shim powers ONE feature: the global docked keyboard that auto-shows on input focus (see "JavaScript policy" below).
 - Built on MudBlazor components and theming
 - AOT and trim-friendly (no reflection, no dynamic code)
 - Targets .NET 8+ (no static SSR support — interactive Server and WASM only)
@@ -18,9 +18,18 @@ tests/MudKeyboard.Tests/        ← xUnit tests
 
 ## Architecture rules — READ BEFORE WRITING ANY CODE
 
-### No JavaScript
-Never use IJSRuntime, JSInterop, or any .js files in the library project.
-The library must work with zero JS. All interactivity is Blazor event handlers.
+### JavaScript policy (minimal, isolated)
+The keyboard **core** (rendering, text engine, shift/caps/symbol toggle, all the inline components:
+MudKeyboard, MudNumpad, MudPricepad, KeyGrid, KeyButton) must stay 100% JavaScript-free — no
+IJSRuntime, all interactivity via Blazor event handlers. It must keep working with zero JS.
+
+The ONE sanctioned exception is the **global docked keyboard** (`MudKeyboardHost`): a browser cannot
+report focus on arbitrary inputs to Blazor without JS, so a single small ES module
+(`wwwroot/mudKeyboard.js`) does global focus capture + caret-aware insertion. Rules for it:
+- All JS interop is confined to `KeyboardInteropService` (constructor-injects IJSRuntime).
+- Only primitive strings cross the interop boundary — no reflection-based (de)serialisation, so it
+  stays AOT/trim-safe.
+- Do not add JavaScript anywhere else, and do not make the core depend on it.
 
 ### AOT / Trim rules
 - No reflection (no typeof(T) lookups at runtime, no Activator.CreateInstance)
@@ -101,8 +110,8 @@ public sealed record KeyboardLayout
 <PackageId>MudKeyboard</PackageId>
 <Version>0.1.0-alpha</Version>
 <Authors>Sardar</Authors>
-<Description>Pure Blazor on-screen virtual keyboard with MudBlazor theming. Zero JavaScript. AOT and trim-friendly.</Description>
-<PackageTags>blazor;mudblazor;virtual-keyboard;onscreen-keyboard;blazor-component</PackageTags>
+<Description>Blazor on-screen virtual keyboard with MudBlazor theming. The keyboard core is JavaScript-free; an optional, tiny JS shim adds a global docked keyboard that pops up when any input is focused. AOT and trim-friendly.</Description>
+<PackageTags>blazor;mudblazor;virtual-keyboard;onscreen-keyboard;touch-keyboard;blazor-component</PackageTags>
 <PackageLicenseExpression>MIT</PackageLicenseExpression>
 <PackageProjectUrl>https://github.com/sardar97/mudkeyboard</PackageProjectUrl>
 <RepositoryUrl>https://github.com/sardar97/mudkeyboard</RepositoryUrl>
@@ -122,9 +131,9 @@ public sealed record KeyboardLayout
 - No code-behind (.razor.cs) unless the file exceeds ~150 lines
 
 ## What NOT to do
-- Do not add JavaScript files to the library
+- Do not add JavaScript files to the library beyond the single focus-capture shim (`wwwroot/mudKeyboard.js`); the keyboard core stays JS-free
 - Do not use Bootstrap — MudBlazor only
 - Do not target .NET 6 or .NET 7
 - Do not add static SSR render mode
-- Do not use [Inject] in components — use [Parameter] or constructor injection in services
+- Do not use [Inject] in components — use [Parameter] or constructor injection in services. (Sole exception: `MudKeyboardHost` injects `KeyboardInteropService`, because a render-mode-agnostic component can't use constructor injection; the interop logic itself lives in the service via constructor injection.)
 - Do not put business logic in .razor files — extract to C# classes

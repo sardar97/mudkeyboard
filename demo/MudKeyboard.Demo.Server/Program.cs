@@ -1,5 +1,6 @@
 using MudBlazor.Services;
 using MudKeyboard.Demo.Server.Components;
+using MudKeyboard.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,9 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
+
+// Registers the global docked-keyboard services. Pair with a single <MudKeyboardHost /> in the layout.
+builder.Services.AddMudKeyboard();
 
 var app = builder.Build();
 

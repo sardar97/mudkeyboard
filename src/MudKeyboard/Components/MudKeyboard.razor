@@ -58,6 +58,18 @@
     /// <summary>Raised when an Escape (<c>{esc}</c>) key is pressed. Add an <c>{esc}</c> token to a custom layout to surface it.</summary>
     [Parameter] public EventCallback OnEscape { get; set; }
 
+    /// <summary>
+    /// When set, the keyboard runs in <em>emit mode</em>: each press raises this callback instead of
+    /// mutating <see cref="Value"/>, letting a host route the input elsewhere (for example into the
+    /// caret of the currently focused field — see <see cref="MudKeyboardHost"/>). Shift, caps and the
+    /// symbol/letter toggle are still managed internally; <see cref="MaxLength"/> is ignored in this
+    /// mode (the host enforces any limit on its target).
+    /// </summary>
+    [Parameter] public EventCallback<KeyboardInput> OnInput { get; set; }
+
+    // In emit mode the keyboard produces KeyboardInput events rather than editing its own Value.
+    private bool EmitMode => OnInput.HasDelegate;
+
     protected override void OnParametersSet()
     {
         _baseLayout = Layout ?? (Variant == KeyboardVariant.Custom ? null : LayoutLibrary.ForVariant(Variant));
@@ -101,16 +113,42 @@
         switch (key.ActionToken)
         {
             case KeyTokens.Enter:
+                if (EmitMode)
+                {
+                    await OnInput.InvokeAsync(KeyboardInput.Enter);
+                }
+
                 await OnEnter.InvokeAsync();
                 break;
             case KeyTokens.Escape:
+                if (EmitMode)
+                {
+                    await OnInput.InvokeAsync(KeyboardInput.Escape);
+                }
+
                 await OnEscape.InvokeAsync();
                 break;
             case KeyTokens.Backspace:
-                await SetValueAsync(KeyboardEngine.Backspace(Value));
+                if (EmitMode)
+                {
+                    await OnInput.InvokeAsync(KeyboardInput.Backspace);
+                }
+                else
+                {
+                    await SetValueAsync(KeyboardEngine.Backspace(Value));
+                }
+
                 break;
             case KeyTokens.Space:
-                await SetValueAsync(KeyboardEngine.Append(Value, " ", MaxLength));
+                if (EmitMode)
+                {
+                    await OnInput.InvokeAsync(KeyboardInput.Char(" "));
+                }
+                else
+                {
+                    await SetValueAsync(KeyboardEngine.Append(Value, " ", MaxLength));
+                }
+
                 break;
             default:
                 // Never type an unhandled command token (e.g. a stray {caps} in a custom layout).
@@ -120,7 +158,15 @@
                 }
 
                 var text = KeyboardEngine.ApplyCase(key.ActionToken, _shiftState != ShiftState.Off);
-                await SetValueAsync(KeyboardEngine.Append(Value, text, MaxLength));
+                if (EmitMode)
+                {
+                    await OnInput.InvokeAsync(KeyboardInput.Char(text));
+                }
+                else
+                {
+                    await SetValueAsync(KeyboardEngine.Append(Value, text, MaxLength));
+                }
+
                 break;
         }
 

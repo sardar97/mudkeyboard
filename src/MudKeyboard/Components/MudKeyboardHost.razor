@@ -1,0 +1,82 @@
+@namespace MudKeyboard.Components
+@implements IDisposable
+@inject KeyboardInteropService Interop
+
+@* Place ONCE in your layout. The container is always present (off-screen) so the slide-up
+   transition animates whenever the --open class is toggled; the keyboard inside it renders once a
+   field is focused. mousedown:preventDefault keeps the focused field focused while keys are tapped,
+   so the caret stays put and the panel does not close on key presses. *@
+<div class="mudkeyboard-dock @(Interop.IsOpen ? "mudkeyboard-dock--open" : null)"
+     @onmousedown:preventDefault="true"
+     role="group"
+     aria-label="On-screen keyboard">
+    @if (Interop.CurrentLayout is not null)
+    {
+        <MudPaper Elevation="@Elevation"
+                  Class="pa-2"
+                  Style="@PanelStyle">
+            <div class="mudkeyboard-dock__bar">
+                <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown"
+                               Size="Size.Small"
+                               OnClick="@HideAsync"
+                               aria-label="Hide keyboard" />
+            </div>
+            <MudKeyboard Layout="Interop.CurrentLayout"
+                         SymbolLayout="Interop.CurrentSymbolLayout"
+                         Palette="Palette"
+                         DropShadow="false"
+                         OnInput="@HandleInputAsync" />
+        </MudPaper>
+    }
+</div>
+
+@code { 
+
+    /// <summary>Optional colour overrides for the docked keyboard. See <see cref="KeyboardPalette"/>.</summary>
+    [Parameter] public KeyboardPalette? Palette { get; set; }
+
+    /// <summary>Elevation (drop shadow) of the docked panel. Default <c>8</c>.</summary>
+    [Parameter] public int Elevation { get; set; } = 8;
+
+    /// <summary>Extra inline styles appended to the docked panel.</summary>
+    [Parameter] public string? Style { get; set; }
+
+    private string PanelStyle => $"border-radius:16px 16px 0 0;{Style}";
+
+    protected override void OnInitialized() => Interop.StateChanged += OnStateChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // JS interop is only available once the component is interactive.
+        if (firstRender)
+        {
+            await Interop.InitializeAsync();
+        }
+    }
+
+    private async Task HandleInputAsync(KeyboardInput input)
+    {
+        switch (input.Kind)
+        {
+            case KeyboardInputKind.Text:
+                await Interop.InsertTextAsync(input.Text);
+                break;
+            case KeyboardInputKind.Backspace:
+                await Interop.BackspaceAsync();
+                break;
+            case KeyboardInputKind.Enter:
+                await Interop.EnterAsync();
+                break;
+            case KeyboardInputKind.Escape:
+                await Interop.CloseAsync();
+                break;
+        }
+    }
+
+    private Task HideAsync() => Interop.CloseAsync();
+
+    // Focus events arrive from JS; marshal the re-render onto the renderer's sync context.
+    private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Interop.StateChanged -= OnStateChanged;
+}
