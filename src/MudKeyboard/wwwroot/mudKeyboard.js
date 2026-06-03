@@ -58,13 +58,30 @@ function insideDock(el) {
     return !!(el && el.closest && el.closest(DOCK_SELECTOR));
 }
 
+// Highest z-index currently used anywhere on the page, ignoring our own dock (which carries the
+// value we set last time). Lets the keyboard sit one above whatever is on top right now — a dialog,
+// a nested dialog, a custom overlay at any value — instead of guessing with a static number.
+function highestZIndex() {
+    let max = 0;
+    const dock = document.querySelector(DOCK_SELECTOR);
+    const all = document.body ? document.body.getElementsByTagName('*') : [];
+    for (let i = 0; i < all.length; i++) {
+        const el = all[i];
+        if (el === dock) continue;
+        const z = parseInt(window.getComputedStyle(el).zIndex, 10);
+        if (!Number.isNaN(z) && z > max) max = z;
+    }
+    // Guard against overflow when added to on the .NET side.
+    return Math.min(max, 2000000000);
+}
+
 function onFocusIn(e) {
     const el = e.target;
     if (insideDock(el)) return; // focus moving onto the keyboard itself — ignore
     if (!shouldAttach(el)) return;
 
     activeEl = el;
-    dotnet.invokeMethodAsync('OnFocusIn', inferLayout(el));
+    dotnet.invokeMethodAsync('OnFocusIn', inferLayout(el), highestZIndex());
 
     // Lift the field above the docked keyboard so the user can see what they type.
     setTimeout(() => {

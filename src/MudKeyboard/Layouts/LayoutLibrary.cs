@@ -81,7 +81,7 @@ public static class LayoutLibrary
             ["7", "8", "9"],
             ["4", "5", "6"],
             ["1", "2", "3"],
-            ["00", "0", KeyTokens.Backspace],
+            ["0","00", KeyTokens.Backspace],
             [KeyTokens.Enter],
         },
     };

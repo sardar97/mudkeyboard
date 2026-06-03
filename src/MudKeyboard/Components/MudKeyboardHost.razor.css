@@ -9,7 +9,7 @@
     width: min(720px, 100vw);
     transform: translateX(-50%) translateY(110%);
     transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-    z-index: 1300; /* above app content; below MudSnackbar */
+    z-index: 1400; /* fallback only — the host sets an inline z-index of (highest-on-page + 1) at open time */
     pointer-events: none; /* off-screen panel must not swallow clicks */
 }
 

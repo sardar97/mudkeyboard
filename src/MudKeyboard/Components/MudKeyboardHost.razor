@@ -7,6 +7,7 @@
    field is focused. mousedown:preventDefault keeps the focused field focused while keys are tapped,
    so the caret stays put and the panel does not close on key presses. *@
 <div class="mudkeyboard-dock @(Interop.IsOpen ? "mudkeyboard-dock--open" : null) @DockSizeClass"
+     style="z-index:@DockZIndex"
      @onmousedown:preventDefault="true"
      role="group"
      aria-label="On-screen keyboard">
@@ -74,10 +75,21 @@
     /// <summary>Elevation (drop shadow) of the docked panel. Default <c>8</c>.</summary>
     [Parameter] public int Elevation { get; set; } = 8;
 
+    /// <summary>
+    /// Floor for the docked keyboard's <c>z-index</c>. On every open the keyboard measures the highest
+    /// z-index on the page and docks <em>one above it</em>, so it always floats over the current top-most
+    /// layer (a dialog, a nested dialog, a custom overlay at any value). This value only kicks in when the
+    /// page has nothing higher — it guarantees a sensible minimum. Default <c>1400</c>.
+    /// </summary>
+    [Parameter] public int MinZIndex { get; set; } = 1400;
+
     /// <summary>Extra inline styles appended to the docked panel.</summary>
     [Parameter] public string? Style { get; set; }
 
     private string PanelStyle => $"border-radius:16px 16px 0 0;{Style}";
+
+    // Sit one above the highest layer on the page when opened (e.g. a dialog), but never below the floor.
+    private int DockZIndex => Math.Max(Interop.PageMaxZIndex + 1, MinZIndex);
 
     // The numeric/money keypads are the built-in numpad layouts; everything else (QWERTY, custom) is text.
     private bool IsKeypad =>

@@ -48,6 +48,12 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     public KeyboardLayout? CurrentSymbolLayout { get; private set; }
 
     /// <summary>
+    /// The highest <c>z-index</c> found anywhere on the page when the keyboard was last opened. The host
+    /// docks itself one above this so it always floats over the current top-most layer (e.g. a dialog).
+    /// </summary>
+    public int PageMaxZIndex { get; private set; }
+
+    /// <summary>
     /// Loads the JS module and starts global focus capture. Safe to call repeatedly — only the first
     /// call does work. Invoke from the host's first interactive render.
     /// </summary>
@@ -63,12 +69,14 @@ public sealed class KeyboardInteropService : IAsyncDisposable
         await _module.InvokeVoidAsync("initialize", _selfRef, _options.AttachMode.ToString());
     }
 
-    /// <summary>Called from JS when an attachable field gains focus. <paramref name="layoutKind"/> is the inferred face.</summary>
+    /// <summary>Called from JS when an attachable field gains focus.</summary>
     /// <param name="layoutKind">A layout hint such as <c>"qwerty"</c>, <c>"numpad"</c> or <c>"decimal"</c>.</param>
+    /// <param name="pageMaxZIndex">The highest z-index currently on the page, so the host can dock above it.</param>
     [JSInvokable]
-    public void OnFocusIn(string layoutKind)
+    public void OnFocusIn(string layoutKind, int pageMaxZIndex)
     {
         (CurrentLayout, CurrentSymbolLayout) = ResolveLayout(layoutKind);
+        PageMaxZIndex = pageMaxZIndex;
         IsOpen = true;
         StateChanged?.Invoke();
     }
