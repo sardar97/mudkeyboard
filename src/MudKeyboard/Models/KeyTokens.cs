@@ -34,5 +34,12 @@ public static class KeyTokens
     /// </summary>
     /// <param name="token">The key token to test.</param>
     public static bool IsCommand(string token) =>
-        token is ['{', _, ..] && token[^1] == '}';
+        token is ['{', _, ..] && token[^1] == '}' && token is not Enter;
+    
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="token"/> is enter token
+    /// </summary>
+    /// <param name="token">The key token to test.</param>
+    public static bool IsEnter(string token) =>
+       token is Enter;
 }

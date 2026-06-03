@@ -24,6 +24,10 @@ public sealed class KeyGrid : ComponentBase
     [Parameter]
     public bool Disabled { get; set; }
 
+    /// <summary>Whether keys cast a drop shadow. Forwarded to each key button.</summary>
+    [Parameter]
+    public bool DropShadow { get; set; } = true;
+
     /// <inheritdoc />
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
@@ -44,7 +48,8 @@ public sealed class KeyGrid : ComponentBase
                 builder.OpenComponent<KeyButton>(6);
                 builder.AddComponentParameter(7, nameof(KeyButton.Key), key);
                 builder.AddComponentParameter(8, nameof(KeyButton.Disabled), Disabled);
-                builder.AddComponentParameter(9, nameof(KeyButton.OnKeyPress), OnKeyPress);
+                builder.AddComponentParameter(9, nameof(KeyButton.DropShadow), DropShadow);
+                builder.AddComponentParameter(10, nameof(KeyButton.OnKeyPress), OnKeyPress);
                 builder.CloseComponent();
             }
 

@@ -28,8 +28,13 @@ internal sealed class KeyButton : ComponentBase
     [Parameter]
     public bool Disabled { get; set; }
 
-    // Command keys (enter, backspace, shift…) get the primary accent; literals stay neutral.
-    private Color KeyColor => Key.IsCommand ? Color.Primary : Color.Default;
+    /// <summary>Whether the key casts a drop shadow. Maps directly to <see cref="MudButton.DropShadow"/>.</summary>
+    [Parameter]
+    public bool DropShadow { get; set; } = true;
+
+    // Command keys (space, backspace, shift…) get the primary accent; literals stay neutral.
+    private Color KeyColor => Key.IsEnter ? Color.Primary : Color.Default;
+    
 
     // Grow proportionally to the key's width multiplier within its flex row.
     private string KeyStyle =>
@@ -43,12 +48,13 @@ internal sealed class KeyButton : ComponentBase
         builder.AddComponentParameter(1, nameof(MudButton.Variant), Variant.Filled);
         builder.AddComponentParameter(2, nameof(MudButton.Color), KeyColor);
         builder.AddComponentParameter(3, nameof(MudButton.Disabled), Disabled);
-        builder.AddComponentParameter(4, nameof(MudButton.Style), KeyStyle);
+        builder.AddComponentParameter(4, nameof(MudButton.DropShadow), DropShadow);
+        builder.AddComponentParameter(5, nameof(MudButton.Style), KeyStyle);
         builder.AddComponentParameter(
-            5,
+            6,
             nameof(MudButton.OnClick),
             EventCallback.Factory.Create<MouseEventArgs>(this, HandleClickAsync));
-        builder.AddComponentParameter(6, nameof(MudButton.ChildContent), (RenderFragment)BuildLabel);
+        builder.AddComponentParameter(7, nameof(MudButton.ChildContent), (RenderFragment)BuildLabel);
         builder.CloseComponent();
     }
 

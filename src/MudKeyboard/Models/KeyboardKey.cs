@@ -17,10 +17,15 @@ namespace MudKeyboard.Models;
 public sealed record KeyboardKey(string ActionToken, string DisplayLabel, double WidthMultiplier = 1.0)
 {
     /// <summary>
-    /// <see langword="true"/> when this key is a command (such as backspace or enter)
+    /// <see langword="true"/> when this key is a command (such as backspace or space)
     /// rather than a literal character to append to the value.
     /// </summary>
     public bool IsCommand => KeyTokens.IsCommand(ActionToken);
+    /// <summary>
+    /// <see langword="true"/> when this key is Enter
+    /// rather than a literal character to append to the value.
+    /// </summary>
+    public bool IsEnter => KeyTokens.IsEnter(ActionToken);
 
     /// <summary>
     /// Creates a <see cref="KeyboardKey"/> from a layout token, resolving a sensible display
@@ -35,7 +40,7 @@ public sealed record KeyboardKey(string ActionToken, string DisplayLabel, double
         {
             KeyTokens.Backspace => new KeyboardKey(token, "⌫", 1.5d), // ⌫
             KeyTokens.Enter => new KeyboardKey(token, "⏎", 1.5d),     // ⏎
-            KeyTokens.Space => new KeyboardKey(token, " ", 5.0d),
+            KeyTokens.Space => new KeyboardKey(token, "⎵", 5.0d),    // ⎵
             KeyTokens.Shift => new KeyboardKey(token, "⇧", 1.5d),     // ⇧
             KeyTokens.Caps => new KeyboardKey(token, "⇪", 1.5d),      // ⇪
             KeyTokens.Escape => new KeyboardKey(token, "Esc", 1.5d),
