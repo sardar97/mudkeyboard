@@ -3,3 +3,4 @@ obj/
 .vs/
 *.user
 .DS_Store
+/CLAUDE.md
