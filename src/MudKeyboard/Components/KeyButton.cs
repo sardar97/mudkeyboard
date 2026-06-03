@@ -32,7 +32,7 @@ internal sealed class KeyButton : ComponentBase
     [Parameter]
     public bool Disabled { get; set; }
 
-    /// <summary>Whether the key casts a drop shadow. Maps directly to <see cref="MudButton.DropShadow"/>.</summary>
+    /// <summary>Whether the key casts a drop shadow. Maps directly to <c>MudButton.DropShadow</c>.</summary>
     [Parameter]
     public bool DropShadow { get; set; } = true;
 
