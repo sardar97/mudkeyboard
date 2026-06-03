@@ -4,13 +4,45 @@
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+
+    <!--
+      AOT / trim friendliness.
+      IsAotCompatible (net8.0+) is the umbrella switch: it sets IsTrimmable=true and
+      turns on the trim analyzer (EnableTrimAnalyzer), the AOT analyzer (EnableAotAnalyzer),
+      and the single-file analyzer. These surface IL2xxx/IL3xxx warnings at build time so the
+      "no reflection / no dynamic code" rule is enforced by the compiler, not by convention.
+    -->
+    <IsAotCompatible>true</IsAotCompatible>
+
+    <!-- Produce the XML doc file so public API docs flow into the NuGet package (Phase 6). -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <!-- NuGet package metadata -->
+  <PropertyGroup>
+    <PackageId>MudKeyboard</PackageId>
+    <Version>0.1.0-alpha</Version>
+    <Authors>Sardar</Authors>
+    <Description>Pure Blazor on-screen virtual keyboard with MudBlazor theming. Zero JavaScript. AOT and trim-friendly.</Description>
+    <PackageTags>blazor;mudblazor;virtual-keyboard;onscreen-keyboard;blazor-component</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/sardar97/mudkeyboard</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sardar97/mudkeyboard</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
 
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 
+  <!-- MudBlazor is a peer dependency. 9.5.0 ships native net8.0/net9.0/net10.0 assets. -->
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="9.5.0" />
+  </ItemGroup>
+
+  <!-- Pin the Blazor framework floor per TFM (matches MudBlazor's own dependency groups). -->
   <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.12" />
   </ItemGroup>
