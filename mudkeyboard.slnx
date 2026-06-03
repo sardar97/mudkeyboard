@@ -1,12 +1,16 @@
 <Solution>
+
   <Folder Name="/demo/">
     <Project Path="demo/MudKeyboard.Demo.Server/MudKeyboard.Demo.Server.csproj" />
     <Project Path="demo/MudKeyboard.Demo.Wasm/MudKeyboard.Demo.Wasm.csproj" />
   </Folder>
+  
   <Folder Name="/src/">
     <Project Path="src/MudKeyboard/MudKeyboard.csproj" />
   </Folder>
+  
   <Folder Name="/tests/">
     <Project Path="tests/MudKeyboard.Tests/MudKeyboard.Tests.csproj" />
   </Folder>
+  
 </Solution>
