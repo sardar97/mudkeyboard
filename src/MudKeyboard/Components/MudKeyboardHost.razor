@@ -35,18 +35,22 @@
                                        OnClick="@PasteAsync"
                                        aria-label="Paste" />
                     </MudTooltip>
-                    <MudTooltip Text="Move cursor left">
-                        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
-                                       Size="Size.Medium"
-                                       OnClick="@(() => MoveCaretAsync(-1))"
-                                       aria-label="Move cursor left" />
-                    </MudTooltip>
-                    <MudTooltip Text="Move cursor right">
-                        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
-                                       Size="Size.Medium"
-                                       OnClick="@(() => MoveCaretAsync(1))"
-                                       aria-label="Move cursor right" />
-                    </MudTooltip>
+                    @* Cursor arrows are meaningless for pence-first money entry (always appends at the end). *@
+                    @if (!IsMoney)
+                    {
+                        <MudTooltip Text="Move cursor left">
+                            <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                                           Size="Size.Medium"
+                                           OnClick="@(() => MoveCaretAsync(-1))"
+                                           aria-label="Move cursor left" />
+                        </MudTooltip>
+                        <MudTooltip Text="Move cursor right">
+                            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                                           Size="Size.Medium"
+                                           OnClick="@(() => MoveCaretAsync(1))"
+                                           aria-label="Move cursor right" />
+                        </MudTooltip>
+                    }
                 </div>
                 <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown"
                                Size="Size.Medium"
