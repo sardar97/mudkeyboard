@@ -1,0 +1,82 @@
+@namespace MudKeyboard.Components
+
+<MudPaper Class="@Class" Style="@Style" Elevation="0">
+    <KeyGrid Keys="_keys" Disabled="Disabled" OnKeyPress="@HandleKeyPressAsync" />
+</MudPaper>
+
+@code {
+    private readonly IReadOnlyList<IReadOnlyList<KeyboardKey>> _keys =
+        KeyboardKey.FromRows(LayoutLibrary.Price.Rows);
+
+    /// <summary>The formatted currency value (for example <c>£1.23</c>), two-way bindable.</summary>
+    [Parameter] public string Value { get; set; } = string.Empty;
+
+    /// <summary>Raised when <see cref="Value"/> changes.</summary>
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>Currency symbol prefix. Default <c>£</c>.</summary>
+    [Parameter] public string CurrencySymbol { get; set; } = "£";
+
+    /// <summary>Number of fractional digits the value is formatted with. Default <c>2</c>.</summary>
+    [Parameter] public int DecimalPlaces { get; set; } = 2;
+
+    /// <summary>Optional cap on the number of entered digits.</summary>
+    [Parameter] public int? MaxLength { get; set; }
+
+    /// <summary>Disables every key.</summary>
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Raised when the Enter key is pressed.</summary>
+    [Parameter] public EventCallback OnEnter { get; set; }
+
+    /// <summary>Extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>Extra inline styles for the root element.</summary>
+    [Parameter] public string? Style { get; set; }
+
+    private async Task HandleKeyPressAsync(KeyboardKey key)
+    {
+        switch (key.ActionToken)
+        {
+            case KeyTokens.Enter:
+                await OnEnter.InvokeAsync();
+                break;
+            case KeyTokens.Backspace:
+            {
+                var digits = PricepadFormatter.ExtractDigits(Value);
+                if (digits.Length > 0)
+                {
+                    digits = digits[..^1];
+                }
+
+                await SetFormattedAsync(digits);
+                break;
+            }
+            default:
+            {
+                // Price layout only emits digit tokens ("7", "00", …); append then re-format.
+                var digits = PricepadFormatter.ExtractDigits(Value) + key.ActionToken;
+                if (MaxLength is { } max && digits.Length > max)
+                {
+                    break;
+                }
+
+                await SetFormattedAsync(digits);
+                break;
+            }
+        }
+    }
+
+    private async Task SetFormattedAsync(string digits)
+    {
+        var formatted = PricepadFormatter.Format(digits, CurrencySymbol, DecimalPlaces);
+        if (string.Equals(formatted, Value, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Value = formatted;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

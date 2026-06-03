@@ -38,6 +38,7 @@ public sealed record KeyboardKey(string ActionToken, string DisplayLabel, double
             KeyTokens.Space => new KeyboardKey(token, " ", 5.0d),
             KeyTokens.Shift => new KeyboardKey(token, "⇧", 1.5d),     // ⇧
             KeyTokens.Caps => new KeyboardKey(token, "⇪", 1.5d),      // ⇪
+            KeyTokens.Escape => new KeyboardKey(token, "Esc", 1.5d),
             _ => new KeyboardKey(token, token, 1.0d),
         };
     }

@@ -1,0 +1,102 @@
+@namespace MudKeyboard.Components
+
+<MudPaper Class="@Class" Style="@Style" Elevation="0">
+    <KeyGrid Keys="_displayKeys" Disabled="Disabled" OnKeyPress="@HandleKeyPressAsync" />
+</MudPaper>
+
+@code {
+    private KeyboardLayout? _layout;
+    private IReadOnlyList<IReadOnlyList<KeyboardKey>> _displayKeys = [];
+    private bool _shift;
+    private bool _caps;
+
+    /// <summary>The current value, two-way bindable via <c>@bind-Value</c>.</summary>
+    [Parameter] public string Value { get; set; } = string.Empty;
+
+    /// <summary>Raised when <see cref="Value"/> changes.</summary>
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>An explicit layout. When set, it overrides <see cref="Variant"/>.</summary>
+    [Parameter] public KeyboardLayout? Layout { get; set; }
+
+    /// <summary>Which built-in surface to show when <see cref="Layout"/> is not set. Default <see cref="KeyboardVariant.Full"/>.</summary>
+    [Parameter] public KeyboardVariant Variant { get; set; } = KeyboardVariant.Full;
+
+    /// <summary>Optional maximum length of <see cref="Value"/>.</summary>
+    [Parameter] public int? MaxLength { get; set; }
+
+    /// <summary>Disables every key.</summary>
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>Extra inline styles for the root element.</summary>
+    [Parameter] public string? Style { get; set; }
+
+    /// <summary>Raised when the Enter key is pressed.</summary>
+    [Parameter] public EventCallback OnEnter { get; set; }
+
+    /// <summary>Raised when an Escape (<c>{esc}</c>) key is pressed. Add an <c>{esc}</c> token to a custom layout to surface it.</summary>
+    [Parameter] public EventCallback OnEscape { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        _layout = Layout ?? (Variant == KeyboardVariant.Custom ? null : LayoutLibrary.ForVariant(Variant));
+        RebuildKeys();
+    }
+
+    private void RebuildKeys() =>
+        _displayKeys = _layout is null
+            ? []
+            : KeyboardEngine.BuildDisplayKeys(_layout, _shift ^ _caps);
+
+    private async Task HandleKeyPressAsync(KeyboardKey key)
+    {
+        switch (key.ActionToken)
+        {
+            case KeyTokens.Enter:
+                await OnEnter.InvokeAsync();
+                break;
+            case KeyTokens.Escape:
+                await OnEscape.InvokeAsync();
+                break;
+            case KeyTokens.Backspace:
+                await SetValueAsync(KeyboardEngine.Backspace(Value));
+                break;
+            case KeyTokens.Space:
+                await SetValueAsync(KeyboardEngine.Append(Value, " ", MaxLength));
+                break;
+            case KeyTokens.Shift:
+                _shift = !_shift;
+                RebuildKeys();
+                break;
+            case KeyTokens.Caps:
+                _caps = !_caps;
+                RebuildKeys();
+                break;
+            default:
+                var text = KeyboardEngine.ApplyCase(key.ActionToken, _shift ^ _caps);
+                await SetValueAsync(KeyboardEngine.Append(Value, text, MaxLength));
+                if (_shift)
+                {
+                    // Shift is one-shot: it applies to a single letter then releases.
+                    _shift = false;
+                    RebuildKeys();
+                }
+
+                break;
+        }
+    }
+
+    private async Task SetValueAsync(string newValue)
+    {
+        if (string.Equals(newValue, Value, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Value = newValue;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

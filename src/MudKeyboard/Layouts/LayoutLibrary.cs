@@ -41,6 +41,19 @@ public static class LayoutLibrary
         },
     };
 
+    /// <summary>Calculator-style numeric pad with an extra decimal-point key.</summary>
+    public static KeyboardLayout NumpadWithDecimal { get; } = new()
+    {
+        Rows = new string[][]
+        {
+            ["7", "8", "9"],
+            ["4", "5", "6"],
+            ["1", "2", "3"],
+            [".", "0", KeyTokens.Backspace],
+            [KeyTokens.Enter],
+        },
+    };
+
     /// <summary>
     /// Money-entry pad: digits plus a "00" quick key, backspace and enter. There is no decimal
     /// point — currency components (such as the pricepad) place the decimal automatically.

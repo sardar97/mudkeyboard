@@ -25,6 +25,9 @@ public static class KeyTokens
     /// <summary>Toggles caps lock. Token: <c>{caps}</c>.</summary>
     public const string Caps = "{caps}";
 
+    /// <summary>Dismisses / cancels. Token: <c>{esc}</c>. Not present in built-in layouts.</summary>
+    public const string Escape = "{esc}";
+
     /// <summary>
     /// Returns <see langword="true"/> when <paramref name="token"/> is a command token
     /// (wrapped in braces) rather than a literal character.

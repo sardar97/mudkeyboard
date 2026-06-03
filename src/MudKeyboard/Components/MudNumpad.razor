@@ -1,0 +1,69 @@
+@namespace MudKeyboard.Components
+
+<MudPaper Class="@Class" Style="@Style" Elevation="0">
+    <KeyGrid Keys="_keys" Disabled="Disabled" OnKeyPress="@HandleKeyPressAsync" />
+</MudPaper>
+
+@code {
+    private IReadOnlyList<IReadOnlyList<KeyboardKey>> _keys = [];
+
+    /// <summary>The current value, two-way bindable via <c>@bind-Value</c>.</summary>
+    [Parameter] public string Value { get; set; } = string.Empty;
+
+    /// <summary>Raised when <see cref="Value"/> changes.</summary>
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>When <see langword="true"/>, shows a decimal-point key and allows a single '.' in the value.</summary>
+    [Parameter] public bool AllowDecimal { get; set; }
+
+    /// <summary>Optional maximum length of <see cref="Value"/>.</summary>
+    [Parameter] public int? MaxLength { get; set; }
+
+    /// <summary>Disables every key.</summary>
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Raised when the Enter key is pressed.</summary>
+    [Parameter] public EventCallback OnEnter { get; set; }
+
+    /// <summary>Extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>Extra inline styles for the root element.</summary>
+    [Parameter] public string? Style { get; set; }
+
+    protected override void OnParametersSet() =>
+        _keys = KeyboardKey.FromRows((AllowDecimal ? LayoutLibrary.NumpadWithDecimal : LayoutLibrary.Numpad).Rows);
+
+    private async Task HandleKeyPressAsync(KeyboardKey key)
+    {
+        switch (key.ActionToken)
+        {
+            case KeyTokens.Enter:
+                await OnEnter.InvokeAsync();
+                break;
+            case KeyTokens.Backspace:
+                await SetValueAsync(KeyboardEngine.Backspace(Value));
+                break;
+            case ".":
+                if (AllowDecimal && !(string.IsNullOrWhiteSpace(Value) ? string.Empty : Value).Contains('.'))
+                {
+                    await SetValueAsync(KeyboardEngine.Append(Value, ".", MaxLength));
+                }
+                break;
+            default:
+                await SetValueAsync(KeyboardEngine.Append(Value, key.ActionToken, MaxLength));
+                break;
+        }
+    }
+
+    private async Task SetValueAsync(string newValue)
+    {
+        if (string.Equals(newValue, Value, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Value = newValue;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

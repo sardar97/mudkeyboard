@@ -3,4 +3,9 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
-@using MudKeyboard
+@* global:: is required because the component class MudKeyboard.Components.MudKeyboard
+   otherwise shadows the root MudKeyboard namespace inside this namespace. *@
+@using global::MudKeyboard.Components
+@using global::MudKeyboard.Models
+@using global::MudKeyboard.Layouts
+@using global::MudKeyboard.Internal

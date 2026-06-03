@@ -1,5 +1,7 @@
 # CLAUDE.md — MudKeyboard Project
 
+## Important!! never commit i do commit myself
+
 ## What is this project?
 MudKeyboard is an open-source pure Blazor virtual on-screen keyboard library.
 - Zero JavaScript — pure C# and Blazor only
