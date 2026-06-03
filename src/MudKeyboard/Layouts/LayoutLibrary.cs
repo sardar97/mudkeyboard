@@ -16,7 +16,22 @@ public static class LayoutLibrary
             ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
             ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
             [KeyTokens.Shift, "z", "x", "c", "v", "b", "n", "m", KeyTokens.Backspace],
-            [KeyTokens.Space, KeyTokens.Enter],
+            [KeyTokens.SymbolToggle, KeyTokens.Space, KeyTokens.Enter],
+        },
+    };
+
+    /// <summary>
+    /// The numbers-and-symbols face of the full keyboard, reached from <see cref="Qwerty"/> via
+    /// the <see cref="KeyTokens.SymbolToggle"/> key. Its toggle key returns to the letters.
+    /// </summary>
+    public static KeyboardLayout Symbols { get; } = new()
+    {
+        Rows = new string[][]
+        {
+            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+            ["@", "#", "£", "$", "€", "_", "&", "-", "+", "(", ")"],
+            ["/", ".", "*", "\"", "'", ":", ";", "!", "?", KeyTokens.Backspace],
+            [KeyTokens.SymbolToggle, KeyTokens.Space, KeyTokens.Enter],
         },
     };
 
@@ -88,4 +103,13 @@ public static class LayoutLibrary
             variant,
             "KeyboardVariant.Custom has no built-in layout; supply a KeyboardLayout instead."),
     };
+
+    /// <summary>
+    /// Returns the numbers/symbols face paired with <paramref name="variant"/>, or
+    /// <see langword="null"/> when the variant has none. Only <see cref="KeyboardVariant.Full"/>
+    /// ships a built-in symbol face (<see cref="Symbols"/>); the numeric pads have nothing to flip to.
+    /// </summary>
+    /// <param name="variant">The variant whose symbol face is required.</param>
+    public static KeyboardLayout? SymbolsForVariant(KeyboardVariant variant) =>
+        variant == KeyboardVariant.Full ? Symbols : null;
 }

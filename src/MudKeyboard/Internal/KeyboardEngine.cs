@@ -37,9 +37,11 @@ internal static class KeyboardEngine
     /// <paramref name="state"/>: letter keys are upper-cased and bolded while shift is active,
     /// and the shift key is highlighted (showing the caps-lock glyph when locked). The action
     /// token is left untouched — casing of the emitted character is decided at press time via
-    /// <see cref="ApplyCase"/>.
+    /// <see cref="ApplyCase"/>. The symbol-toggle key shows <c>ABC</c> when
+    /// <paramref name="symbolMode"/> is set (the symbol face is showing) and <c>123</c> otherwise.
     /// </summary>
-    public static IReadOnlyList<IReadOnlyList<KeyboardKey>> BuildDisplayKeys(KeyboardLayout layout, ShiftState state)
+    public static IReadOnlyList<IReadOnlyList<KeyboardKey>> BuildDisplayKeys(
+        KeyboardLayout layout, ShiftState state, bool symbolMode = false)
     {
         ArgumentNullException.ThrowIfNull(layout);
 
@@ -63,6 +65,11 @@ internal static class KeyboardEngine
                         ShiftState.OneShot => key with { Highlighted = true },
                         _ => key,
                     };
+                }
+                else if (token == KeyTokens.SymbolToggle)
+                {
+                    // Shows the face you switch *to*: "ABC" while symbols show, "123" while letters show.
+                    key = key with { DisplayLabel = symbolMode ? "ABC" : "123" };
                 }
                 else if (upper && IsLetterToken(token))
                 {

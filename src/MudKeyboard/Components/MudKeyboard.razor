@@ -5,9 +5,11 @@
 </MudPaper>
 
 @code {
-    private KeyboardLayout? _layout;
+    private KeyboardLayout? _baseLayout;
+    private KeyboardLayout? _symbolLayout;
     private IReadOnlyList<IReadOnlyList<KeyboardKey>> _displayKeys = [];
     private ShiftState _shiftState = ShiftState.Off;
+    private bool _symbolMode;
 
     /// <summary>The current value, two-way bindable via <c>@bind-Value</c>.</summary>
     [Parameter] public string Value { get; set; } = string.Empty;
@@ -20,6 +22,14 @@
 
     /// <summary>Which built-in surface to show when <see cref="Layout"/> is not set. Default <see cref="KeyboardVariant.Full"/>.</summary>
     [Parameter] public KeyboardVariant Variant { get; set; } = KeyboardVariant.Full;
+
+    /// <summary>
+    /// The numbers/symbols face shown when a <see cref="KeyTokens.SymbolToggle"/> (<c>{sym}</c>)
+    /// key is pressed. When not set it defaults to the built-in symbol face for <see cref="Variant"/>
+    /// (only <see cref="KeyboardVariant.Full"/> has one). Supply this to give a custom
+    /// <see cref="Layout"/> its own symbol face.
+    /// </summary>
+    [Parameter] public KeyboardLayout? SymbolLayout { get; set; }
 
     /// <summary>Optional maximum length of <see cref="Value"/>.</summary>
     [Parameter] public int? MaxLength { get; set; }
@@ -44,14 +54,27 @@
 
     protected override void OnParametersSet()
     {
-        _layout = Layout ?? (Variant == KeyboardVariant.Custom ? null : LayoutLibrary.ForVariant(Variant));
+        _baseLayout = Layout ?? (Variant == KeyboardVariant.Custom ? null : LayoutLibrary.ForVariant(Variant));
+        // A custom Layout opts into the symbol face only by supplying its own SymbolLayout.
+        _symbolLayout = SymbolLayout ?? (Layout is null ? LayoutLibrary.SymbolsForVariant(Variant) : null);
+
+        // Nothing to flip to → never sit on the (missing) symbol face.
+        if (_symbolLayout is null)
+        {
+            _symbolMode = false;
+        }
+
         RebuildKeys();
     }
 
+    // The face currently on screen: the symbol layout while flipped, otherwise the base layout.
+    private KeyboardLayout? ActiveLayout =>
+        _symbolMode && _symbolLayout is not null ? _symbolLayout : _baseLayout;
+
     private void RebuildKeys() =>
-        _displayKeys = _layout is null
-            ? []
-            : KeyboardEngine.BuildDisplayKeys(_layout, _shiftState);
+        _displayKeys = ActiveLayout is { } layout
+            ? KeyboardEngine.BuildDisplayKeys(layout, _shiftState, _symbolMode)
+            : [];
 
     private async Task HandleKeyPressAsync(KeyboardKey key)
     {
@@ -59,6 +82,13 @@
         if (key.ActionToken == KeyTokens.Shift)
         {
             HandleShiftClick();
+            return;
+        }
+
+        // The {sym} key flips the whole surface between its letter and numbers/symbols faces.
+        if (key.ActionToken == KeyTokens.SymbolToggle)
+        {
+            ToggleSymbolMode();
             return;
         }
 
@@ -94,6 +124,20 @@
             _shiftState = ShiftState.Off;
             RebuildKeys();
         }
+    }
+
+    // Flips between the letter face and the numbers/symbols face. Shift is meaningless on the
+    // symbol face, so it is cleared on every flip for predictable casing back on the letters.
+    private void ToggleSymbolMode()
+    {
+        if (_symbolLayout is null)
+        {
+            return;
+        }
+
+        _symbolMode = !_symbolMode;
+        _shiftState = ShiftState.Off;
+        RebuildKeys();
     }
 
     // A single click arms a one-shot shift; clicking again while locked turns caps off.

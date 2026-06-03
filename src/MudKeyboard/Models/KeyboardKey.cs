@@ -46,9 +46,11 @@ public sealed record KeyboardKey(string ActionToken, string DisplayLabel, double
         {
             KeyTokens.Backspace => new KeyboardKey(token, "⌫", 1.5d), // ⌫
             KeyTokens.Enter => new KeyboardKey(token, "⏎", 1.5d),     // ⏎
-            KeyTokens.Space => new KeyboardKey(token, "⎵", 5.0d),    // ⎵
+            KeyTokens.Space => new KeyboardKey(token, " ", 5.0d),    // ⎵
             KeyTokens.Shift => new KeyboardKey(token, "⇧", 1.5d),     // ⇧
             KeyTokens.Caps => new KeyboardKey(token, "⇪", 1.5d),      // ⇪
+            // Label is mode-dependent ("123" / "ABC"); the engine overrides it per shift/symbol state.
+            KeyTokens.SymbolToggle => new KeyboardKey(token, "123", 1.5d),
             KeyTokens.Escape => new KeyboardKey(token, "Esc", 1.5d),
             _ => new KeyboardKey(token, token, 1.0d),
         };

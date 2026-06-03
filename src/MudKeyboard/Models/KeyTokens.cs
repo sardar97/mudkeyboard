@@ -25,6 +25,12 @@ public static class KeyTokens
     /// <summary>Toggles caps lock. Token: <c>{caps}</c>.</summary>
     public const string Caps = "{caps}";
 
+    /// <summary>
+    /// Flips the keyboard between its letter face and its numbers/symbols face. Token:
+    /// <c>{sym}</c>. The key shows <c>123</c> on the letter face and <c>ABC</c> on the symbol face.
+    /// </summary>
+    public const string SymbolToggle = "{sym}";
+
     /// <summary>Dismisses / cancels. Token: <c>{esc}</c>. Not present in built-in layouts.</summary>
     public const string Escape = "{esc}";
 
