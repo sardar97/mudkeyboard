@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/MudKeyboard/wwwroot/mudkeyboard_logo.svg" alt="MudKeyboard — a pure-Blazor on-screen virtual keyboard" width="540">
+</p>
+
 # MudKeyboard
 
 [![CI](https://github.com/sardar97/mudkeyboard/actions/workflows/ci.yml/badge.svg)](https://github.com/sardar97/mudkeyboard/actions/workflows/ci.yml)

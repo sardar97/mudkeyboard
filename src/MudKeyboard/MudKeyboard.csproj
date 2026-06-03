@@ -31,7 +31,20 @@
     <RepositoryUrl>https://github.com/sardar97/mudkeyboard</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
+    <!--
+      Package icon. NuGet only accepts raster icons (.png/.jpg) for PackageIcon — SVG is rejected
+      (NU5046) — so this is a faithful PNG rasterisation of wwwroot/mudkeyboard_logo.svg (the same
+      artwork the demos and README use). The SVG itself still ships in the package as a static web
+      asset under staticwebassets/.
+    -->
+    <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
+
+  <!-- Pack the icon at the package root so PackageIcon can resolve it. -->
+  <ItemGroup>
+    <None Include="logo.png" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
 
   <ItemGroup>
     <SupportedPlatform Include="browser" />
@@ -56,10 +69,6 @@
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net10.0' ">
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.8" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>
