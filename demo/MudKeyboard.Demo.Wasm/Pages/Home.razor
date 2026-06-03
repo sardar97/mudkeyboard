@@ -1,7 +1,103 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>MudKeyboard Demo (WASM)</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudText Typo="Typo.h4" GutterBottom="true">MudKeyboard</MudText>
+<MudText Typo="Typo.body1" Class="mb-6" Color="Color.Secondary">
+    Pure-Blazor on-screen keyboard, running here on WebAssembly. Zero JavaScript in the library, themed
+    entirely by MudBlazor — toggle dark mode in the top bar and every key follows.
+</MudText>
 
-Welcome to your new app.
+<MudStack Spacing="6">
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Global docked keyboard · focus any field</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
+            These fields have no inline keyboard. Tap one and the keyboard slides up from the bottom of
+            the screen; the layout is inferred from the field (text → QWERTY, number → numpad,
+            <c>data-mudkeyboard-layout="decimal"</c> → decimal numpad). Powered by a small optional JS shim.
+        </MudText>
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_dockText" Label="Text (QWERTY)" Variant="Variant.Outlined" Immediate="true" />
+            <MudTextField @bind-Value="_dockNumber" Label="Number (numpad)" Variant="Variant.Outlined" Immediate="true" InputMode="InputMode.numeric" />
+            <MudTextField @bind-Value="_dockMoney" Label="Money (pence-first, type 5·2·3 → 5.23)" Variant="Variant.Outlined" Immediate="true" data-mudkeyboard-layout="money" />
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Full QWERTY · two-way binding + OnEnter</MudText>
+        <MudTextField @bind-Value="_text" Label="Bound value" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
+        <MudKeyboard @bind-Value="_text" OnEnter="@OnEnterPressed" MaxLength="40" />
+        <MudText Typo="Typo.caption" Class="mt-2">Last Enter: <b>@_lastEnter</b></MudText>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Numpad · AllowDecimal</MudText>
+        <MudTextField @bind-Value="_number" Label="Number" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
+        <div style="max-width: 320px">
+            <MudNumpad @bind-Value="_number" AllowDecimal="true" />
+        </div>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Pricepad · £, 2 decimals (pence-first)</MudText>
+        <MudTextField @bind-Value="_price" Label="Price" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
+        <div style="max-width: 320px">
+            <MudPricepad @bind-Value="_price" />
+        </div>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Custom layout</MudText>
+        <MudTextField @bind-Value="_custom" Label="Custom" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
+        <MudKeyboard @bind-Value="_custom" Variant="KeyboardVariant.Custom" Layout="CustomLayout" />
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">KeyboardPalette · per-keyboard colour override</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
+            Only this keyboard is recoloured — unset slots still follow the theme, so the dark-mode
+            toggle keeps working on the surface and key text below.
+        </MudText>
+        <MudTextField @bind-Value="_branded" Label="Branded value" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
+        <MudKeyboard @bind-Value="_branded" Palette="BrandPalette" />
+    </MudPaper>
+
+</MudStack>
+
+@code {
+    private string _text = string.Empty;
+    private string _number = string.Empty;
+    private string _price = string.Empty;
+    private string _custom = string.Empty;
+    private string _branded = string.Empty;
+    private string _dockText = string.Empty;
+    private string _dockNumber = string.Empty;
+    private string _dockMoney = string.Empty;
+    private int _enterCount;
+    private string _lastEnter = "(none yet)";
+
+    // Recolours only the accent (Enter) keys; every other slot is left to the MudBlazor theme so
+    // dark/light still cascades to this keyboard.
+    private static readonly KeyboardPalette BrandPalette = new()
+    {
+        AccentColor = "#00897b",      // teal 600
+        AccentTextColor = "#ffffff",
+    };
+
+    private static readonly KeyboardLayout CustomLayout = new()
+    {
+        Rows = new string[][]
+        {
+            ["m", "u", "d"],
+            ["k", "e", "y"],
+            [KeyTokens.Space, KeyTokens.Backspace, KeyTokens.Enter],
+        },
+    };
+
+    private void OnEnterPressed()
+    {
+        _enterCount++;
+        _lastEnter = $"\"{_text}\" (press #{_enterCount})";
+    }
+}
