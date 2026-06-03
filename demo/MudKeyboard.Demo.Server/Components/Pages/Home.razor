@@ -20,7 +20,7 @@
         <MudStack Spacing="3">
             <MudTextField @bind-Value="_dockText" Label="Text (QWERTY)" Variant="Variant.Outlined" Immediate="true" />
             <MudTextField @bind-Value="_dockNumber" Label="Number (numpad)" Variant="Variant.Outlined" Immediate="true" InputMode="InputMode.numeric" />
-            <MudTextField @bind-Value="_dockMoney" Label="Money (decimal numpad)" Variant="Variant.Outlined" Immediate="true" data-mudkeyboard-layout="decimal" />
+            <MudTextField @bind-Value="_dockMoney" Label="Money (pence-first, type 5·2·3 → 5.23)" Variant="Variant.Outlined" Immediate="true" data-mudkeyboard-layout="money" />
         </MudStack>
     </MudPaper>
 

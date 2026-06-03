@@ -1,3 +1,4 @@
+using MudKeyboard.Internal;
 using MudKeyboard.Layouts;
 using MudKeyboard.Models;
 using MudKeyboard.Services;
@@ -18,16 +19,25 @@ public class KeyboardInteropServiceTests
         Assert.Null(symbol);
     }
 
-    [Theory]
-    [InlineData("decimal")]
-    [InlineData("money")]
-    [InlineData("price")]
-    public void ResolveLayout_DecimalKinds_MapToNumpadWithDecimal(string kind)
+    [Fact]
+    public void ResolveLayout_Decimal_MapsToNumpadWithDecimal()
     {
-        var (layout, symbol) = KeyboardInteropService.ResolveLayout(kind);
+        var (layout, symbol) = KeyboardInteropService.ResolveLayout("decimal");
 
         Assert.Same(LayoutLibrary.NumpadWithDecimal, layout);
         Assert.Null(symbol);
+    }
+
+    [Theory]
+    [InlineData("money")]
+    [InlineData("price")]
+    public void ResolveLayout_MoneyKinds_MapToPriceWithNoDecimalKey(string kind)
+    {
+        var (layout, symbol) = KeyboardInteropService.ResolveLayout(kind);
+
+        Assert.Same(LayoutLibrary.Price, layout);
+        Assert.Null(symbol);
+        Assert.DoesNotContain(".", layout.Rows.SelectMany(r => r));
     }
 
     [Theory]
@@ -49,11 +59,11 @@ public class LayoutLibraryTests
     [Fact]
     public void Numpad_HasDoubleZeroNextToZero()
     {
-        var lastRow = LayoutLibrary.Numpad.Rows[^1];
-        var zeroIndex = lastRow.ToList().IndexOf("0");
+        var row = LayoutLibrary.Numpad.Rows.First(r => r.Contains("0"));
+        var zeroIndex = row.ToList().IndexOf("0");
 
-        Assert.Contains("00", lastRow);
-        Assert.Equal("00", lastRow[zeroIndex + 1]);
+        Assert.Contains("00", row);
+        Assert.Equal("00", row[zeroIndex + 1]);
     }
 
     [Fact]
@@ -65,6 +75,42 @@ public class LayoutLibraryTests
 
         Assert.Contains("00", decimalRow);
         Assert.Equal("00", decimalRow[zeroIndex + 1]);
+    }
+}
+
+public class MoneyEntryTests
+{
+    // Mirrors what KeyboardInteropService.AppendMoneyDigitsAsync does per key press: append the
+    // pressed digit(s) to the existing digits, then re-format pence-first with no currency symbol.
+    private static string Press(string current, string digit) =>
+        PricepadFormatter.Format(
+            PricepadFormatter.ExtractDigits(current) + digit, string.Empty, 2);
+
+    [Fact]
+    public void TypingFiveTwoThree_Yields_5_23()
+    {
+        var value = string.Empty;
+        value = Press(value, "5"); // 0.05
+        value = Press(value, "2"); // 0.52
+        value = Press(value, "3"); // 5.23
+
+        Assert.Equal("5.23", value);
+    }
+
+    [Theory]
+    [InlineData("5", "0.05")]
+    [InlineData("52", "0.52")]
+    [InlineData("523", "5.23")]
+    [InlineData("100", "1.00")]
+    public void PenceFirstFormatting(string typed, string expected)
+    {
+        var value = string.Empty;
+        foreach (var ch in typed)
+        {
+            value = Press(value, ch.ToString());
+        }
+
+        Assert.Equal(expected, value);
     }
 }
 

@@ -174,6 +174,20 @@ export async function paste() {
     if (text) insertText(text);
 }
 
+// Returns the focused field's current value (used by pence-first money formatting).
+export function getValue() {
+    return activeEl ? (activeEl.value ?? '') : '';
+}
+
+// Replaces the focused field's whole value (used by pence-first money formatting) and dispatches input.
+export function setValue(text) {
+    const el = activeEl;
+    if (!el) return;
+    el.value = text ?? '';
+    setCaret(el, el.value.length);
+    dispatchInput(el);
+}
+
 // Moves the caret left (delta < 0) or right (delta > 0); collapses a selection toward that side.
 export function moveCaret(delta) {
     const el = activeEl;

@@ -78,7 +78,11 @@
     // The numeric/money keypads are the built-in numpad layouts; everything else (QWERTY, custom) is text.
     private bool IsKeypad =>
         ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.Numpad)
-        || ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.NumpadWithDecimal);
+        || ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.NumpadWithDecimal)
+        || ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.Price);
+
+    // The money keypad enters digits pence-first (no decimal-point key) like MudPricepad.
+    private bool IsMoney => ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.Price);
 
     // Drives the dock width: a roomier panel for the full keyboard, a narrower one for keypads.
     private string DockSizeClass => IsKeypad ? "mudkeyboard-dock--keypad" : "mudkeyboard-dock--text";
@@ -99,10 +103,26 @@
         switch (input.Kind)
         {
             case KeyboardInputKind.Text:
-                await Interop.InsertTextAsync(input.Text);
+                if (IsMoney)
+                {
+                    await Interop.AppendMoneyDigitsAsync(input.Text);
+                }
+                else
+                {
+                    await Interop.InsertTextAsync(input.Text);
+                }
+
                 break;
             case KeyboardInputKind.Backspace:
-                await Interop.BackspaceAsync();
+                if (IsMoney)
+                {
+                    await Interop.BackspaceMoneyAsync();
+                }
+                else
+                {
+                    await Interop.BackspaceAsync();
+                }
+
                 break;
             case KeyboardInputKind.Enter:
                 // Enter commits, then closes the keyboard for every layout.

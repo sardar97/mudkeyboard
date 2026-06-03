@@ -1,4 +1,5 @@
 using Microsoft.JSInterop;
+using MudKeyboard.Internal;
 using MudKeyboard.Layouts;
 using MudKeyboard.Models;
 
@@ -18,6 +19,7 @@ namespace MudKeyboard.Services;
 public sealed class KeyboardInteropService : IAsyncDisposable
 {
     private const string ModulePath = "./_content/MudKeyboard/mudKeyboard.js";
+    private const int MoneyDecimalPlaces = 2;
 
     private readonly IJSRuntime _js;
     private readonly MudKeyboardOptions _options;
@@ -114,6 +116,36 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     public ValueTask MoveCaretAsync(int delta) =>
         _module?.InvokeVoidAsync("moveCaret", delta) ?? ValueTask.CompletedTask;
 
+    /// <summary>
+    /// Appends <paramref name="digits"/> to the focused money field and re-formats it pence-first,
+    /// exactly like the in-screen <see cref="MudKeyboard.Components.MudPricepad"/> (typing 5, 2, 3 → <c>5.23</c>).
+    /// </summary>
+    /// <param name="digits">The digit(s) just pressed (for example <c>"5"</c> or <c>"00"</c>).</param>
+    public async Task AppendMoneyDigitsAsync(string digits)
+    {
+        var combined = PricepadFormatter.ExtractDigits(await GetValueAsync())
+            + PricepadFormatter.ExtractDigits(digits);
+        await SetValueAsync(PricepadFormatter.Format(combined, string.Empty, MoneyDecimalPlaces));
+    }
+
+    /// <summary>Removes the last entered digit from the focused money field, re-formatting pence-first.</summary>
+    public async Task BackspaceMoneyAsync()
+    {
+        var digits = PricepadFormatter.ExtractDigits(await GetValueAsync());
+        if (digits.Length > 0)
+        {
+            digits = digits[..^1];
+        }
+
+        await SetValueAsync(PricepadFormatter.Format(digits, string.Empty, MoneyDecimalPlaces));
+    }
+
+    private ValueTask<string> GetValueAsync() =>
+        _module is null ? ValueTask.FromResult(string.Empty) : _module.InvokeAsync<string>("getValue");
+
+    private ValueTask SetValueAsync(string value) =>
+        _module?.InvokeVoidAsync("setValue", value) ?? ValueTask.CompletedTask;
+
     /// <summary>Blurs the focused field and hides the keyboard.</summary>
     public async Task CloseAsync()
     {
@@ -137,7 +169,10 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     internal static (KeyboardLayout Layout, KeyboardLayout? Symbol) ResolveLayout(string? kind) => kind switch
     {
         "numpad" or "numeric" or "tel" => (LayoutLibrary.Numpad, null),
-        "decimal" or "money" or "price" => (LayoutLibrary.NumpadWithDecimal, null),
+        // Money/price: pence-first, no decimal-point key (the decimal is placed automatically).
+        "money" or "price" => (LayoutLibrary.Price, null),
+        // Decimal: free decimal entry with a "." key.
+        "decimal" => (LayoutLibrary.NumpadWithDecimal, null),
         _ => (LayoutLibrary.Qwerty, LayoutLibrary.Symbols),
     };
 
