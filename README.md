@@ -292,4 +292,4 @@ dotnet test tests/MudKeyboard.Tests            # run the unit + bUnit tests
 
 ## License
 
-[MIT](LICENSE) © Sardar
+[MIT](LICENSE) © Sardar Qaslany
