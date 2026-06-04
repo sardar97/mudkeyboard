@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/MudKeyboard/wwwroot/mudkeyboard_logo.svg" alt="MudKeyboard — a pure-Blazor on-screen virtual keyboard" width="540">
+  <img src="https://raw.githubusercontent.com/sardar97/mudkeyboard/master/src/MudKeyboard/wwwroot/mudkeyboard_logo.svg" alt="MudKeyboard — a pure-Blazor on-screen virtual keyboard" width="540">
 </p>
 
 # MudKeyboard
@@ -29,7 +29,7 @@ them in; the references below will light up automatically.
 
 | Inline keyboard | Numpad / Pricepad | Global docked keyboard |
 | --- | --- | --- |
-| ![Full QWERTY keyboard](docs/images/keyboard.png) | ![Numpad and pricepad](docs/images/numpad.png) | ![Docked keyboard slides up on focus](docs/images/docked.png) |
+| ![Full QWERTY keyboard](https://raw.githubusercontent.com/sardar97/mudkeyboard/master/docs/images/keyboard.png) | ![Numpad and pricepad](https://raw.githubusercontent.com/sardar97/mudkeyboard/master/docs/images/numpad.png) | ![Docked keyboard slides up on focus](https://raw.githubusercontent.com/sardar97/mudkeyboard/master/docs/images/docked.png) |
 
 ---
 

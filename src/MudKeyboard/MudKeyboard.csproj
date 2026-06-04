@@ -22,14 +22,18 @@
   <!-- NuGet package metadata -->
   <PropertyGroup>
     <PackageId>MudKeyboard</PackageId>
+    <Title>MudKeyboard — Blazor on-screen virtual keyboard for MudBlazor</Title>
     <Version>0.1.0-alpha</Version>
     <Authors>Sardar Qaslany</Authors>
-    <Description>Blazor on-screen virtual keyboard with MudBlazor theming. The keyboard core is JavaScript-free; an optional, tiny JS shim adds a global docked keyboard that pops up when any input is focused. AOT and trim-friendly.</Description>
-    <PackageTags>blazor;mudblazor;virtual-keyboard;onscreen-keyboard;touch-keyboard;blazor-component</PackageTags>
+    <Product>MudKeyboard</Product>
+    <Description>Free, open-source on-screen virtual keyboard for Blazor and MudBlazor apps. The keyboard core is JavaScript-free (pure C#/Blazor); an optional, tiny JS shim adds a global docked keyboard that pops up when any input is focused. Includes a full QWERTY keyboard, numpad, pence-first pricepad and custom layouts, themed automatically by MudBlazor (dark/light follows your theme). AOT and trim-friendly. Targets .NET 8, 9 and 10.</Description>
+    <PackageTags>blazor;mudblazor;virtual-keyboard;onscreen-keyboard;on-screen-keyboard;touch-keyboard;touchscreen;numpad;keypad;kiosk;blazor-component;blazor-webassembly;dotnet;csharp</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/sardar97/mudkeyboard</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/sardar97/mudkeyboard</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
     <!--
@@ -41,9 +45,12 @@
     <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
 
-  <!-- Pack the icon at the package root so PackageIcon can resolve it. -->
+  <!-- Pack the icon and README at the package root (PackageIcon / PackageReadmeFile resolve there).
+       The README is shown on nuget.org and indexed by search engines, so it's the main discoverability
+       surface for the package; its image links use absolute raw.githubusercontent URLs so they render. -->
   <ItemGroup>
     <None Include="logo.png" Pack="true" PackagePath="" Visible="false" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>

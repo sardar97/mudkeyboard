@@ -1,0 +1,32 @@
+{
+  "name": "MudKeyboard — Blazor on-screen keyboard",
+  "short_name": "MudKeyboard",
+  "description": "Free, open-source on-screen virtual keyboard for Blazor and MudBlazor. JavaScript-free core, automatic theming, AOT & trim friendly.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#12101c",
+  "theme_color": "#7C4DFF",
+  "categories": ["developer", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "og-image.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "_content/MudKeyboard/mudkeyboard_logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
