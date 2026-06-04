@@ -8,10 +8,14 @@
 #
 # The static, deployable output lands in ./publish/wwwroot.
 #
-# Cloudflare Pages → Settings → Builds & deployments must match:
+# Cloudflare Pages → Settings must match:
+#   Production branch:       docs               (deploys come from the `docs` branch, never master)
 #   Build command:           bash build.sh
 #   Build output directory:  publish/wwwroot
 #   Root directory:          /                  (repo root — leave blank/default)
+#   Automatic deployments:   production branch only (so library-only pushes to master don't rebuild)
+#
+# To deploy the current master: git push origin origin/master:docs  (see RELEASE.md).
 #
 set -euo pipefail
 
@@ -38,6 +42,8 @@ echo "==> Installing wasm-tools workload (required for RunAOTCompilation)"
 dotnet workload install wasm-tools
 
 echo "==> Publishing docs site (Release, AOT)"
-dotnet publish src/MudKeyboard.Docs/MudKeyboard.Docs.csproj -c Release -o publish
+# AOT is passed on the command line (not set in the .csproj) so that an ordinary restore/build — e.g. CI —
+# doesn't require the wasm-tools workload. See the comment in MudKeyboard.Docs.csproj.
+dotnet publish src/MudKeyboard.Docs/MudKeyboard.Docs.csproj -c Release -p:RunAOTCompilation=true -o publish
 
 echo "==> Done. Static site is in ./publish/wwwroot"

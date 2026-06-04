@@ -1,12 +1,19 @@
 name: Publish to NuGet
 
-# Publishes the package whenever a version tag (v1.2.3, v0.1.0-alpha, …) is pushed.
+# Publishes the NuGet package — and creates a matching GitHub Release — whenever a version
+# tag (v1.2.3, v0.1.0-alpha, …) is pushed. The tag string is the single source of truth for
+# the released version.
+#
+# This is the ONLY thing that publishes the package. The docs website is deployed by a
+# completely separate path (push to the `docs` branch → Cloudflare Pages); see RELEASE.md.
 on:
   push:
     tags: ['v*']
 
+# contents: write is needed so the workflow can create the GitHub Release.
+# The NuGet push itself authenticates with the NUGET_API_KEY secret, not this token.
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   publish:
@@ -46,3 +53,32 @@ jobs:
 
       - name: Push to NuGet
         run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      # Pull the notes for this version out of CHANGELOG.md (the "## [1.2.3] — …" section,
+      # up to the next version header or the link-reference block at the bottom of the file).
+      - name: Extract release notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { flag = 1; next }
+            flag && (/^## \[/ || /^\[[^]]+\]: /) { exit }
+            flag { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "Release v$VERSION. See CHANGELOG.md for details." > release-notes.md
+          fi
+
+      # Create (or, on a re-run, update) the GitHub Release for this tag. Pre-release versions
+      # (anything with a hyphen, e.g. 1.1.0-beta.1) are flagged as pre-release automatically.
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PRERELEASE=""
+          case "$VERSION" in *-*) PRERELEASE="--prerelease" ;; esac
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" --notes-file release-notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" --title "v$VERSION" --notes-file release-notes.md $PRERELEASE
+          fi

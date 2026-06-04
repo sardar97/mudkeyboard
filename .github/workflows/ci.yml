@@ -1,5 +1,9 @@
 name: CI
 
+# Quality gate only: builds and tests the whole solution on every push/PR to master.
+# It does NOT deploy or publish anything — the docs site deploys from the `docs` branch
+# (Cloudflare Pages) and the NuGet package publishes from `v*` tags (publish.yml).
+# See RELEASE.md for the release runbook.
 on:
   push:
     branches: [master]

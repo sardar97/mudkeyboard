@@ -9,18 +9,23 @@
 
         <!--
           AOT. The official site is published with WebAssembly AOT compilation enabled, which compiles
-          the .NET IL to native WebAssembly for faster runtime execution. This only runs during
-          `dotnet publish` (a normal `dotnet build` stays fast), and requires the `wasm-tools` workload:
+          the .NET IL to native WebAssembly for faster runtime execution.
+
+          AOT is deliberately NOT set as a project property here. `RunAOTCompilation=true` makes even a
+          plain `dotnet restore`/`dotnet build` demand the heavy `wasm-tools` workload (error NETSDK1147),
+          which broke CI: the workflow restores the whole solution on a runner that has no workloads.
+
+          Instead AOT is enabled only for the real publish, by build.sh (the Cloudflare Pages build script),
+          which installs the workload first:
 
               dotnet workload install wasm-tools
-              dotnet publish src/MudKeyboard.Docs -c Release
+              dotnet publish src/MudKeyboard.Docs -c Release -p:RunAOTCompilation=true
 
-          MudKeyboard is itself AOT/trim-friendly (no reflection, no dynamic code), so the components
-          used on this site carry no AOT warnings of their own.
+          So `dotnet build` of the whole solution stays fast and workload-free (and still compile-checks
+          this project in CI), while the deployed docs site is still trimmed and AOT-compiled. MudKeyboard
+          is itself AOT/trim-friendly (no reflection, no dynamic code), so the components used on this site
+          carry no AOT warnings of their own.
         -->
-        <RunAOTCompilation>true</RunAOTCompilation>
-        <!-- Publishing a WASM app trims and AOT-compiles it; trim analysis runs then. (The MudKeyboard
-             library carries the trim/AOT analyzers itself, so the components used here are already clean.) -->
     </PropertyGroup>
 
     <ItemGroup>
