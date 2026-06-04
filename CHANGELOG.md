@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-06-04
+
+First stable release. Promotes the `0.1.0-alpha` preview to a stable `1.0.0` under
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html) — the public API surface is now considered
+stable and subsequent changes will follow SemVer. No functional changes from `0.1.0-alpha`.
+
 ## [0.1.0-alpha] — 2026-06-03
 
 First public preview.
@@ -30,5 +36,6 @@ First public preview.
 - Multi-targeting for `net8.0`, `net9.0` and `net10.0`, with `IsAotCompatible` enabled (trim/AOT
   analyzers run on every build) and XML documentation shipped in the package.
 
-[Unreleased]: https://github.com/sardar97/mudkeyboard/compare/v0.1.0-alpha...HEAD
+[Unreleased]: https://github.com/sardar97/mudkeyboard/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/sardar97/mudkeyboard/compare/v0.1.0-alpha...v1.0.0
 [0.1.0-alpha]: https://github.com/sardar97/mudkeyboard/releases/tag/v0.1.0-alpha
