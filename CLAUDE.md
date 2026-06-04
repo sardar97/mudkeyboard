@@ -109,7 +109,7 @@ public sealed record KeyboardLayout
 ```xml
 <PackageId>MudKeyboard</PackageId>
 <Version>0.1.0-alpha</Version>
-<Authors>Sardar</Authors>
+<Authors>Sardar Qaslany</Authors>
 <Description>Blazor on-screen virtual keyboard with MudBlazor theming. The keyboard core is JavaScript-free; an optional, tiny JS shim adds a global docked keyboard that pops up when any input is focused. AOT and trim-friendly.</Description>
 <PackageTags>blazor;mudblazor;virtual-keyboard;onscreen-keyboard;touch-keyboard;blazor-component</PackageTags>
 <PackageLicenseExpression>MIT</PackageLicenseExpression>
