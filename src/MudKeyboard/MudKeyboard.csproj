@@ -23,7 +23,7 @@
   <PropertyGroup>
     <PackageId>MudKeyboard</PackageId>
     <Title>MudKeyboard — Blazor on-screen virtual keyboard for MudBlazor</Title>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>Sardar Qaslany</Authors>
     <Product>MudKeyboard</Product>
     <Description>Free, open-source on-screen virtual keyboard for Blazor and MudBlazor apps. The keyboard core is JavaScript-free (pure C#/Blazor); an optional, tiny JS shim adds a global docked keyboard that pops up when any input is focused. Includes a full QWERTY keyboard, numpad, pence-first pricepad and custom layouts, themed automatically by MudBlazor (dark/light follows your theme). AOT and trim-friendly. Targets .NET 8, 9 and 10.</Description>

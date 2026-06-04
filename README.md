@@ -51,7 +51,7 @@ bundle a second theme. If you do not have MudBlazor yet, follow its
 
 ```xml
 <PackageReference Include="MudBlazor" Version="9.*" />
-<PackageReference Include="MudKeyboard" Version="1.0.1" />
+<PackageReference Include="MudKeyboard" Version="1.0.2" />
 ```
 
 Add the namespaces to `_Imports.razor`:
