@@ -1,0 +1,62 @@
+@namespace MudKeyboard.Docs.Shared
+
+<MudPaper Class="docs-example" Elevation="0">
+    @if (!string.IsNullOrWhiteSpace(Title) || !string.IsNullOrWhiteSpace(Description))
+    {
+        <div class="docs-example__header">
+            @if (!string.IsNullOrWhiteSpace(Title))
+            {
+                <MudText Typo="Typo.subtitle1" Style="font-weight:600;">@Title</MudText>
+            }
+            @if (!string.IsNullOrWhiteSpace(Description))
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@Description</MudText>
+            }
+        </div>
+    }
+
+    <div class="docs-example__demo">
+        @ChildContent
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Code))
+    {
+        <MudDivider />
+        <div class="docs-example__actions">
+            <MudButton StartIcon="@Icons.Material.Filled.Code"
+                       Variant="Variant.Text"
+                       Size="Size.Small"
+                       Color="Color.Primary"
+                       OnClick="@(() => _showCode = !_showCode)">
+                @(_showCode ? "Hide code" : "Show code")
+            </MudButton>
+        </div>
+        <MudCollapse Expanded="_showCode">
+            <CodeBlock Code="@Code" Language="@Language" />
+        </MudCollapse>
+    }
+</MudPaper>
+
+@code {
+    /// <summary>Optional heading shown above the live example.</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Optional one-line explanation shown under the title.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    /// <summary>The live, interactive example.</summary>
+    [Parameter, EditorRequired] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>The source for this example, revealed by the "Show code" toggle.</summary>
+    [Parameter] public string? Code { get; set; }
+
+    /// <summary>Language label / highlight grammar for <see cref="Code"/>. Default <c>razor</c>.</summary>
+    [Parameter] public string Language { get; set; } = "razor";
+
+    /// <summary>When <see langword="true"/> the code is expanded on first render.</summary>
+    [Parameter] public bool ShowCodeInitially { get; set; }
+
+    private bool _showCode;
+
+    protected override void OnInitialized() => _showCode = ShowCodeInitially;
+}

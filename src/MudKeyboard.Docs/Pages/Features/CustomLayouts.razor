@@ -1,0 +1,201 @@
+@page "/features/custom-layouts"
+
+<PageTitle>Custom layouts · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Features & guides"
+            Title="Custom layouts"
+            Lead="A KeyboardLayout is just data — an ordered list of rows, each an ordered list of key tokens. Build any keyboard you like: a dialer, a hex pad, a domain-specific symbol set, anything." />
+
+<MudText id="model" Typo="Typo.h5" Class="docs-section-title">The model</MudText>
+<div class="docs-prose">
+    <p>
+        Define a <code class="docs-inline-code">KeyboardLayout</code> with its
+        <code class="docs-inline-code">Rows</code>, then pass it to a keyboard with
+        <code class="docs-inline-code">Variant="KeyboardVariant.Custom"</code> and
+        <code class="docs-inline-code">Layout="..."</code>. Literal tokens are typed verbatim; brace tokens
+        such as <code class="docs-inline-code">{bksp}</code> are commands. Each token is projected to a
+        <code class="docs-inline-code">KeyboardKey</code> — command tokens get sensible glyphs and widths
+        (⌫, ⏎ and space are wider) automatically.
+    </p>
+</div>
+<CodeBlock Language="csharp" Code="@ModelCode" />
+
+<MudText id="basic" Typo="Typo.h5" Class="docs-section-title">A simple custom layout</MudText>
+<ExampleCard Title="Three short rows"
+             Description="Literal letters plus space, backspace and enter."
+             Code="@SimpleCode">
+    <MudTextField @bind-Value="_simple" Variant="Variant.Outlined" Immediate="true" Label="Value" />
+    <div style="max-width:360px;"><MudKeyboard @bind-Value="_simple" Variant="KeyboardVariant.Custom" Layout="SimpleLayout" /></div>
+</ExampleCard>
+
+<MudText id="dialer" Typo="Typo.h5" Class="docs-section-title">A phone dialer</MudText>
+<div class="docs-prose">
+    <p>Literal tokens can be more than one character — <code class="docs-inline-code">"+"</code> or even <code class="docs-inline-code">"00"</code>.</p>
+</div>
+<ExampleCard Title="Telephone keypad"
+             Code="@DialerCode">
+    <MudTextField @bind-Value="_dialer" Variant="Variant.Outlined" Immediate="true" Label="Phone number" />
+    <div style="max-width:300px;"><MudKeyboard @bind-Value="_dialer" Variant="KeyboardVariant.Custom" Layout="DialerLayout" /></div>
+</ExampleCard>
+
+<MudText id="symbol-face" Typo="Typo.h5" Class="docs-section-title">Adding a symbol face</MudText>
+<div class="docs-prose">
+    <p>
+        A custom layout opts into the <strong>123</strong> toggle by supplying its own
+        <code class="docs-inline-code">SymbolLayout</code>. Put a <code class="docs-inline-code">{sym}</code>
+        token in both faces and MudKeyboard flips between them (the key auto-labels itself
+        <strong>123</strong> / <strong>ABC</strong>).
+    </p>
+</div>
+<ExampleCard Title="Custom letters with a custom symbol face"
+             Code="@SymbolCode">
+    <MudTextField @bind-Value="_sym" Variant="Variant.Outlined" Immediate="true" Label="Value" />
+    <div style="max-width:420px;">
+        <MudKeyboard @bind-Value="_sym" Variant="KeyboardVariant.Custom" Layout="LettersFace" SymbolLayout="SymbolFace" />
+    </div>
+</ExampleCard>
+
+<MudText id="tips" Typo="Typo.h5" Class="docs-section-title">Tips</MudText>
+<div class="docs-prose">
+    <ul>
+        <li>Rows can be any length and the rows can differ — keys flex to fill their row.</li>
+        <li>Unhandled command tokens are never typed, so a stray <code class="docs-inline-code">{caps}</code> in a custom layout is simply ignored if you don't want caps behaviour.</li>
+        <li>Define layouts as <code class="docs-inline-code">static readonly</code> fields so they're allocated once.</li>
+        <li>Use the collection-expression syntax (<code class="docs-inline-code">["a", "b"]</code>) for concise rows.</li>
+    </ul>
+</div>
+
+<div class="docs-nav-footer">
+    <MudButton Href="features/layouts" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">Layouts &amp; key tokens</MudButton>
+    <MudButton Href="features/theming" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Theming &amp; palette</MudButton>
+</div>
+
+@code {
+    private string _simple = string.Empty;
+    private string _dialer = string.Empty;
+    private string _sym = string.Empty;
+
+    private static readonly KeyboardLayout SimpleLayout = new()
+    {
+        Rows = new string[][]
+        {
+            ["m", "u", "d"],
+            ["k", "e", "y"],
+            [KeyTokens.Space, KeyTokens.Backspace, KeyTokens.Enter],
+        },
+    };
+
+    private static readonly KeyboardLayout DialerLayout = new()
+    {
+        Rows = new string[][]
+        {
+            ["1", "2", "3"],
+            ["4", "5", "6"],
+            ["7", "8", "9"],
+            ["+", "0", KeyTokens.Backspace],
+        },
+    };
+
+    private static readonly KeyboardLayout LettersFace = new()
+    {
+        Rows = new string[][]
+        {
+            ["a", "b", "c", "d", "e"],
+            ["f", "g", "h", "i", "j"],
+            [KeyTokens.Shift, "k", "l", "m", KeyTokens.Backspace],
+            [KeyTokens.SymbolToggle, KeyTokens.Space, KeyTokens.Enter],
+        },
+    };
+
+    private static readonly KeyboardLayout SymbolFace = new()
+    {
+        Rows = new string[][]
+        {
+            ["1", "2", "3", "4", "5"],
+            ["!", "?", "@", "#", "%"],
+            [".", ",", "-", "_", KeyTokens.Backspace],
+            [KeyTokens.SymbolToggle, KeyTokens.Space, KeyTokens.Enter],
+        },
+    };
+
+    private const string ModelCode = """
+public sealed record KeyboardLayout
+{
+    // Rows top-to-bottom; each inner list is one row of key tokens, left-to-right.
+    public required IReadOnlyList<IReadOnlyList<string>> Rows { get; init; }
+}
+
+// Use it:
+private static readonly KeyboardLayout MyLayout = new()
+{
+    Rows = new string[][]
+    {
+        ["m", "u", "d"],
+        ["k", "e", "y"],
+        [KeyTokens.Space, KeyTokens.Backspace, KeyTokens.Enter],
+    },
+};
+""";
+
+    private const string SimpleCode = """
+<MudKeyboard @bind-Value="_value" Variant="KeyboardVariant.Custom" Layout="MyLayout" />
+
+@code {
+    private string _value = string.Empty;
+
+    private static readonly KeyboardLayout MyLayout = new()
+    {
+        Rows = new string[][]
+        {
+            ["m", "u", "d"],
+            ["k", "e", "y"],
+            [KeyTokens.Space, KeyTokens.Backspace, KeyTokens.Enter],
+        },
+    };
+}
+""";
+
+    private const string DialerCode = """
+private static readonly KeyboardLayout DialerLayout = new()
+{
+    Rows = new string[][]
+    {
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["7", "8", "9"],
+        ["+", "0", KeyTokens.Backspace],
+    },
+};
+""";
+
+    private const string SymbolCode = """
+<MudKeyboard @bind-Value="_value"
+             Variant="KeyboardVariant.Custom"
+             Layout="LettersFace"
+             SymbolLayout="SymbolFace" />
+
+@code {
+    private static readonly KeyboardLayout LettersFace = new()
+    {
+        Rows = new string[][]
+        {
+            ["a", "b", "c", "d", "e"],
+            ["f", "g", "h", "i", "j"],
+            [KeyTokens.Shift, "k", "l", "m", KeyTokens.Backspace],
+            [KeyTokens.SymbolToggle, KeyTokens.Space, KeyTokens.Enter],
+        },
+    };
+
+    private static readonly KeyboardLayout SymbolFace = new()
+    {
+        Rows = new string[][]
+        {
+            ["1", "2", "3", "4", "5"],
+            ["!", "?", "@", "#", "%"],
+            [".", ",", "-", "_", KeyTokens.Backspace],
+            [KeyTokens.SymbolToggle, KeyTokens.Space, KeyTokens.Enter],
+        },
+    };
+}
+""";
+}

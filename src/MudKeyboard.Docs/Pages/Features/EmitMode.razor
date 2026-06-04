@@ -1,0 +1,132 @@
+@page "/features/emit-mode"
+
+<PageTitle>Emit mode · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Features & guides"
+            Title="Emit mode"
+            Lead="Set OnInput and the keyboard stops editing its own Value — instead each press raises a KeyboardInput event, so you can route input anywhere: a custom editor, an external field, or the caret of whatever is focused (which is exactly how the docked keyboard works)." />
+
+<MudText id="how" Typo="Typo.h5" Class="docs-section-title">How it works</MudText>
+<div class="docs-prose">
+    <p>
+        When <code class="docs-inline-code">OnInput</code> has a handler, the keyboard runs in
+        <strong>emit mode</strong>. Shift, caps and the symbol/letter toggle are still managed internally,
+        and casing is applied before the character is emitted — but <code class="docs-inline-code">Value</code>
+        is never touched and <code class="docs-inline-code">MaxLength</code> is ignored (the host enforces any
+        limit on its own target). Each press arrives as a <code class="docs-inline-code">KeyboardInput</code>:
+    </p>
+</div>
+<CodeBlock Language="csharp" Code="@TypesCode" />
+
+<MudText id="demo" Typo="Typo.h5" Class="docs-section-title">Live example</MudText>
+<div class="docs-prose">
+    <p>
+        This keyboard has no <code class="docs-inline-code">Value</code> binding. The page owns the text and
+        applies each emitted press itself — note the readout of the last <code class="docs-inline-code">KeyboardInput</code>.
+    </p>
+</div>
+<ExampleCard Title="Route presses into your own state"
+             Code="@DemoCode">
+    <MudPaper Outlined="true" Class="pa-3" Style="min-height:3rem;">
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Captured text</MudText>
+        <MudText Typo="Typo.h6" Class="docs-value-readout">@(_captured.Length == 0 ? "—" : _captured)</MudText>
+    </MudPaper>
+    <div class="d-flex" style="gap:0.5rem;">
+        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">Last kind: @_lastKind</MudChip>
+        @if (!string.IsNullOrEmpty(_lastText))
+        {
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Text">Text: "@_lastText"</MudChip>
+        }
+    </div>
+    <div style="max-width:560px;"><MudKeyboard OnInput="@HandleInput" /></div>
+</ExampleCard>
+
+<MudText id="use-cases" Typo="Typo.h5" Class="docs-section-title">When to use it</MudText>
+<div class="docs-prose">
+    <ul>
+        <li>Typing into a target the keyboard doesn't own — a contenteditable region, a canvas, a remote terminal.</li>
+        <li>Inserting at a caret position rather than always appending.</li>
+        <li>Custom buffering, validation or transformation of each keystroke before it lands.</li>
+    </ul>
+    <p>
+        The built-in <MudLink Href="components/docked-keyboard">docked keyboard</MudLink> is the canonical
+        consumer: it runs the keyboard in emit mode and forwards each <code class="docs-inline-code">KeyboardInput</code>
+        to the focused field's caret via the focus-capture shim.
+    </p>
+</div>
+
+<div class="docs-nav-footer">
+    <MudButton Href="features/theming" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">Theming &amp; palette</MudButton>
+    <MudButton Href="features/aot" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">AOT &amp; trimming</MudButton>
+</div>
+
+@code {
+    private string _captured = string.Empty;
+    private string _lastKind = "—";
+    private string _lastText = string.Empty;
+
+    private void HandleInput(KeyboardInput input)
+    {
+        _lastKind = input.Kind.ToString();
+        _lastText = input.Text;
+
+        switch (input.Kind)
+        {
+            case KeyboardInputKind.Text:
+                _captured += input.Text;
+                break;
+            case KeyboardInputKind.Backspace:
+                if (_captured.Length > 0)
+                {
+                    _captured = _captured[..^1];
+                }
+                break;
+            case KeyboardInputKind.Enter:
+                _captured += "\n";
+                break;
+            case KeyboardInputKind.Escape:
+                _captured = string.Empty;
+                break;
+        }
+    }
+
+    private const string TypesCode = """
+public enum KeyboardInputKind { Text, Backspace, Enter, Escape }
+
+public readonly record struct KeyboardInput(KeyboardInputKind Kind, string Text = "")
+{
+    public static KeyboardInput Char(string text); // a literal character/space
+    public static KeyboardInput Backspace { get; }
+    public static KeyboardInput Enter { get; }
+    public static KeyboardInput Escape { get; }
+}
+""";
+
+    private const string DemoCode = """
+<MudKeyboard OnInput="HandleInput" />   @* no @bind-Value — emit mode *@
+
+@code {
+    private string _captured = string.Empty;
+
+    private void HandleInput(KeyboardInput input)
+    {
+        switch (input.Kind)
+        {
+            case KeyboardInputKind.Text:
+                _captured += input.Text;
+                break;
+            case KeyboardInputKind.Backspace:
+                if (_captured.Length > 0)
+                    _captured = _captured[..^1];
+                break;
+            case KeyboardInputKind.Enter:
+                _captured += "\n";
+                break;
+            case KeyboardInputKind.Escape:
+                _captured = string.Empty;
+                break;
+        }
+    }
+}
+""";
+}

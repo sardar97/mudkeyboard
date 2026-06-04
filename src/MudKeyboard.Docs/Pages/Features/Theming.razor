@@ -1,0 +1,166 @@
+@page "/features/theming"
+
+<PageTitle>Theming & palette · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Features & guides"
+            Title="Theming & palette"
+            Lead="MudKeyboard reads the ambient MudBlazor theme — toggle dark mode and every key follows, with zero extra code. To recolour a single keyboard without touching the app theme, pass a KeyboardPalette." />
+
+<MudText id="ambient" Typo="Typo.h5" Class="docs-section-title">Ambient theme</MudText>
+<div class="docs-prose">
+    <p>
+        Every colour comes from MudBlazor CSS variables (<code class="docs-inline-code">--mud-palette-surface</code>,
+        <code class="docs-inline-code">--mud-palette-primary</code>, …). Because the keyboard sits inside your
+        <code class="docs-inline-code">MudThemeProvider</code> cascade, your theme — including the dark/light
+        toggle in this site's top bar — applies automatically. Nothing is hardcoded.
+    </p>
+</div>
+<ExampleCard Title="Follows the theme"
+             Description="Toggle dark mode in the top bar — this keyboard recolours with no palette set."
+             Code="@AmbientCode">
+    <div style="max-width:420px;"><MudKeyboard @bind-Value="_ambient" Variant="KeyboardVariant.Numpad" /></div>
+</ExampleCard>
+
+<MudText id="palette" Typo="Typo.h5" Class="docs-section-title">KeyboardPalette slots</MudText>
+<div class="docs-prose">
+    <p>
+        Each slot is any CSS colour — a hex string, an <code class="docs-inline-code">rgb()</code>/<code class="docs-inline-code">hsl()</code>
+        expression, or a <code class="docs-inline-code">var(--…)</code> reference. Any slot you leave unset still
+        follows the theme, so dark/light keeps working for everything you don't override.
+    </p>
+</div>
+<ParamTable Members="Slots" NameHeader="Slot" ShowDefault="false" />
+
+<MudText id="accent" Typo="Typo.h5" Class="docs-section-title">Recolour just the accent</MudText>
+<div class="docs-prose">
+    <p>The most common case: brand the Enter / active-shift keys, leave everything else to the theme.</p>
+</div>
+<ExampleCard Title="Accent-only palette"
+             Code="@AccentCode">
+    <div style="max-width:420px;"><MudKeyboard @bind-Value="_accentVal" Palette="BrandPalette" /></div>
+</ExampleCard>
+
+<MudText id="full" Typo="Typo.h5" Class="docs-section-title">Fully custom palette</MudText>
+<ExampleCard Title="Every slot set"
+             Code="@FullCode">
+    <div style="max-width:420px;"><MudKeyboard @bind-Value="_fullVal" Variant="KeyboardVariant.Numpad" Palette="FullPalette" /></div>
+</ExampleCard>
+
+<MudText id="interactive" Typo="Typo.h5" Class="docs-section-title">Try a preset</MudText>
+<div class="docs-prose">
+    <p>Pick an accent and watch the keyboard — and the generated palette — update live.</p>
+</div>
+<MudPaper Class="docs-example" Elevation="0">
+    <div class="docs-example__demo">
+        <div class="d-flex flex-wrap align-center" style="gap:0.5rem;">
+            <MudText Typo="Typo.body2" Class="mr-2">Accent:</MudText>
+            @foreach (var (name, hex) in Presets)
+            {
+                var current = hex;
+                <MudButton Variant="@(_chosen == current ? Variant.Filled : Variant.Outlined)"
+                           Style="@($"background:{(_chosen == current ? current : "transparent")};border-color:{current};color:{(_chosen == current ? "#fff" : current)};min-width:0;")"
+                           Size="Size.Small"
+                           OnClick="@(() => _chosen = current)">@name</MudButton>
+            }
+        </div>
+        <div style="max-width:420px;">
+            <MudKeyboard @bind-Value="_interactiveVal" Palette="@LivePalette" />
+        </div>
+    </div>
+    <MudDivider />
+    <CodeBlock Code="@LiveCode" />
+</MudPaper>
+
+<div class="docs-nav-footer">
+    <MudButton Href="features/custom-layouts" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">Custom layouts</MudButton>
+    <MudButton Href="features/emit-mode" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Emit mode</MudButton>
+</div>
+
+@code {
+    private string _ambient = string.Empty;
+    private string _accentVal = string.Empty;
+    private string _fullVal = string.Empty;
+    private string _interactiveVal = string.Empty;
+    private string _chosen = "#00897b";
+
+    private static readonly KeyboardPalette BrandPalette = new()
+    {
+        AccentColor = "#00897b",      // teal 600 — Enter / active-shift keys
+        AccentTextColor = "#ffffff",
+        // Surface, KeyColor, KeyTextColor left unset → follow the theme
+    };
+
+    private static readonly KeyboardPalette FullPalette = new()
+    {
+        Surface = "#1a1a2e",
+        KeyColor = "#16213e",
+        KeyTextColor = "#e7e7ff",
+        AccentColor = "#e94560",
+        AccentTextColor = "#ffffff",
+    };
+
+    private static readonly (string Name, string Hex)[] Presets =
+    [
+        ("Teal", "#00897b"),
+        ("Pink", "#e91e63"),
+        ("Orange", "#fb8c00"),
+        ("Indigo", "#3f51b5"),
+    ];
+
+    private KeyboardPalette LivePalette => new() { AccentColor = _chosen, AccentTextColor = "#ffffff" };
+
+    private string LiveCode =>
+        $$"""
+        <MudKeyboard @bind-Value="_value" Palette="Brand" />
+
+        @code {
+            private static readonly KeyboardPalette Brand = new()
+            {
+                AccentColor = "{{_chosen}}",
+                AccentTextColor = "#ffffff",
+            };
+        }
+        """;
+
+    private const string AmbientCode = """
+@* No palette — inherits the MudBlazor theme, dark/light and all *@
+<MudKeyboard @bind-Value="_value" Variant="KeyboardVariant.Numpad" />
+""";
+
+    private const string AccentCode = """
+<MudKeyboard @bind-Value="_value" Palette="Brand" />
+
+@code {
+    private static readonly KeyboardPalette Brand = new()
+    {
+        AccentColor = "#00897b",      // Enter / active-shift keys
+        AccentTextColor = "#ffffff",
+        // Surface, KeyColor, KeyTextColor unset → follow the theme
+    };
+}
+""";
+
+    private const string FullCode = """
+<MudKeyboard @bind-Value="_value" Variant="KeyboardVariant.Numpad" Palette="Custom" />
+
+@code {
+    private static readonly KeyboardPalette Custom = new()
+    {
+        Surface = "#1a1a2e",
+        KeyColor = "#16213e",
+        KeyTextColor = "#e7e7ff",
+        AccentColor = "#e94560",
+        AccentTextColor = "#ffffff",
+    };
+}
+""";
+
+    private static readonly IReadOnlyList<ApiMember> Slots =
+    [
+        new("Surface", "string?", "—", "Keyboard background."),
+        new("KeyColor", "string?", "—", "Literal-key background."),
+        new("KeyTextColor", "string?", "—", "Literal-key label colour."),
+        new("AccentColor", "string?", "—", "Accent-key (Enter / active shift) background."),
+        new("AccentTextColor", "string?", "—", "Accent-key label colour."),
+    ];
+}

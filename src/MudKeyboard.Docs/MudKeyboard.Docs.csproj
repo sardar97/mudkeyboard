@@ -4,12 +4,34 @@
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>latest</LangVersion>
         <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+
+        <!--
+          AOT. The official site is published with WebAssembly AOT compilation enabled, which compiles
+          the .NET IL to native WebAssembly for faster runtime execution. This only runs during
+          `dotnet publish` (a normal `dotnet build` stays fast), and requires the `wasm-tools` workload:
+
+              dotnet workload install wasm-tools
+              dotnet publish src/MudKeyboard.Docs -c Release
+
+          MudKeyboard is itself AOT/trim-friendly (no reflection, no dynamic code), so the components
+          used on this site carry no AOT warnings of their own.
+        -->
+        <RunAOTCompilation>true</RunAOTCompilation>
+        <!-- Publishing a WASM app trims and AOT-compiles it; trim analysis runs then. (The MudKeyboard
+             library carries the trim/AOT analyzers itself, so the components used here are already clean.) -->
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.8"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.8" PrivateAssets="all"/>
+        <PackageReference Include="MudBlazor" Version="9.5.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- The library this site documents. -->
+        <ProjectReference Include="..\MudKeyboard\MudKeyboard.csproj"/>
     </ItemGroup>
 
 </Project>

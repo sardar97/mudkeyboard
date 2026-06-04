@@ -1,0 +1,145 @@
+@page "/getting-started"
+@namespace MudKeyboard.Docs.Pages
+
+<PageTitle>Getting started · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Overview"
+            Title="Getting started"
+            Lead="Install the package, point it at your existing MudBlazor setup, and drop a keyboard onto the page. MudKeyboard adds no theme of its own — it reuses yours." />
+
+<MudText id="install" Typo="Typo.h5" Class="docs-section-title">1. Install</MudText>
+<div class="docs-prose">
+    <p>
+        MudKeyboard is published on NuGet as <code class="docs-inline-code">MudKeyboard</code>.
+        MudBlazor is a <strong>peer dependency</strong> — MudKeyboard reuses your existing MudBlazor
+        setup and does <em>not</em> bundle a second copy of the theme. If you don't have MudBlazor yet,
+        follow its <MudLink Href="https://mudblazor.com/getting-started/installation" Target="_blank">installation guide</MudLink> first.
+    </p>
+</div>
+<CodeBlock Language="bash" Code="@InstallCode" />
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2 mb-2">Or reference it directly in your <code class="docs-inline-code">.csproj</code>:</MudText>
+<CodeBlock Language="xml" Code="@CsprojCode" />
+
+<MudText id="imports" Typo="Typo.h5" Class="docs-section-title">2. Add the namespaces</MudText>
+<div class="docs-prose">
+    <p>Add these usings to your <code class="docs-inline-code">_Imports.razor</code> so the components and models are in scope:</p>
+</div>
+<CodeBlock Language="razor" Code="@ImportsCode" />
+
+<MudText id="mudblazor" Typo="Typo.h5" Class="docs-section-title">3. Make sure MudBlazor is set up</MudText>
+<div class="docs-prose">
+    <p>
+        MudKeyboard renders MudBlazor components and reads MudBlazor's CSS variables, so your app needs
+        the standard MudBlazor registration and providers. In <code class="docs-inline-code">Program.cs</code>:
+    </p>
+</div>
+<CodeBlock Language="csharp" Code="@MudServicesCode" />
+<div class="docs-prose mt-3">
+    <p>And the providers + theme provider in your main layout:</p>
+</div>
+<CodeBlock Language="razor" Code="@ProvidersCode" />
+
+<MudText id="inline" Typo="Typo.h5" Class="docs-section-title">4. Drop in a keyboard</MudText>
+<div class="docs-prose">
+    <p>
+        The inline <code class="docs-inline-code">&lt;MudKeyboard&gt;</code> needs nothing else — no service
+        registration, no JavaScript. Bind a value and you're done:
+    </p>
+</div>
+
+<ExampleCard Title="Your first keyboard"
+             Description="Two-way bound to a MudTextField. Try the shift, 123 (symbols) and ⏎ keys."
+             Code="@FirstKeyboardCode">
+    <MudTextField @bind-Value="_text" Label="Name" Variant="Variant.Outlined" Immediate="true" />
+    <div class="docs-keyboard-frame" style="max-width:520px;">
+        <MudKeyboard @bind-Value="_text" OnEnter="@(() => Snackbar.Add($"Enter pressed: \"{_text}\""))" MaxLength="40" />
+    </div>
+</ExampleCard>
+
+<MudText id="render-modes" Typo="Typo.h5" Class="docs-section-title">5. Choose a render mode</MudText>
+<div class="docs-prose">
+    <p>
+        MudKeyboard is <strong>render-mode agnostic</strong> — the library never sets
+        <code class="docs-inline-code">@@rendermode</code>. Your app chooses:
+    </p>
+    <ul>
+        <li><strong>Interactive Server</strong> — <code class="docs-inline-code">@@rendermode InteractiveServer</code></li>
+        <li><strong>Interactive WebAssembly</strong> — <code class="docs-inline-code">@@rendermode InteractiveWebAssembly</code> (this very site runs on WASM)</li>
+    </ul>
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="my-3" Dense="true">
+        Static SSR is <strong>not</strong> supported — a virtual keyboard needs interactivity. The component
+        only works under an interactive render mode.
+    </MudAlert>
+</div>
+
+<MudText id="next" Typo="Typo.h5" Class="docs-section-title">Next steps</MudText>
+<MudGrid Spacing="3" Class="mb-2">
+    <MudItem xs="12" sm="6">
+        <MudPaper Outlined="true" Class="pa-4" Style="border-radius:14px;height:100%;">
+            <MudText Typo="Typo.subtitle1" Style="font-weight:600;">Explore the components</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">Keyboard, numpad, pricepad and the global docked keyboard.</MudText>
+            <MudButton Href="components/keyboard" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ChevronRight">Components</MudButton>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudPaper Outlined="true" Class="pa-4" Style="border-radius:14px;height:100%;">
+            <MudText Typo="Typo.subtitle1" Style="font-weight:600;">Add the docked keyboard</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">One host component that pops up for any focused field.</MudText>
+            <MudButton Href="components/docked-keyboard" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ChevronRight">Docked keyboard</MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<div class="docs-nav-footer">
+    <MudButton Href="" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">Home</MudButton>
+    <MudButton Href="components/keyboard" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">MudKeyboard</MudButton>
+</div>
+
+@code {
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+    private string _text = string.Empty;
+
+    private const string InstallCode = """
+dotnet add package MudKeyboard
+dotnet add package MudBlazor
+""";
+
+    private const string CsprojCode = """
+<PackageReference Include="MudBlazor" Version="9.*" />
+<PackageReference Include="MudKeyboard" Version="0.1.0-alpha" />
+""";
+
+    private const string ImportsCode = """
+@using MudKeyboard.Components
+@using MudKeyboard.Models
+@using MudKeyboard.Layouts
+""";
+
+    private const string MudServicesCode = """
+using MudBlazor.Services;
+
+builder.Services.AddMudServices();
+""";
+
+    private const string ProvidersCode = """
+<MudThemeProvider @bind-IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@code {
+    private bool _isDarkMode;
+}
+""";
+
+    private const string FirstKeyboardCode = """
+<MudTextField @bind-Value="_text" Label="Name" Variant="Variant.Outlined" Immediate="true" />
+<MudKeyboard @bind-Value="_text" OnEnter="Submit" MaxLength="40" />
+
+@code {
+    private string _text = string.Empty;
+    private void Submit() { /* Enter was pressed */ }
+}
+""";
+}

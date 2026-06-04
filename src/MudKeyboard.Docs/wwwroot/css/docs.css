@@ -1,0 +1,279 @@
+/* MudKeyboard documentation site styles.
+   Colours are driven by MudBlazor CSS variables wherever possible, so everything follows the
+   active light/dark theme automatically. The brand purple (#7C4DFF) matches the logo and is set
+   as the MudBlazor primary colour in MainLayout. */
+
+:root {
+    --docs-brand: #7c4dff;
+    --docs-brand-2: #b388ff;
+    --docs-code-bg: #282c34; /* atom-one-dark surface, used for all code blocks in both themes */
+}
+
+html, body {
+    scroll-behavior: smooth;
+}
+
+/* ---------- Loading splash ---------- */
+.app-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: #12101c;
+}
+
+.app-loading__logo {
+    width: min(440px, 80vw);
+    filter: drop-shadow(0 12px 40px rgba(124, 77, 255, 0.45));
+    animation: docs-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes docs-pulse {
+    0%, 100% { opacity: 0.78; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-4px); }
+}
+
+.app-loading .loading-progress {
+    position: relative;
+    width: 4rem;
+    height: 4rem;
+    inset: auto;
+    margin: 0;
+}
+
+.app-loading .loading-progress circle:last-child {
+    stroke: var(--docs-brand);
+}
+
+.app-loading .loading-progress-text {
+    position: relative;
+    inset: auto;
+    color: #cfc6ff;
+    font-family: "Roboto", system-ui, sans-serif;
+}
+
+/* ---------- Page rhythm ---------- */
+.docs-page {
+    max-width: 920px;
+}
+
+.docs-h1 {
+    font-family: "Roboto", system-ui, sans-serif;
+    font-size: 2.4rem;
+    line-height: 1.15;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.01em;
+}
+
+.docs-lead {
+    font-size: 1.12rem;
+    line-height: 1.6;
+    color: var(--mud-palette-text-secondary);
+    margin-bottom: 1.5rem;
+    max-width: 70ch;
+}
+
+.docs-section-title {
+    scroll-margin-top: 90px;
+    margin-top: 2.75rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.docs-section-title:first-of-type {
+    margin-top: 1.5rem;
+}
+
+.docs-prose {
+    line-height: 1.65;
+    color: var(--mud-palette-text-primary);
+}
+
+.docs-prose p {
+    margin: 0 0 1rem 0;
+}
+
+.docs-prose code,
+.docs-inline-code {
+    font-family: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86em;
+    background: var(--mud-palette-action-default-hover);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 6px;
+    padding: 0.1em 0.42em;
+    color: var(--mud-palette-primary);
+    white-space: nowrap;
+}
+
+/* ---------- Example card ---------- */
+.docs-example {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+    background: var(--mud-palette-surface);
+}
+
+.docs-example__header {
+    padding: 1rem 1.25rem 0.25rem 1.25rem;
+}
+
+.docs-example__demo {
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background:
+        linear-gradient(0deg, var(--mud-palette-background-gray), var(--mud-palette-background-gray)),
+        var(--mud-palette-surface);
+}
+
+.docs-example__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.35rem 0.75rem;
+}
+
+/* ---------- Code block ---------- */
+.docs-code {
+    background: var(--docs-code-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.docs-example .docs-code {
+    border-radius: 0;
+    border: none;
+}
+
+.docs-code__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.35rem 0.25rem 0.9rem;
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.docs-code__lang {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9aa0aa;
+}
+
+.docs-code__pre {
+    margin: 0;
+    padding: 0;
+    max-height: 32rem;
+    overflow: auto;
+}
+
+.docs-code__pre code {
+    display: block;
+    padding: 1rem 1.1rem;
+    font-family: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.84rem;
+    line-height: 1.6;
+    background: transparent !important;
+    tab-size: 4;
+}
+
+/* ---------- Hero (home page) ---------- */
+.docs-hero {
+    position: relative;
+    border-radius: 24px;
+    padding: 3.5rem 2rem;
+    text-align: center;
+    overflow: hidden;
+    background:
+        radial-gradient(1200px 400px at 50% -10%, rgba(124, 77, 255, 0.28), transparent 60%),
+        linear-gradient(160deg, rgba(124, 77, 255, 0.10), rgba(124, 77, 255, 0.02));
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.docs-hero__logo {
+    width: min(560px, 90%);
+    margin: 0 auto 1.5rem auto;
+    display: block;
+    filter: drop-shadow(0 16px 50px rgba(124, 77, 255, 0.35));
+}
+
+.docs-hero__tagline {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: var(--mud-palette-text-secondary);
+    max-width: 60ch;
+    margin: 0 auto 2rem auto;
+}
+
+.docs-hero__cta {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.docs-badges {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+/* ---------- Feature grid ---------- */
+.docs-feature {
+    height: 100%;
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.docs-feature:hover {
+    transform: translateY(-3px);
+    border-color: var(--docs-brand);
+    box-shadow: 0 12px 30px rgba(124, 77, 255, 0.18);
+}
+
+.docs-feature__icon {
+    color: var(--docs-brand);
+    margin-bottom: 0.5rem;
+}
+
+/* ---------- Misc helpers ---------- */
+.docs-keyboard-frame {
+    max-width: 420px;
+}
+
+.docs-value-readout {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    word-break: break-all;
+}
+
+.docs-nav-footer {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+a.docs-anchor {
+    color: inherit;
+    text-decoration: none;
+}
+
+a.docs-anchor:hover::after {
+    content: " #";
+    color: var(--docs-brand);
+}

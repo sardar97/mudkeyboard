@@ -1,0 +1,102 @@
+@page "/components/numpad"
+
+<PageTitle>MudNumpad · Components</PageTitle>
+
+<PageHeader Overline="Components"
+            Title="MudNumpad"
+            Lead="A calculator-style numeric pad: 7-8-9 / 4-5-6 / 1-2-3, a zero row with a quick 00 key, backspace and enter. Opt into a decimal point with AllowDecimal." />
+
+<MudText id="basic" Typo="Typo.h5" Class="docs-section-title">Basic usage</MudText>
+<ExampleCard Title="Digits only"
+             Description="Pure integer entry — no decimal point."
+             Code="@BasicCode">
+    <MudTextField @bind-Value="_int" Label="Quantity" Variant="Variant.Outlined" Immediate="true" />
+    <div style="max-width:320px;">
+        <MudNumpad @bind-Value="_int" />
+    </div>
+</ExampleCard>
+
+<MudText id="decimal" Typo="Typo.h5" Class="docs-section-title">Allow a decimal point</MudText>
+<div class="docs-prose">
+    <p>
+        Set <code class="docs-inline-code">AllowDecimal="true"</code> to show a
+        <code class="docs-inline-code">.</code> key. Only a single decimal point is ever accepted.
+    </p>
+</div>
+<ExampleCard Title="AllowDecimal"
+             Code="@DecimalCode">
+    <MudTextField @bind-Value="_dec" Label="Measurement" Variant="Variant.Outlined" Immediate="true" />
+    <div style="max-width:320px;">
+        <MudNumpad @bind-Value="_dec" AllowDecimal="true" />
+    </div>
+</ExampleCard>
+
+<MudText id="maxlength" Typo="Typo.h5" Class="docs-section-title">Max length, enter & disabled</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">MaxLength</code> caps the digits entered,
+        <code class="docs-inline-code">OnEnter</code> reacts to ⏎, and
+        <code class="docs-inline-code">Disabled</code> turns every key off.
+    </p>
+</div>
+<ExampleCard Title="MaxLength = 4 + OnEnter"
+             Code="@PinCode">
+    <MudTextField @bind-Value="_pin" Label="PIN (4 digits)" Variant="Variant.Outlined" Immediate="true" />
+    <div style="max-width:320px;">
+        <MudNumpad @bind-Value="_pin" MaxLength="4" OnEnter="@(() => Snackbar.Add($"Submitted PIN: {_pin}"))" />
+    </div>
+</ExampleCard>
+
+<MudText id="parameters" Typo="Typo.h5" Class="docs-section-title">Parameters</MudText>
+<ParamTable Members="Parameters" />
+
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-4" Dense="true">
+    Need currency formatting (always two decimals, a symbol prefix, pence-first entry)? Use
+    <MudLink Href="components/pricepad">MudPricepad</MudLink> instead.
+</MudAlert>
+
+<div class="docs-nav-footer">
+    <MudButton Href="components/keyboard" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">MudKeyboard</MudButton>
+    <MudButton Href="components/pricepad" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">MudPricepad</MudButton>
+</div>
+
+@code {
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+    private string _int = string.Empty;
+    private string _dec = string.Empty;
+    private string _pin = string.Empty;
+
+    private const string BasicCode = """
+<MudTextField @bind-Value="_value" Label="Quantity" Variant="Variant.Outlined" Immediate="true" />
+<MudNumpad @bind-Value="_value" />
+
+@code { private string _value = string.Empty; }
+""";
+
+    private const string DecimalCode = """
+<MudNumpad @bind-Value="_value" AllowDecimal="true" />
+
+@code { private string _value = string.Empty; }
+""";
+
+    private const string PinCode = """
+<MudNumpad @bind-Value="_pin" MaxLength="4" OnEnter="Submit" />
+
+@code {
+    private string _pin = string.Empty;
+    private void Submit() { /* ⏎ pressed */ }
+}
+""";
+
+    private static readonly IReadOnlyList<ApiMember> Parameters =
+    [
+        new("Value / ValueChanged", "string", "\"\"", "Two-way bindable value (@bind-Value)."),
+        new("AllowDecimal", "bool", "false", "Shows a '.' key and allows a single decimal point."),
+        new("MaxLength", "int?", "null", "Optional cap on value length."),
+        new("Disabled", "bool", "false", "Disables every key."),
+        new("Palette", "KeyboardPalette?", "null", "Per-numpad colour overrides; unset slots follow the theme."),
+        new("Class / Style", "string?", "null", "Passthrough CSS for the root surface."),
+        new("OnEnter", "EventCallback", "—", "Fires when the Enter (⏎) key is pressed."),
+    ];
+}

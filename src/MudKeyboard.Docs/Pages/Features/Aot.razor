@@ -1,0 +1,73 @@
+@page "/features/aot"
+
+<PageTitle>AOT & trimming · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Features & guides"
+            Title="AOT & trimming"
+            Lead="MudKeyboard is built to be ahead-of-time (AOT) compiled and trimmed: no reflection, no dynamic code, and only primitive strings crossing the one JS interop boundary." />
+
+<MudText id="library" Typo="Typo.h5" Class="docs-section-title">What the library guarantees</MudText>
+<div class="docs-prose">
+    <ul>
+        <li><strong>No reflection</strong> — no <code class="docs-inline-code">typeof(T)</code> runtime lookups, no <code class="docs-inline-code">Activator.CreateInstance</code>.</li>
+        <li><strong>No dynamic / no unknown-type casting.</strong></li>
+        <li><strong>AOT/trim-safe interop</strong> — only primitive strings cross to the focus-capture shim, so there's no reflection-based (de)serialisation.</li>
+        <li><strong>Analyzers on by default</strong> — the library sets <code class="docs-inline-code">&lt;IsAotCompatible&gt;true&lt;/IsAotCompatible&gt;</code>, which turns on the trim, AOT and single-file analyzers so any violation is a build warning, enforced by the compiler rather than by convention.</li>
+    </ul>
+    <p>It multi-targets <code class="docs-inline-code">net8.0;net9.0;net10.0</code>. The library project's setting:</p>
+</div>
+<CodeBlock Language="xml" Code="@LibCsproj" />
+
+<MudText id="site" Typo="Typo.h5" Class="docs-section-title">This site is AOT-compiled</MudText>
+<div class="docs-prose">
+    <p>
+        The documentation site you're reading is a Blazor WebAssembly app published with WebAssembly AOT
+        compilation enabled, which compiles the .NET IL to native WebAssembly for faster runtime execution.
+        Enable it in the app's <code class="docs-inline-code">.csproj</code>:
+    </p>
+</div>
+<CodeBlock Language="xml" Code="@AppCsproj" />
+<div class="docs-prose mt-3">
+    <p>AOT runs during <code class="docs-inline-code">publish</code> (a normal build stays fast) and needs the <code class="docs-inline-code">wasm-tools</code> workload:</p>
+</div>
+<CodeBlock Language="bash" Code="@PublishCmd" />
+
+<MudText id="your-app" Typo="Typo.h5" Class="docs-section-title">Using MudKeyboard in your own AOT app</MudText>
+<div class="docs-prose">
+    <p>
+        Because the library is reflection-free, dropping MudKeyboard into a trimmed or AOT-compiled app adds
+        no warnings of its own. Note that AOT/trimming behaviour of the whole app still depends on every
+        dependency — including MudBlazor and the .NET runtime libraries — so always test a trimmed publish.
+    </p>
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="my-2">
+        Blazor WebAssembly publishes are trimmed by default. AOT compilation is opt-in via
+        <code class="docs-inline-code">RunAOTCompilation</code> and trades a longer publish and a larger
+        download for faster execution — measure before enabling it for production.
+    </MudAlert>
+</div>
+
+<div class="docs-nav-footer">
+    <MudButton Href="features/emit-mode" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">Emit mode</MudButton>
+    <MudButton Href="playground" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Playground</MudButton>
+</div>
+
+@code {
+    private const string LibCsproj = """
+<PropertyGroup>
+  <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+  <IsAotCompatible>true</IsAotCompatible>
+</PropertyGroup>
+""";
+
+    private const string AppCsproj = """
+<PropertyGroup>
+  <TargetFramework>net10.0</TargetFramework>
+  <RunAOTCompilation>true</RunAOTCompilation>
+</PropertyGroup>
+""";
+
+    private const string PublishCmd = """
+dotnet workload install wasm-tools
+dotnet publish -c Release
+""";
+}

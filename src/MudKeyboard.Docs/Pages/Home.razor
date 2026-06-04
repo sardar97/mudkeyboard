@@ -1,7 +1,126 @@
-﻿@page "/"
+@page "/"
+@namespace MudKeyboard.Docs.Pages
 
-<PageTitle>Home</PageTitle>
+<PageTitle>MudKeyboard — Pure-Blazor on-screen keyboard for MudBlazor</PageTitle>
 
-<h1>Hello, world!</h1>
+@* Hidden h1 for FocusOnNavigate + screen readers; the visible title is the logo wordmark. *@
+<h1 class="docs-h1" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">MudKeyboard</h1>
 
-Welcome to your new app.
+<section class="docs-hero">
+    <img class="docs-hero__logo" src="_content/MudKeyboard/mudkeyboard_logo.svg" alt="MudKeyboard" />
+    <p class="docs-hero__tagline">
+        An open-source on-screen <strong>virtual keyboard</strong> for Blazor and MudBlazor.
+        The core is 100% C# — <strong>zero JavaScript</strong> — themed automatically by MudBlazor,
+        and <strong>AOT &amp; trim friendly</strong>.
+    </p>
+    <div class="docs-hero__cta">
+        <MudButton Href="getting-started"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   EndIcon="@Icons.Material.Filled.ArrowForward">Get started</MudButton>
+        <MudButton Href="components/keyboard"
+                   Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   StartIcon="@Icons.Material.Filled.Keyboard">Browse components</MudButton>
+        <MudButton Href="https://github.com/sardar97/mudkeyboard"
+                   Target="_blank"
+                   Variant="Variant.Text"
+                   Color="Color.Default"
+                   Size="Size.Large"
+                   StartIcon="@Icons.Custom.Brands.GitHub">GitHub</MudButton>
+    </div>
+    <div class="docs-badges">
+        <MudChip T="string" Icon="@Icons.Material.Filled.Bolt" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">JavaScript-free core</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Palette" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">MudBlazor theming</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Speed" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">AOT &amp; trim</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Tag" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">.NET 8 · 9 · 10</MudChip>
+    </div>
+</section>
+
+<MudText Typo="Typo.h5" Class="mt-12 mb-1" Style="font-weight:600;">Try it</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+    A real, fully interactive MudKeyboard — no JavaScript involved. Toggle dark mode in the top bar
+    and watch every key follow the theme.
+</MudText>
+<MudPaper Class="pa-4" Outlined="true">
+    <MudTextField @bind-Value="_demo" Label="Type with the keyboard below" Variant="Variant.Outlined" Class="mb-3" Immediate="true" />
+    <MudKeyboard @bind-Value="_demo" />
+</MudPaper>
+
+<MudText Typo="Typo.h5" Class="mt-12 mb-4" Style="font-weight:600;">Why MudKeyboard</MudText>
+<MudGrid Spacing="4">
+    @foreach (var f in Features)
+    {
+        <MudItem xs="12" sm="6" md="3">
+            <div class="docs-feature">
+                <MudIcon Icon="@f.Icon" Size="Size.Large" Class="docs-feature__icon" />
+                <MudText Typo="Typo.subtitle1" Style="font-weight:600;">@f.Title</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@f.Body</MudText>
+            </div>
+        </MudItem>
+    }
+</MudGrid>
+
+<MudText Typo="Typo.h5" Class="mt-12 mb-1" Style="font-weight:600;">Install</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+    MudBlazor is a peer dependency — MudKeyboard reuses your existing MudBlazor setup.
+</MudText>
+<CodeBlock Language="bash" Code="@InstallCode" />
+
+<MudText Typo="Typo.h5" Class="mt-12 mb-4" Style="font-weight:600;">Explore</MudText>
+<MudGrid Spacing="4">
+    @foreach (var link in Cards)
+    {
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Class="pa-4 d-flex flex-column" Outlined="true" Style="height:100%;border-radius:16px;">
+                <MudIcon Icon="@link.Icon" Color="Color.Primary" Class="mb-2" />
+                <MudText Typo="Typo.subtitle1" Style="font-weight:600;">@link.Title</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="flex-grow-1 mb-3">@link.Body</MudText>
+                <MudButton Href="@link.Href" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ChevronRight" Class="align-self-start">Open</MudButton>
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
+<div class="docs-nav-footer">
+    <span></span>
+    <MudButton Href="getting-started" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Getting started</MudButton>
+</div>
+
+@code {
+    private string _demo = "Hello MudBlazor";
+
+    private const string InstallCode = """
+dotnet add package MudKeyboard
+
+# MudBlazor is a peer dependency — install it too if you don't have it yet
+dotnet add package MudBlazor
+""";
+
+    private sealed record Feature(string Icon, string Title, string Body);
+    private sealed record LinkCard(string Icon, string Title, string Body, string Href);
+
+    private static readonly Feature[] Features =
+    [
+        new(Icons.Material.Filled.Bolt, "JavaScript-free core",
+            "Rendering, the text engine, shift/caps and the symbol toggle are pure C#/Blazor. One optional shim powers the docked keyboard."),
+        new(Icons.Material.Filled.Palette, "Themed by MudBlazor",
+            "Every colour comes from MudBlazor CSS variables — dark/light mode and your theme cascade automatically."),
+        new(Icons.Material.Filled.Speed, "AOT & trim friendly",
+            "No reflection, no dynamic code. The library is marked IsAotCompatible so the analyzers run on every build."),
+        new(Icons.Material.Filled.TouchApp, "Touch & kiosk ready",
+            "Inline keyboards, numeric & money keypads, and a global docked keyboard that pops up on focus."),
+    ];
+
+    private static readonly LinkCard[] Cards =
+    [
+        new(Icons.Material.Filled.Keyboard, "MudKeyboard", "The full QWERTY keyboard with shift, caps, symbols and two-way binding.", "components/keyboard"),
+        new(Icons.Material.Filled.Dialpad, "MudNumpad & MudPricepad", "Calculator-style numeric entry and pence-first currency input.", "components/numpad"),
+        new(Icons.Material.Filled.VerticalAlignBottom, "Docked keyboard", "A global keyboard that slides up from the bottom when any input is focused.", "components/docked-keyboard"),
+        new(Icons.Material.Filled.Dashboard, "Custom layouts", "Layouts are just data — rows of key tokens. Build any keyboard you like.", "features/custom-layouts"),
+        new(Icons.Material.Filled.Palette, "Theming & palette", "Inherit the MudBlazor theme or recolour a single keyboard with KeyboardPalette.", "features/theming"),
+        new(Icons.Material.Filled.Science, "Playground", "Tweak every parameter live and copy the generated markup.", "playground"),
+    ];
+}

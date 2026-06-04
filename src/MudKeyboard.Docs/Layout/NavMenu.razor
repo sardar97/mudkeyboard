@@ -1,0 +1,31 @@
+@namespace MudKeyboard.Docs.Layout
+
+<MudNavMenu Bordered="true" Class="pa-2">
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+    <MudNavLink Href="getting-started" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RocketLaunch">Getting started</MudNavLink>
+
+    <MudNavGroup Title="Components" Icon="@Icons.Material.Filled.Keyboard" Expanded="true">
+        <MudNavLink Href="components/keyboard" Match="NavLinkMatch.Prefix">MudKeyboard</MudNavLink>
+        <MudNavLink Href="components/numpad" Match="NavLinkMatch.Prefix">MudNumpad</MudNavLink>
+        <MudNavLink Href="components/pricepad" Match="NavLinkMatch.Prefix">MudPricepad</MudNavLink>
+        <MudNavLink Href="components/docked-keyboard" Match="NavLinkMatch.Prefix">Docked keyboard</MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="Features &amp; guides" Icon="@Icons.Material.Filled.AutoAwesome" Expanded="true">
+        <MudNavLink Href="features/layouts" Match="NavLinkMatch.Prefix">Layouts &amp; key tokens</MudNavLink>
+        <MudNavLink Href="features/custom-layouts" Match="NavLinkMatch.Prefix">Custom layouts</MudNavLink>
+        <MudNavLink Href="features/theming" Match="NavLinkMatch.Prefix">Theming &amp; palette</MudNavLink>
+        <MudNavLink Href="features/emit-mode" Match="NavLinkMatch.Prefix">Emit mode</MudNavLink>
+        <MudNavLink Href="features/aot" Match="NavLinkMatch.Prefix">AOT &amp; trimming</MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="Tools" Icon="@Icons.Material.Filled.Tune" Expanded="true">
+        <MudNavLink Href="playground" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Science">Playground</MudNavLink>
+        <MudNavLink Href="api" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.DataObject">API reference</MudNavLink>
+    </MudNavGroup>
+
+    <MudDivider Class="my-2" />
+
+    <MudNavLink Href="https://github.com/sardar97/mudkeyboard" Target="_blank" Icon="@Icons.Custom.Brands.GitHub">GitHub</MudNavLink>
+    <MudNavLink Href="https://www.nuget.org/packages/MudKeyboard" Target="_blank" Icon="@Icons.Material.Filled.Inventory2">NuGet</MudNavLink>
+</MudNavMenu>

@@ -1,0 +1,57 @@
+@namespace MudKeyboard.Docs.Shared
+@inject DocsInterop Interop
+@inject ISnackbar Snackbar
+
+<div class="docs-code">
+    <div class="docs-code__bar">
+        <span class="docs-code__lang">@Language</span>
+        <MudTooltip Text="Copy to clipboard">
+            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                           Size="Size.Small"
+                           Style="color:#9aa0aa;"
+                           OnClick="@CopyAsync"
+                           aria-label="Copy code" />
+        </MudTooltip>
+    </div>
+    <pre class="docs-code__pre"><code @ref="_codeRef" class="@HljsClass">@Code</code></pre>
+</div>
+
+@code {
+    private ElementReference _codeRef;
+    private string? _highlightedCode;
+
+    /// <summary>The source code to display, verbatim.</summary>
+    [Parameter, EditorRequired] public string Code { get; set; } = string.Empty;
+
+    /// <summary>Display language label (also used to pick the highlight.js grammar). Default <c>razor</c>.</summary>
+    [Parameter] public string Language { get; set; } = "razor";
+
+    // highlight.js (common bundle) has no dedicated Razor grammar, so Razor/cshtml is highlighted as
+    // HTML/XML — which colours the bulk of a component example (tags, attributes, strings) well.
+    private string HljsClass => "language-" + Language.ToLowerInvariant() switch
+    {
+        "razor" or "cshtml" or "html" => "xml",
+        "cs" or "c#" or "csharp" => "csharp",
+        "sh" or "shell" or "bash" or "console" => "bash",
+        var other => other,
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Highlight once per distinct value: cheap on static examples, still recolours when the
+        // code changes (e.g. the live playground generates a new snippet as parameters change).
+        if (!string.Equals(_highlightedCode, Code, StringComparison.Ordinal))
+        {
+            _highlightedCode = Code;
+            await Interop.HighlightAsync(_codeRef);
+        }
+    }
+
+    private async Task CopyAsync()
+    {
+        if (await Interop.CopyAsync(Code))
+        {
+            Snackbar.Add("Copied to clipboard", Severity.Success);
+        }
+    }
+}

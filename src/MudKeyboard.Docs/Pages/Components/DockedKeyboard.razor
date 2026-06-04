@@ -1,0 +1,160 @@
+@page "/components/docked-keyboard"
+
+<PageTitle>Docked keyboard · Components</PageTitle>
+
+<PageHeader Overline="Components"
+            Title="Global docked keyboard"
+            Lead="One host component shows a keyboard that slides up from the bottom of the screen whenever a field is focused, and types at that field's caret. This is the single MudKeyboard feature that uses JavaScript." />
+
+<MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-6">
+    <strong>Try it now.</strong> Tap any field in the live demo below — the docked keyboard slides up
+    from the bottom of <em>this</em> page. The layout is chosen per field (text → QWERTY,
+    number → numpad, money → pence-first).
+</MudAlert>
+
+<ExampleCard Title="Focus any field"
+             Description="These three fields are opted in with data-mudkeyboard. Tap one to raise the docked keyboard."
+             Code="@DemoCode">
+    <MudTextField @bind-Value="_text" Label="Text (QWERTY)" Variant="Variant.Outlined" Immediate="true"
+                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+    <MudTextField @bind-Value="_number" Label="Number (numpad)" Variant="Variant.Outlined" Immediate="true" InputMode="InputMode.numeric"
+                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+    <MudTextField @bind-Value="_money" Label="Money (pence-first → type 5·2·3 → 5.23)" Variant="Variant.Outlined" Immediate="true"
+                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true", ["data-mudkeyboard-layout"] = "money" })" />
+</ExampleCard>
+
+<MudText id="setup" Typo="Typo.h5" Class="docs-section-title">Setup</MudText>
+<div class="docs-prose">
+    <p><strong>1. Register the services</strong> in <code class="docs-inline-code">Program.cs</code>:</p>
+</div>
+<CodeBlock Language="csharp" Code="@RegisterCode" />
+<div class="docs-prose mt-3">
+    <p><strong>2. Place the host once</strong> in your main layout, next to the MudBlazor providers:</p>
+</div>
+<CodeBlock Language="razor" Code="@HostCode" />
+<div class="docs-prose mt-3">
+    <p>
+        That's it. With the default attach mode, every editable text/number field now raises the keyboard
+        on focus and the layout is inferred from the field. Add
+        <code class="docs-inline-code">Immediate="true"</code> to MudBlazor inputs so the bound value
+        updates as keys are tapped.
+    </p>
+</div>
+
+<MudText id="attach" Typo="Typo.h5" Class="docs-section-title">Choosing which fields attach</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">KeyboardAttachMode</code> controls the policy. In
+        <code class="docs-inline-code">AllInputs</code> (the default) every editable field attaches unless
+        opted out; in <code class="docs-inline-code">OptIn</code> only fields explicitly marked attach.
+    </p>
+</div>
+<CodeBlock Language="csharp" Code="@OptInCode" />
+<ParamTable Members="DataAttributes" NameHeader="Attribute" ShowDefault="false" />
+<CodeBlock Language="razor" Code="@AttrCode" />
+
+<MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="my-4" Dense="true">
+    This documentation site itself registers the host in <code class="docs-inline-code">OptIn</code> mode, so
+    only the fields above (marked with <code class="docs-inline-code">data-mudkeyboard</code>) raise the
+    docked keyboard — the inline-keyboard examples elsewhere on the site are left untouched.
+</MudAlert>
+
+<MudText id="behaviour" Typo="Typo.h5" Class="docs-section-title">Built-in behaviour</MudText>
+<div class="docs-prose">
+    <ul>
+        <li>The docked panel includes <strong>clear, copy, paste</strong> and <strong>cursor</strong> controls (cursor arrows are hidden for pence-first money entry, which always appends).</li>
+        <li>It automatically docks <strong>one layer above the top-most element on the page</strong>, so it floats over dialogs and overlays. <code class="docs-inline-code">MinZIndex</code> sets the floor.</li>
+        <li>Pressing <strong>⏎</strong> commits the value and closes the keyboard; the ⌄ button hides it.</li>
+        <li>The money layout reuses the same pence-first logic as <MudLink Href="components/pricepad">MudPricepad</MudLink>.</li>
+    </ul>
+</div>
+
+<MudText id="parameters" Typo="Typo.h5" Class="docs-section-title">MudKeyboardHost parameters</MudText>
+<ParamTable Members="HostParameters" />
+
+<MudText id="js" Typo="Typo.h5" Class="docs-section-title">About the JavaScript</MudText>
+<div class="docs-prose">
+    <p>
+        A browser can't report focus on arbitrary inputs to Blazor without JavaScript, so the docked
+        keyboard uses one small ES module (<code class="docs-inline-code">mudKeyboard.js</code>, shipped as a
+        static web asset). It does global focus capture and caret-aware insertion. All interop is confined
+        to <code class="docs-inline-code">KeyboardInteropService</code>, and only primitive strings cross the
+        boundary — so it stays AOT/trim-safe. The keyboard <em>core</em> remains 100% JavaScript-free.
+    </p>
+</div>
+
+<div class="docs-nav-footer">
+    <MudButton Href="components/pricepad" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">MudPricepad</MudButton>
+    <MudButton Href="features/layouts" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Layouts &amp; key tokens</MudButton>
+</div>
+
+@code {
+    private string _text = string.Empty;
+    private string _number = string.Empty;
+    private string _money = string.Empty;
+
+    private const string DemoCode = """
+@* The site runs the host in OptIn mode, so fields are marked with data-mudkeyboard. *@
+<MudTextField @bind-Value="_text" Label="Text (QWERTY)" Immediate="true"
+              UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+
+<MudTextField @bind-Value="_number" Label="Number (numpad)" Immediate="true" InputMode="InputMode.numeric"
+              UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+
+<MudTextField @bind-Value="_money" Label="Money" Immediate="true"
+              UserAttributes="@(new() {
+                  ["data-mudkeyboard"] = "true",
+                  ["data-mudkeyboard-layout"] = "money" })" />
+""";
+
+    private const string RegisterCode = """
+using MudKeyboard.Extensions;
+
+builder.Services.AddMudServices();   // MudBlazor
+builder.Services.AddMudKeyboard();   // MudKeyboard docked-keyboard services
+""";
+
+    private const string HostCode = """
+<MudThemeProvider @bind-IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudKeyboardHost />   @* once, anywhere in the layout *@
+""";
+
+    private const string OptInCode = """
+using MudKeyboard.Services;
+
+// Default — attach to every editable field (opt out per-field with data-mudkeyboard-ignore)
+builder.Services.AddMudKeyboard();
+
+// Or: only attach to fields explicitly marked with data-mudkeyboard
+builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
+""";
+
+    private const string AttrCode = """
+@* Force a layout on a field *@
+<MudTextField @bind-Value="_amount" Immediate="true"
+              UserAttributes="@(new() { ["data-mudkeyboard-layout"] = "money" })" />
+
+@* Never raise the keyboard for this field (AllInputs mode) *@
+<MudTextField @bind-Value="_note" Immediate="true"
+              UserAttributes="@(new() { ["data-mudkeyboard-ignore"] = "true" })" />
+""";
+
+    private static readonly IReadOnlyList<ApiMember> DataAttributes =
+    [
+        new("data-mudkeyboard-ignore", "—", "—", "Never raise the keyboard for this field (AllInputs mode)."),
+        new("data-mudkeyboard", "—", "—", "Opt this field in when using KeyboardAttachMode.OptIn."),
+        new("data-mudkeyboard-layout=\"…\"", "—", "—", "Force a layout: qwerty, numpad, decimal, or money / price."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> HostParameters =
+    [
+        new("Palette", "KeyboardPalette?", "null", "Colour overrides for the docked keyboard."),
+        new("Elevation", "int", "8", "Drop-shadow elevation of the docked panel."),
+        new("MinZIndex", "int", "1400", "Floor for the panel's z-index; it docks one above the top-most layer otherwise."),
+        new("Style", "string?", "null", "Extra inline styles appended to the docked panel."),
+    ];
+}

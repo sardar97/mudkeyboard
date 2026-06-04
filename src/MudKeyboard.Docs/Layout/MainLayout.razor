@@ -1,3 +1,90 @@
-﻿@inherits LayoutComponentBase
+@namespace MudKeyboard.Docs.Layout
+@inherits LayoutComponentBase
 
-@Body
+<MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@* The global docked keyboard. Registered in OptIn mode (see Program.cs), so it only appears for
+   fields that carry data-mudkeyboard — i.e. the examples on the "Docked keyboard" page. *@
+<MudKeyboardHost />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="@ToggleDrawer"
+                       aria-label="Toggle navigation" />
+        <MudLink Href="" Underline="Underline.None" Class="d-flex align-center ml-1" Color="Color.Inherit">
+            <MudImage Src="_content/MudKeyboard/mudkeyboard_logo.svg" Alt="MudKeyboard" Height="34" />
+        </MudLink>
+        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" Class="ml-2 d-none d-sm-flex">docs</MudChip>
+        <MudSpacer />
+        <MudTooltip Text="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")">
+            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                           Color="Color.Inherit"
+                           OnClick="@(() => _isDarkMode = !_isDarkMode)"
+                           aria-label="Toggle dark mode" />
+        </MudTooltip>
+        <MudTooltip Text="NuGet">
+            <MudIconButton Icon="@Icons.Material.Filled.Inventory2"
+                           Color="Color.Inherit"
+                           Href="https://www.nuget.org/packages/MudKeyboard"
+                           Target="_blank"
+                           aria-label="NuGet package" />
+        </MudTooltip>
+        <MudTooltip Text="GitHub">
+            <MudIconButton Icon="@Icons.Custom.Brands.GitHub"
+                           Color="Color.Inherit"
+                           Href="https://github.com/sardar97/mudkeyboard"
+                           Target="_blank"
+                           aria-label="GitHub repository" />
+        </MudTooltip>
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always" Variant="@DrawerVariant.Responsive">
+        <NavMenu />
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-6">
+            <div class="docs-page">
+                @Body
+            </div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _isDarkMode;
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    // Brand the site with the logo's purple as the MudBlazor primary colour. MudKeyboard reads these
+    // same MudBlazor palette variables, so every keyboard on the site inherits the brand accent and
+    // follows the dark/light toggle with zero extra code.
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#7C4DFF",
+            Secondary = "#00BFA5",
+            AppbarBackground = "#7C4DFF",
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#B388FF",
+            Secondary = "#1DE9B6",
+            AppbarBackground = "#1a1726",
+            Background = "#14111f",
+            Surface = "#1c1830",
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "10px",
+        },
+    };
+}

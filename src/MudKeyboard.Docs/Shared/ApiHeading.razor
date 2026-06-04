@@ -1,0 +1,22 @@
+@namespace MudKeyboard.Docs.Shared
+
+<div id="@Id" style="scroll-margin-top:88px;" class="mt-6 mb-1">
+    <a href="@($"api#{Id}")" class="docs-anchor">
+        <MudText Typo="Typo.h6" Style="font-weight:600;display:inline;">@Title</MudText>
+    </a>
+    @if (!string.IsNullOrWhiteSpace(Namespace))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">@Namespace</MudText>
+    }
+</div>
+
+@code {
+    /// <summary>Anchor id (used for in-page links).</summary>
+    [Parameter, EditorRequired] public string Id { get; set; } = string.Empty;
+
+    /// <summary>The type or member name.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+
+    /// <summary>Namespace / kind subtitle.</summary>
+    [Parameter] public string? Namespace { get; set; }
+}

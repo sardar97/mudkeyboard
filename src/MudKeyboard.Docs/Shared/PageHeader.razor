@@ -1,0 +1,29 @@
+@namespace MudKeyboard.Docs.Shared
+
+<div class="mb-4">
+    @if (!string.IsNullOrWhiteSpace(Overline))
+    {
+        <MudText Typo="Typo.overline" Color="Color.Primary">@Overline</MudText>
+    }
+    @* Native h1 so Blazor's FocusOnNavigate (Selector="h1") lands here on every navigation. *@
+    <h1 class="docs-h1">@Title</h1>
+    @if (!string.IsNullOrWhiteSpace(Lead))
+    {
+        <p class="docs-lead">@Lead</p>
+    }
+    @ChildContent
+</div>
+
+@code {
+    /// <summary>Small uppercase label above the title (e.g. the section name).</summary>
+    [Parameter] public string? Overline { get; set; }
+
+    /// <summary>The page title (rendered as the page's single <c>h1</c>).</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+
+    /// <summary>Optional lead paragraph under the title.</summary>
+    [Parameter] public string? Lead { get; set; }
+
+    /// <summary>Optional extra content (badges, buttons) under the lead.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

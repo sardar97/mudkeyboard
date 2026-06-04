@@ -1,5 +1,14 @@
-﻿@page "/not-found"
+@page "/not-found"
+@namespace MudKeyboard.Docs.Pages
 @layout MainLayout
 
-<h3>Not Found</h3>
-<p>Sorry, the content you are looking for does not exist.</p>
+<PageTitle>Not found · MudKeyboard</PageTitle>
+
+<div class="d-flex flex-column align-center justify-center" style="min-height:50vh;text-align:center;">
+    <h1 class="docs-h1">404</h1>
+    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-4">We couldn't find that page.</MudText>
+    <div class="d-flex" style="gap:0.75rem;">
+        <MudButton Href="" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Home">Home</MudButton>
+        <MudButton Href="getting-started" Variant="Variant.Outlined" Color="Color.Primary">Getting started</MudButton>
+    </div>
+</div>

@@ -1,0 +1,160 @@
+@page "/components/keyboard"
+
+<PageTitle>MudKeyboard · Components</PageTitle>
+
+<PageHeader Overline="Components"
+            Title="MudKeyboard"
+            Lead="The full on-screen keyboard. A QWERTY letter face with shift / caps lock and a 123 toggle to a numbers-and-symbols face — all in pure C#/Blazor, themed by MudBlazor." />
+
+<MudText id="basic" Typo="Typo.h5" Class="docs-section-title">Basic usage</MudText>
+<div class="docs-prose">
+    <p>
+        Bind <code class="docs-inline-code">Value</code> with <code class="docs-inline-code">@@bind-Value</code>
+        and handle <code class="docs-inline-code">OnEnter</code> to react to the ⏎ key. Tap
+        <strong>⇧</strong> once for a one-shot shift, double-tap it for caps lock, and
+        <strong>123</strong> to flip to the numbers/symbols face.
+    </p>
+</div>
+
+<ExampleCard Title="Two-way binding + OnEnter"
+             Description="The keyboard edits its bound value directly. OnEnter fires when ⏎ is pressed."
+             Code="@BasicCode">
+    <MudTextField @bind-Value="_basic" Label="Bound value" Variant="Variant.Outlined" Immediate="true" />
+    <div style="max-width:560px;">
+        <MudKeyboard @bind-Value="_basic" OnEnter="@OnEnter" />
+    </div>
+    <MudText Typo="Typo.caption">Last Enter: <b>@_lastEnter</b></MudText>
+</ExampleCard>
+
+<MudText id="maxlength" Typo="Typo.h5" Class="docs-section-title">Max length</MudText>
+<div class="docs-prose">
+    <p>Cap the number of characters with <code class="docs-inline-code">MaxLength</code>. Once reached, further keys are ignored.</p>
+</div>
+<ExampleCard Title="MaxLength = 10"
+             Code="@MaxLengthCode">
+    <MudTextField @bind-Value="_capped" Label="Max 10 characters" Variant="Variant.Outlined" Immediate="true" Counter="10" MaxLength="10" />
+    <div style="max-width:560px;">
+        <MudKeyboard @bind-Value="_capped" MaxLength="10" />
+    </div>
+</ExampleCard>
+
+<MudText id="appearance" Typo="Typo.h5" Class="docs-section-title">Appearance</MudText>
+<div class="docs-prose">
+    <p>
+        Set <code class="docs-inline-code">DropShadow="false"</code> for flat keys, and
+        <code class="docs-inline-code">Disabled="true"</code> to disable every key. Use
+        <code class="docs-inline-code">Class</code> / <code class="docs-inline-code">Style</code> to size or space the surface.
+    </p>
+</div>
+<ExampleCard Title="Flat keys & disabled state"
+             Code="@AppearanceCode">
+    <div class="d-flex flex-wrap" style="gap:1.5rem;">
+        <div style="flex:1;min-width:260px;">
+            <MudText Typo="Typo.caption" Class="mb-1">Flat (DropShadow=false)</MudText>
+            <MudKeyboard @bind-Value="_flat" Variant="KeyboardVariant.Numpad" DropShadow="false" />
+        </div>
+        <div style="flex:1;min-width:260px;">
+            <MudText Typo="Typo.caption" Class="mb-1">Disabled</MudText>
+            <MudKeyboard Value="@_flat" Variant="KeyboardVariant.Numpad" Disabled="true" />
+        </div>
+    </div>
+</ExampleCard>
+
+<MudText id="variants" Typo="Typo.h5" Class="docs-section-title">Variants</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">MudKeyboard</code> can render any built-in surface via the
+        <code class="docs-inline-code">Variant</code> parameter — <code class="docs-inline-code">Full</code>
+        (default), <code class="docs-inline-code">Numpad</code>, <code class="docs-inline-code">Pricepad</code>
+        or <code class="docs-inline-code">Custom</code>. For numeric/money entry the dedicated
+        <MudLink Href="components/numpad">MudNumpad</MudLink> and
+        <MudLink Href="components/pricepad">MudPricepad</MudLink> components add extra behaviour
+        (decimal control, currency formatting). Set an explicit
+        <code class="docs-inline-code">Layout</code> to override the variant entirely — see
+        <MudLink Href="features/custom-layouts">custom layouts</MudLink>.
+    </p>
+</div>
+<ExampleCard Title="Variant = Numpad"
+             Code="@VariantCode">
+    <MudTextField @bind-Value="_variant" Label="Numpad value" Variant="Variant.Outlined" Immediate="true" />
+    <div style="max-width:320px;">
+        <MudKeyboard @bind-Value="_variant" Variant="KeyboardVariant.Numpad" />
+    </div>
+</ExampleCard>
+
+<MudText id="parameters" Typo="Typo.h5" Class="docs-section-title">Parameters</MudText>
+<ParamTable Members="Parameters" />
+
+<MudText id="tips" Typo="Typo.h5" Class="docs-section-title">Tips</MudText>
+<div class="docs-prose">
+    <ul>
+        <li>Use <code class="docs-inline-code">Immediate="true"</code> on the bound MudBlazor input so it updates as keys are tapped.</li>
+        <li><code class="docs-inline-code">OnEscape</code> only fires if the layout contains an <code class="docs-inline-code">{esc}</code> token — it isn't in the built-in layouts.</li>
+        <li>To route presses somewhere other than <code class="docs-inline-code">Value</code> (e.g. an external field), use <MudLink Href="features/emit-mode">emit mode</MudLink> via <code class="docs-inline-code">OnInput</code>.</li>
+    </ul>
+</div>
+
+<div class="docs-nav-footer">
+    <MudButton Href="getting-started" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">Getting started</MudButton>
+    <MudButton Href="components/numpad" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">MudNumpad</MudButton>
+</div>
+
+@code {
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+    private string _basic = string.Empty;
+    private string _capped = string.Empty;
+    private string _flat = "42";
+    private string _variant = string.Empty;
+    private string _lastEnter = "(none yet)";
+
+    private void OnEnter()
+    {
+        _lastEnter = $"\"{_basic}\"";
+        Snackbar.Add("Enter pressed", Severity.Info);
+    }
+
+    private const string BasicCode = """
+<MudTextField @bind-Value="_text" Label="Bound value" Variant="Variant.Outlined" Immediate="true" />
+<MudKeyboard @bind-Value="_text" OnEnter="OnEnter" />
+
+@code {
+    private string _text = string.Empty;
+    private void OnEnter() { /* ⏎ pressed */ }
+}
+""";
+
+    private const string MaxLengthCode = """
+<MudTextField @bind-Value="_text" Label="Max 10 characters" Variant="Variant.Outlined" Immediate="true" MaxLength="10" />
+<MudKeyboard @bind-Value="_text" MaxLength="10" />
+""";
+
+    private const string AppearanceCode = """
+@* Flat keys — no drop shadow *@
+<MudKeyboard @bind-Value="_value" Variant="KeyboardVariant.Numpad" DropShadow="false" />
+
+@* Every key disabled *@
+<MudKeyboard Value="@_value" Variant="KeyboardVariant.Numpad" Disabled="true" />
+""";
+
+    private const string VariantCode = """
+<MudTextField @bind-Value="_value" Label="Numpad value" Variant="Variant.Outlined" Immediate="true" />
+<MudKeyboard @bind-Value="_value" Variant="KeyboardVariant.Numpad" />
+""";
+
+    private static readonly IReadOnlyList<ApiMember> Parameters =
+    [
+        new("Value / ValueChanged", "string", "\"\"", "Two-way bindable current value (@bind-Value)."),
+        new("Layout", "KeyboardLayout?", "null", "Explicit layout; overrides Variant when set."),
+        new("Variant", "KeyboardVariant", "Full", "Built-in surface: Full, Numpad, Pricepad or Custom."),
+        new("SymbolLayout", "KeyboardLayout?", "null", "Numbers/symbols face reached via the {sym} (123) key."),
+        new("MaxLength", "int?", "null", "Optional cap on value length (ignored in emit mode)."),
+        new("Disabled", "bool", "false", "Disables every key."),
+        new("DropShadow", "bool", "true", "Flat keys when false."),
+        new("Palette", "KeyboardPalette?", "null", "Per-keyboard colour overrides; unset slots follow the theme."),
+        new("Class / Style", "string?", "null", "Passthrough CSS for the root surface."),
+        new("OnEnter", "EventCallback", "—", "Fires when the Enter (⏎) key is pressed."),
+        new("OnEscape", "EventCallback", "—", "Fires when an {esc} key is pressed."),
+        new("OnInput", "EventCallback<KeyboardInput>", "—", "Emit mode: route each press elsewhere instead of editing Value."),
+    ];
+}

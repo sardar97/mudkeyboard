@@ -1,0 +1,96 @@
+@page "/components/pricepad"
+
+<PageTitle>MudPricepad · Components</PageTitle>
+
+<PageHeader Overline="Components"
+            Title="MudPricepad"
+            Lead="A money keypad with pence-first entry. Type 5 · 2 · 3 and you get £5.23 — the last DecimalPlaces digits are always the fraction, and the value is kept formatted as a currency string." />
+
+<MudText id="basic" Typo="Typo.h5" Class="docs-section-title">Pence-first entry</MudText>
+<div class="docs-prose">
+    <p>
+        There is no decimal-point key — the decimal is placed automatically. Each digit you type shifts
+        in from the right, so <code class="docs-inline-code">1</code> → <code class="docs-inline-code">£0.01</code>,
+        then <code class="docs-inline-code">2</code> → <code class="docs-inline-code">£0.12</code>,
+        then <code class="docs-inline-code">3</code> → <code class="docs-inline-code">£1.23</code>.
+    </p>
+</div>
+<ExampleCard Title="Default (£, 2 decimals)"
+             Code="@BasicCode">
+    <MudTextField @bind-Value="_price" Label="Price" Variant="Variant.Outlined" Immediate="true" />
+    <div style="max-width:320px;">
+        <MudPricepad @bind-Value="_price" />
+    </div>
+</ExampleCard>
+
+<MudText id="currency" Typo="Typo.h5" Class="docs-section-title">Currency symbol & decimal places</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">CurrencySymbol</code> sets the prefix and
+        <code class="docs-inline-code">DecimalPlaces</code> the number of fractional digits — for example
+        a 3-decimal currency, or 0 decimals for whole units.
+    </p>
+</div>
+<ExampleCard Title="$ with 2 decimals · ¥ with 0 decimals"
+             Code="@CurrencyCode">
+    <div class="d-flex flex-wrap" style="gap:1.5rem;">
+        <div style="flex:1;min-width:240px;">
+            <MudTextField @bind-Value="_usd" Label="USD" Variant="Variant.Outlined" Immediate="true" Class="mb-2" />
+            <MudPricepad @bind-Value="_usd" CurrencySymbol="$" DecimalPlaces="2" />
+        </div>
+        <div style="flex:1;min-width:240px;">
+            <MudTextField @bind-Value="_yen" Label="JPY (no decimals)" Variant="Variant.Outlined" Immediate="true" Class="mb-2" />
+            <MudPricepad @bind-Value="_yen" CurrencySymbol="¥" DecimalPlaces="0" />
+        </div>
+    </div>
+</ExampleCard>
+
+<MudText id="parameters" Typo="Typo.h5" Class="docs-section-title">Parameters</MudText>
+<ParamTable Members="Parameters" />
+
+<MudText id="notes" Typo="Typo.h5" Class="docs-section-title">How it works</MudText>
+<div class="docs-prose">
+    <p>
+        Internally the pricepad keeps only the run of digits you typed and re-formats them on every press
+        with a culture-invariant, allocation-light formatter — so the displayed value is always a valid,
+        fully-formatted currency string. <code class="docs-inline-code">MaxLength</code> caps the number of
+        underlying digits, not the formatted length. The same pence-first logic powers the
+        <MudLink Href="components/docked-keyboard">docked keyboard's</MudLink> money layout.
+    </p>
+</div>
+
+<div class="docs-nav-footer">
+    <MudButton Href="components/numpad" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">MudNumpad</MudButton>
+    <MudButton Href="components/docked-keyboard" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Docked keyboard</MudButton>
+</div>
+
+@code {
+    private string _price = string.Empty;
+    private string _usd = string.Empty;
+    private string _yen = string.Empty;
+
+    private const string BasicCode = """
+<MudTextField @bind-Value="_price" Label="Price" Variant="Variant.Outlined" Immediate="true" />
+<MudPricepad @bind-Value="_price" />
+
+@code { private string _price = string.Empty; }
+""";
+
+    private const string CurrencyCode = """
+<MudPricepad @bind-Value="_usd" CurrencySymbol="$" DecimalPlaces="2" />
+
+<MudPricepad @bind-Value="_yen" CurrencySymbol="¥" DecimalPlaces="0" />
+""";
+
+    private static readonly IReadOnlyList<ApiMember> Parameters =
+    [
+        new("Value / ValueChanged", "string", "\"\"", "Two-way bindable formatted currency string (@bind-Value)."),
+        new("CurrencySymbol", "string", "\"£\"", "Symbol prefixed to the formatted value."),
+        new("DecimalPlaces", "int", "2", "Number of fractional digits the value is formatted with."),
+        new("MaxLength", "int?", "null", "Optional cap on the number of entered digits."),
+        new("Disabled", "bool", "false", "Disables every key."),
+        new("Palette", "KeyboardPalette?", "null", "Per-pricepad colour overrides; unset slots follow the theme."),
+        new("Class / Style", "string?", "null", "Passthrough CSS for the root surface."),
+        new("OnEnter", "EventCallback", "—", "Fires when the Enter (⏎) key is pressed."),
+    ];
+}

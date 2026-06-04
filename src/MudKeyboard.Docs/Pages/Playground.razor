@@ -1,0 +1,127 @@
+@page "/playground"
+@namespace MudKeyboard.Docs.Pages
+
+<PageTitle>Playground · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Tools"
+            Title="Playground"
+            Lead="Tweak the parameters and watch a real MudKeyboard update live. The generated markup below always matches what you see — copy it straight into your app." />
+
+<MudGrid Spacing="4">
+    <MudItem xs="12" md="4">
+        <MudPaper Outlined="true" Class="pa-4" Style="border-radius:14px;position:sticky;top:88px;">
+            <MudText Typo="Typo.subtitle1" Style="font-weight:600;" Class="mb-3">Parameters</MudText>
+
+            <MudSelect T="KeyboardVariant" @bind-Value="_variant" Label="Variant" Dense="true" Variant="Variant.Outlined" Class="mb-3">
+                <MudSelectItem Value="KeyboardVariant.Full">Full (QWERTY)</MudSelectItem>
+                <MudSelectItem Value="KeyboardVariant.Numpad">Numpad</MudSelectItem>
+                <MudSelectItem Value="KeyboardVariant.Pricepad">Pricepad (layout)</MudSelectItem>
+            </MudSelect>
+
+            <MudSwitch T="bool" @bind-Value="_dropShadow" Color="Color.Primary" Class="mb-1" Label="Drop shadow" />
+            <MudSwitch T="bool" @bind-Value="_disabled" Color="Color.Primary" Class="mb-1" Label="Disabled" />
+            <MudSwitch T="bool" @bind-Value="_limit" Color="Color.Primary" Class="mb-2" Label="Limit length" />
+
+            @if (_limit)
+            {
+                <MudNumericField T="int" @bind-Value="_maxLength" Label="MaxLength" Min="1" Max="60" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" />
+            }
+
+            <MudDivider Class="my-2" />
+            <MudSwitch T="bool" @bind-Value="_useAccent" Color="Color.Primary" Class="mb-2" Label="Brand accent (Palette)" />
+            @if (_useAccent)
+            {
+                <div class="d-flex flex-wrap" style="gap:0.4rem;">
+                    @foreach (var (name, hex) in Accents)
+                    {
+                        var current = hex;
+                        <MudButton Size="Size.Small"
+                                   Variant="@(_accent == current ? Variant.Filled : Variant.Outlined)"
+                                   Style="@($"min-width:0;border-color:{current};background:{(_accent == current ? current : "transparent")};color:{(_accent == current ? "#fff" : current)};")"
+                                   OnClick="@(() => _accent = current)">@name</MudButton>
+                    }
+                </div>
+            }
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="8">
+        <MudPaper Outlined="true" Class="pa-4 mb-4" Style="border-radius:14px;">
+            <MudTextField @bind-Value="_value" Label="Bound value" Variant="Variant.Outlined" Immediate="true" Class="mb-3" />
+            <div style="@PreviewWidth">
+                <MudKeyboard @bind-Value="_value"
+                             Variant="_variant"
+                             DropShadow="_dropShadow"
+                             Disabled="_disabled"
+                             MaxLength="EffectiveMaxLength"
+                             Palette="@EffectivePalette" />
+            </div>
+        </MudPaper>
+
+        <MudText Typo="Typo.subtitle2" Class="mb-2">Generated markup</MudText>
+        <CodeBlock Code="@GeneratedCode" />
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _value = string.Empty;
+    private KeyboardVariant _variant = KeyboardVariant.Full;
+    private bool _dropShadow = true;
+    private bool _disabled;
+    private bool _limit;
+    private int _maxLength = 20;
+    private bool _useAccent;
+    private string _accent = "#00897b";
+
+    private static readonly (string Name, string Hex)[] Accents =
+    [
+        ("Teal", "#00897b"),
+        ("Pink", "#e91e63"),
+        ("Orange", "#fb8c00"),
+        ("Indigo", "#3f51b5"),
+    ];
+
+    private int? EffectiveMaxLength => _limit ? _maxLength : null;
+    private KeyboardPalette? EffectivePalette => _useAccent ? new KeyboardPalette { AccentColor = _accent, AccentTextColor = "#ffffff" } : null;
+    private string PreviewWidth => _variant == KeyboardVariant.Full ? "max-width:560px;" : "max-width:320px;";
+
+    private string GeneratedCode
+    {
+        get
+        {
+            var attrs = new List<string> { "@bind-Value=\"_value\"" };
+
+            if (_variant != KeyboardVariant.Full)
+            {
+                attrs.Add($"Variant=\"KeyboardVariant.{_variant}\"");
+            }
+            if (!_dropShadow)
+            {
+                attrs.Add("DropShadow=\"false\"");
+            }
+            if (_disabled)
+            {
+                attrs.Add("Disabled=\"true\"");
+            }
+            if (_limit)
+            {
+                attrs.Add($"MaxLength=\"{_maxLength}\"");
+            }
+            if (_useAccent)
+            {
+                attrs.Add("Palette=\"Brand\"");
+            }
+
+            var markup = "<MudKeyboard " + string.Join("\n             ", attrs) + " />";
+
+            if (!_useAccent)
+            {
+                return markup;
+            }
+
+            return markup + "\n\n@code {\n    private static readonly KeyboardPalette Brand = new()\n    {\n"
+                + $"        AccentColor = \"{_accent}\",\n        AccentTextColor = \"#ffffff\",\n"
+                + "    };\n}";
+        }
+    }
+}

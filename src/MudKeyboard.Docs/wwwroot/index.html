@@ -4,22 +4,40 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MudKeyboard.Docs</title>
+    <title>MudKeyboard — Pure-Blazor on-screen keyboard for MudBlazor</title>
+    <meta name="description" content="MudKeyboard is an open-source on-screen virtual keyboard for Blazor and MudBlazor. JavaScript-free core, themed automatically by MudBlazor, AOT and trim-friendly." />
     <base href="/" />
+
+    <link rel="icon" type="image/svg+xml" href="_content/MudKeyboard/mudkeyboard_logo.svg" />
     <link rel="preload" id="webassembly" />
+
+    <!-- Fonts + MudBlazor theme (MudKeyboard reads MudBlazor's CSS variables). -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
+
+    <!-- Syntax highlighting for the code samples (docs site only — not part of the library). -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
     <link rel="stylesheet" href="css/app.css" />
-    <!-- If you add any scoped CSS files, uncomment the following to load them
-    <link href="MudKeyboard.Docs.styles.css" rel="stylesheet" /> -->
+    <link rel="stylesheet" href="css/docs.css" />
+
+    <!-- RCL scoped CSS bundle — includes MudKeyboardHost's slide-up animation. -->
+    <link rel="stylesheet" href="MudKeyboard.Docs.styles.css" />
+
     <script type="importmap"></script>
 </head>
 
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+        <div class="app-loading">
+            <img class="app-loading__logo" src="_content/MudKeyboard/mudkeyboard_logo.svg" alt="MudKeyboard" />
+            <svg class="loading-progress">
+                <circle r="40%" cx="50%" cy="50%" />
+                <circle r="40%" cx="50%" cy="50%" />
+            </svg>
+            <div class="loading-progress-text"></div>
+        </div>
     </div>
 
     <div id="blazor-error-ui">
@@ -27,7 +45,9 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
+
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>
 
 </html>

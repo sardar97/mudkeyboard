@@ -1,0 +1,113 @@
+@page "/features/layouts"
+
+<PageTitle>Layouts & key tokens · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Features & guides"
+            Title="Layouts & key tokens"
+            Lead="A layout is just data: rows of key tokens. MudKeyboard ships a set of built-in layouts on LayoutLibrary, and every layout is made of literal characters plus a handful of brace-wrapped command tokens." />
+
+<MudText id="tokens" Typo="Typo.h5" Class="docs-section-title">Key tokens</MudText>
+<div class="docs-prose">
+    <p>
+        Inside a <code class="docs-inline-code">KeyboardLayout</code> row, any token wrapped in braces is a
+        <strong>command</strong>; everything else is a <strong>literal</strong> character that is typed
+        verbatim. The well-known tokens are constants on <code class="docs-inline-code">KeyTokens</code>:
+    </p>
+</div>
+<ParamTable Members="Tokens" NameHeader="Token" ShowDefault="true" />
+
+<MudText id="built-in" Typo="Typo.h5" Class="docs-section-title">Built-in layouts</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">LayoutLibrary</code> exposes every shipped layout. The full keyboard
+        pairs <code class="docs-inline-code">Qwerty</code> with <code class="docs-inline-code">Symbols</code>
+        (reached via the <strong>123</strong> key); the numeric pads have no symbol face.
+    </p>
+</div>
+<ParamTable Members="Library" NameHeader="LayoutLibrary member" ShowDefault="false" />
+
+<MudText id="gallery" Typo="Typo.h5" Class="docs-section-title">Gallery</MudText>
+<div class="docs-prose">
+    <p>Every built-in layout, live. These are real, interactive keyboards.</p>
+</div>
+
+<ExampleCard Title="Full keyboard (Qwerty + Symbols)"
+             Description="Variant.Full — tap ⇧ for shift, double-tap for caps, 123 to flip to the symbol face."
+             Code="@FullCode">
+    <MudTextField @bind-Value="_full" Variant="Variant.Outlined" Immediate="true" Label="Value" />
+    <div style="max-width:560px;"><MudKeyboard @bind-Value="_full" /></div>
+</ExampleCard>
+
+<ExampleCard Title="Numeric row, Numpad & decimal numpad"
+             Code="@NumericCode">
+    <div class="d-flex flex-wrap" style="gap:1.5rem;">
+        <div style="flex:1;min-width:240px;">
+            <MudText Typo="Typo.caption" Class="mb-1">LayoutLibrary.Numeric</MudText>
+            <MudKeyboard @bind-Value="_num1" Variant="KeyboardVariant.Custom" Layout="LayoutLibrary.Numeric" />
+        </div>
+        <div style="min-width:200px;">
+            <MudText Typo="Typo.caption" Class="mb-1">LayoutLibrary.Numpad</MudText>
+            <div style="max-width:240px;"><MudKeyboard @bind-Value="_num2" Variant="KeyboardVariant.Numpad" /></div>
+        </div>
+        <div style="min-width:200px;">
+            <MudText Typo="Typo.caption" Class="mb-1">NumpadWithDecimal</MudText>
+            <div style="max-width:240px;"><MudKeyboard @bind-Value="_num3" Variant="KeyboardVariant.Custom" Layout="LayoutLibrary.NumpadWithDecimal" /></div>
+        </div>
+    </div>
+</ExampleCard>
+
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-4" Dense="true">
+    Passing an explicit <code class="docs-inline-code">Layout</code> overrides <code class="docs-inline-code">Variant</code>.
+    A custom <code class="docs-inline-code">Layout</code> only gets a symbol (<strong>123</strong>) face if you
+    also pass a <code class="docs-inline-code">SymbolLayout</code> — see <MudLink Href="features/custom-layouts">custom layouts</MudLink>.
+</MudAlert>
+
+<div class="docs-nav-footer">
+    <MudButton Href="components/docked-keyboard" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">Docked keyboard</MudButton>
+    <MudButton Href="features/custom-layouts" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Custom layouts</MudButton>
+</div>
+
+@code {
+    private string _full = string.Empty;
+    private string _num1 = string.Empty;
+    private string _num2 = string.Empty;
+    private string _num3 = string.Empty;
+
+    private const string FullCode = """
+<MudKeyboard @bind-Value="_value" />   @* Variant.Full is the default *@
+""";
+
+    private const string NumericCode = """
+@* A single 0–9 row *@
+<MudKeyboard @bind-Value="_a" Variant="KeyboardVariant.Custom" Layout="LayoutLibrary.Numeric" />
+
+@* Calculator numpad *@
+<MudKeyboard @bind-Value="_b" Variant="KeyboardVariant.Numpad" />
+
+@* Numpad with a decimal-point key *@
+<MudKeyboard @bind-Value="_c" Variant="KeyboardVariant.Custom" Layout="LayoutLibrary.NumpadWithDecimal" />
+""";
+
+    private static readonly IReadOnlyList<ApiMember> Tokens =
+    [
+        new("{bksp}", "KeyTokens.Backspace", "Delete the character before the caret"),
+        new("{enter}", "KeyTokens.Enter", "Commit / submit (raises OnEnter)"),
+        new("{space}", "KeyTokens.Space", "Insert a space"),
+        new("{shift}", "KeyTokens.Shift", "One-shot shift (double-tap = caps lock)"),
+        new("{caps}", "KeyTokens.Caps", "Caps lock"),
+        new("{sym}", "KeyTokens.SymbolToggle", "Flip between letters and numbers/symbols (shows 123 / ABC)"),
+        new("{esc}", "KeyTokens.Escape", "Dismiss (raises OnEscape)"),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> Library =
+    [
+        new("Qwerty", "KeyboardLayout", "—", "Standard English QWERTY with shift, backspace, space, enter and the 123 toggle."),
+        new("Symbols", "KeyboardLayout", "—", "The numbers-and-symbols face of the full keyboard."),
+        new("Numeric", "KeyboardLayout", "—", "A single row of the digits 0–9."),
+        new("Numpad", "KeyboardLayout", "—", "Calculator-style pad: 7-8-9 / 4-5-6 / 1-2-3 / 0-00-·-⌫ / ⏎."),
+        new("NumpadWithDecimal", "KeyboardLayout", "—", "Numpad including a decimal-point key."),
+        new("Price", "KeyboardLayout", "—", "Money pad — digits + 00, no decimal key (the decimal is placed automatically)."),
+        new("ForVariant(variant)", "KeyboardLayout", "—", "Returns the default layout for a KeyboardVariant."),
+        new("SymbolsForVariant(variant)", "KeyboardLayout?", "—", "Returns the symbol face for a variant (only Full has one)."),
+    ];
+}

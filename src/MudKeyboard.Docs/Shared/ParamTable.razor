@@ -1,0 +1,40 @@
+@namespace MudKeyboard.Docs.Shared
+
+<MudSimpleTable Dense="true" Hover="true" Bordered="false" Striped="true" Elevation="0" Class="my-3" Style="overflow-x:auto;">
+    <thead>
+        <tr>
+            <th style="white-space:nowrap;">@NameHeader</th>
+            <th style="white-space:nowrap;">Type</th>
+            @if (ShowDefault)
+            {
+                <th style="white-space:nowrap;">Default</th>
+            }
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var m in Members)
+        {
+            <tr>
+                <td><code class="docs-inline-code">@m.Name</code></td>
+                <td><code class="docs-inline-code" style="white-space:normal;">@m.Type</code></td>
+                @if (ShowDefault)
+                {
+                    <td>@m.Default</td>
+                }
+                <td>@m.Description</td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>
+
+@code {
+    /// <summary>The members to list.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<ApiMember> Members { get; set; } = [];
+
+    /// <summary>Header for the first column. Default <c>Parameter</c>.</summary>
+    [Parameter] public string NameHeader { get; set; } = "Parameter";
+
+    /// <summary>Whether to render the Default column. Default <see langword="true"/>.</summary>
+    [Parameter] public bool ShowDefault { get; set; } = true;
+}

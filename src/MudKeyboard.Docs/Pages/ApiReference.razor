@@ -1,0 +1,260 @@
+@page "/api"
+@namespace MudKeyboard.Docs.Pages
+
+<PageTitle>API reference · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Tools"
+            Title="API reference"
+            Lead="Every public type in the MudKeyboard library — components, models, services and the built-in layouts." />
+
+<MudGrid Spacing="4">
+    <MudItem xs="12" md="9">
+        @* ---------------- Components ---------------- *@
+        <h2 id="components" class="docs-section-title"><MudText Typo="Typo.h5" Style="font-weight:600;">Components</MudText></h2>
+
+        <ApiHeading Id="mudkeyboard" Title="MudKeyboard" Namespace="MudKeyboard.Components" />
+        <ParamTable Members="KeyboardParams" />
+
+        <ApiHeading Id="mudnumpad" Title="MudNumpad" Namespace="MudKeyboard.Components" />
+        <ParamTable Members="NumpadParams" />
+
+        <ApiHeading Id="mudpricepad" Title="MudPricepad" Namespace="MudKeyboard.Components" />
+        <ParamTable Members="PricepadParams" />
+
+        <ApiHeading Id="mudkeyboardhost" Title="MudKeyboardHost" Namespace="MudKeyboard.Components" />
+        <ParamTable Members="HostParams" />
+
+        @* ---------------- Models ---------------- *@
+        <h2 id="models" class="docs-section-title"><MudText Typo="Typo.h5" Style="font-weight:600;">Models</MudText></h2>
+
+        <ApiHeading Id="keyboardlayout" Title="KeyboardLayout" Namespace="MudKeyboard.Models — sealed record" />
+        <ParamTable Members="LayoutMembers" NameHeader="Member" />
+
+        <ApiHeading Id="keyboardkey" Title="KeyboardKey" Namespace="MudKeyboard.Models — sealed record" />
+        <ParamTable Members="KeyMembers" NameHeader="Member" />
+
+        <ApiHeading Id="keyboardvariant" Title="KeyboardVariant" Namespace="MudKeyboard.Models — enum" />
+        <ParamTable Members="VariantMembers" NameHeader="Value" ShowDefault="false" />
+
+        <ApiHeading Id="keyboardpalette" Title="KeyboardPalette" Namespace="MudKeyboard.Models — sealed record" />
+        <ParamTable Members="PaletteMembers" NameHeader="Member" />
+
+        <ApiHeading Id="keyboardinput" Title="KeyboardInput / KeyboardInputKind" Namespace="MudKeyboard.Models" />
+        <ParamTable Members="InputMembers" NameHeader="Member" />
+
+        <ApiHeading Id="keytokens" Title="KeyTokens" Namespace="MudKeyboard.Models — static class" />
+        <ParamTable Members="TokenMembers" NameHeader="Constant / method" ShowDefault="false" />
+
+        @* ---------------- Services ---------------- *@
+        <h2 id="services" class="docs-section-title"><MudText Typo="Typo.h5" Style="font-weight:600;">Services &amp; setup</MudText></h2>
+
+        <ApiHeading Id="addmudkeyboard" Title="AddMudKeyboard()" Namespace="MudKeyboard.Extensions — IServiceCollection extension" />
+        <div class="docs-prose"><p>Registers the services needed by <code class="docs-inline-code">MudKeyboardHost</code>. Call once in <code class="docs-inline-code">Program.cs</code>; not required for the inline components.</p></div>
+        <CodeBlock Language="csharp" Code="@AddCode" />
+
+        <ApiHeading Id="mudkeyboardoptions" Title="MudKeyboardOptions" Namespace="MudKeyboard.Services" />
+        <ParamTable Members="OptionMembers" NameHeader="Member" />
+
+        <ApiHeading Id="keyboardattachmode" Title="KeyboardAttachMode" Namespace="MudKeyboard.Services — enum" />
+        <ParamTable Members="AttachMembers" NameHeader="Value" ShowDefault="false" />
+
+        <ApiHeading Id="keyboardinteropservice" Title="KeyboardInteropService" Namespace="MudKeyboard.Services — scoped service" />
+        <div class="docs-prose"><p>The single place that performs JS interop for the docked keyboard. Used internally by <code class="docs-inline-code">MudKeyboardHost</code>; you rarely call it directly. Key members:</p></div>
+        <ParamTable Members="InteropMembers" NameHeader="Member" ShowDefault="false" />
+
+        @* ---------------- Layouts ---------------- *@
+        <h2 id="layouts" class="docs-section-title"><MudText Typo="Typo.h5" Style="font-weight:600;">Layouts</MudText></h2>
+
+        <ApiHeading Id="layoutlibrary" Title="LayoutLibrary" Namespace="MudKeyboard.Layouts — static class" />
+        <ParamTable Members="LibraryMembers" NameHeader="Member" ShowDefault="false" />
+
+        <div class="docs-nav-footer">
+            <MudButton Href="playground" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">Playground</MudButton>
+            <MudButton Href="" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Home">Home</MudButton>
+        </div>
+    </MudItem>
+
+    <MudItem xs="12" md="3" Class="d-none d-md-flex">
+        <MudPaper Outlined="true" Class="pa-3" Style="border-radius:12px;position:sticky;top:88px;width:100%;align-self:flex-start;">
+            <MudText Typo="Typo.overline" Color="Color.Primary">On this page</MudText>
+            <div class="d-flex flex-column" style="gap:0.15rem;">
+                @foreach (var (anchor, label, indent) in Toc)
+                {
+                    <MudLink Href="@($"api#{anchor}")" Typo="Typo.body2" Color="Color.Inherit" Style="@($"padding-left:{indent}rem;")">@label</MudLink>
+                }
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private static readonly (string Anchor, string Label, double Indent)[] Toc =
+    [
+        ("components", "Components", 0),
+        ("mudkeyboard", "MudKeyboard", 0.75),
+        ("mudnumpad", "MudNumpad", 0.75),
+        ("mudpricepad", "MudPricepad", 0.75),
+        ("mudkeyboardhost", "MudKeyboardHost", 0.75),
+        ("models", "Models", 0),
+        ("keyboardlayout", "KeyboardLayout", 0.75),
+        ("keyboardkey", "KeyboardKey", 0.75),
+        ("keyboardvariant", "KeyboardVariant", 0.75),
+        ("keyboardpalette", "KeyboardPalette", 0.75),
+        ("keyboardinput", "KeyboardInput", 0.75),
+        ("keytokens", "KeyTokens", 0.75),
+        ("services", "Services & setup", 0),
+        ("addmudkeyboard", "AddMudKeyboard()", 0.75),
+        ("mudkeyboardoptions", "MudKeyboardOptions", 0.75),
+        ("keyboardattachmode", "KeyboardAttachMode", 0.75),
+        ("keyboardinteropservice", "KeyboardInteropService", 0.75),
+        ("layouts", "Layouts", 0),
+        ("layoutlibrary", "LayoutLibrary", 0.75),
+    ];
+
+    private const string AddCode = """
+using MudKeyboard.Extensions;
+using MudKeyboard.Services;
+
+builder.Services.AddMudKeyboard();                                       // default: AllInputs
+builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
+""";
+
+    private static readonly IReadOnlyList<ApiMember> KeyboardParams =
+    [
+        new("Value / ValueChanged", "string", "\"\"", "Two-way bindable value (@bind-Value)."),
+        new("Layout", "KeyboardLayout?", "null", "Explicit layout; overrides Variant."),
+        new("Variant", "KeyboardVariant", "Full", "Built-in surface: Full, Numpad, Pricepad, Custom."),
+        new("SymbolLayout", "KeyboardLayout?", "null", "Numbers/symbols face for the {sym} toggle."),
+        new("MaxLength", "int?", "null", "Optional cap on value length."),
+        new("Disabled", "bool", "false", "Disables every key."),
+        new("DropShadow", "bool", "true", "Flat keys when false."),
+        new("Palette", "KeyboardPalette?", "null", "Per-keyboard colour overrides."),
+        new("Class / Style", "string?", "null", "Passthrough CSS."),
+        new("OnEnter", "EventCallback", "—", "Fires on the Enter key."),
+        new("OnEscape", "EventCallback", "—", "Fires on an {esc} key."),
+        new("OnInput", "EventCallback<KeyboardInput>", "—", "Emit mode: route each press elsewhere."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> NumpadParams =
+    [
+        new("Value / ValueChanged", "string", "\"\"", "Two-way bindable value."),
+        new("AllowDecimal", "bool", "false", "Shows a '.' key; allows one decimal point."),
+        new("MaxLength", "int?", "null", "Optional cap on value length."),
+        new("Disabled", "bool", "false", "Disables every key."),
+        new("Palette", "KeyboardPalette?", "null", "Per-numpad colour overrides."),
+        new("Class / Style", "string?", "null", "Passthrough CSS."),
+        new("OnEnter", "EventCallback", "—", "Fires on the Enter key."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> PricepadParams =
+    [
+        new("Value / ValueChanged", "string", "\"\"", "Two-way bindable formatted currency string."),
+        new("CurrencySymbol", "string", "\"£\"", "Symbol prefix."),
+        new("DecimalPlaces", "int", "2", "Fractional digits."),
+        new("MaxLength", "int?", "null", "Cap on entered digits."),
+        new("Disabled", "bool", "false", "Disables every key."),
+        new("Palette", "KeyboardPalette?", "null", "Per-pricepad colour overrides."),
+        new("Class / Style", "string?", "null", "Passthrough CSS."),
+        new("OnEnter", "EventCallback", "—", "Fires on the Enter key."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> HostParams =
+    [
+        new("Palette", "KeyboardPalette?", "null", "Colour overrides for the docked keyboard."),
+        new("Elevation", "int", "8", "Drop-shadow elevation of the docked panel."),
+        new("MinZIndex", "int", "1400", "Floor for the panel's z-index."),
+        new("Style", "string?", "null", "Extra inline styles for the panel."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> LayoutMembers =
+    [
+        new("Rows", "IReadOnlyList<IReadOnlyList<string>>", "required", "Rows of key tokens, top-to-bottom, left-to-right."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> KeyMembers =
+    [
+        new("ActionToken", "string", "ctor", "Token emitted on press (literal char or command token)."),
+        new("DisplayLabel", "string", "ctor", "Glyph/text shown on the key face."),
+        new("WidthMultiplier", "double", "1.0", "Width relative to a standard key."),
+        new("Highlighted", "bool", "false", "Renders with the primary accent."),
+        new("Bold", "bool", "false", "Renders the label bold."),
+        new("IsCommand", "bool", "—", "True when the token is a command (braced)."),
+        new("IsEnter", "bool", "—", "True when the token is {enter}."),
+        new("FromToken(token)", "static KeyboardKey", "—", "Resolves a token to a key with sensible label/width."),
+        new("FromRows(rows)", "static IReadOnlyList<IReadOnlyList<KeyboardKey>>", "—", "Projects raw token rows into key rows."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> VariantMembers =
+    [
+        new("Full", "KeyboardVariant", "—", "Full QWERTY text keyboard."),
+        new("Numpad", "KeyboardVariant", "—", "Calculator-style numeric pad."),
+        new("Pricepad", "KeyboardVariant", "—", "Numeric pad formatted as currency (via MudPricepad)."),
+        new("Custom", "KeyboardVariant", "—", "Use a caller-supplied Layout."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> PaletteMembers =
+    [
+        new("Surface", "string?", "null", "Keyboard background."),
+        new("KeyColor", "string?", "null", "Literal-key background."),
+        new("KeyTextColor", "string?", "null", "Literal-key label."),
+        new("AccentColor", "string?", "null", "Accent-key background."),
+        new("AccentTextColor", "string?", "null", "Accent-key label."),
+        new("Compose(palette, style)", "static string?", "—", "Composes CSS-variable overrides with an inline style."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> InputMembers =
+    [
+        new("KeyboardInputKind", "enum", "—", "Text, Backspace, Enter, Escape."),
+        new("KeyboardInput.Kind", "KeyboardInputKind", "—", "What the press represents."),
+        new("KeyboardInput.Text", "string", "\"\"", "Literal text when Kind is Text."),
+        new("KeyboardInput.Char(text)", "static KeyboardInput", "—", "Creates a literal-text input."),
+        new("KeyboardInput.Backspace / Enter / Escape", "static KeyboardInput", "—", "The command inputs."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> TokenMembers =
+    [
+        new("Backspace", "const \"{bksp}\"", "Delete before the caret."),
+        new("Enter", "const \"{enter}\"", "Commit / submit."),
+        new("Space", "const \"{space}\"", "Insert a space."),
+        new("Shift", "const \"{shift}\"", "One-shot shift / caps lock."),
+        new("Caps", "const \"{caps}\"", "Caps lock."),
+        new("SymbolToggle", "const \"{sym}\"", "Flip letters ⇄ numbers/symbols."),
+        new("Escape", "const \"{esc}\"", "Dismiss (raises OnEscape)."),
+        new("IsCommand(token)", "static bool", "True when the token is a braced command."),
+        new("IsEnter(token)", "static bool", "True when the token is {enter}."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> OptionMembers =
+    [
+        new("AttachMode", "KeyboardAttachMode", "AllInputs", "Which fields the docked keyboard attaches to."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> AttachMembers =
+    [
+        new("AllInputs", "KeyboardAttachMode", "—", "Attach to every editable field (opt out with data-mudkeyboard-ignore)."),
+        new("OptIn", "KeyboardAttachMode", "—", "Attach only to fields marked data-mudkeyboard."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> InteropMembers =
+    [
+        new("IsOpen", "bool", "—", "Whether the docked keyboard is currently shown."),
+        new("CurrentLayout / CurrentSymbolLayout", "KeyboardLayout?", "—", "The layout (and symbol face) for the focused field."),
+        new("StateChanged", "event Action", "—", "Raised when IsOpen or the active layout changes."),
+        new("InitializeAsync()", "Task", "—", "Loads the JS module and starts focus capture."),
+        new("InsertTextAsync / BackspaceAsync / EnterAsync", "ValueTask", "—", "Edit the focused field at its caret."),
+        new("ClearAsync / CopyAsync / PasteAsync / MoveCaretAsync", "ValueTask", "—", "Toolbar actions on the focused field."),
+        new("CloseAsync()", "Task", "—", "Blurs the field and hides the keyboard."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> LibraryMembers =
+    [
+        new("Qwerty", "KeyboardLayout", "—", "English QWERTY with shift, backspace, space, enter, 123 toggle."),
+        new("Symbols", "KeyboardLayout", "—", "Numbers-and-symbols face of the full keyboard."),
+        new("Numeric", "KeyboardLayout", "—", "A single row of digits 0–9."),
+        new("Numpad", "KeyboardLayout", "—", "Calculator-style numeric pad."),
+        new("NumpadWithDecimal", "KeyboardLayout", "—", "Numpad with a decimal-point key."),
+        new("Price", "KeyboardLayout", "—", "Money pad (pence-first, no decimal key)."),
+        new("ForVariant(variant)", "static KeyboardLayout", "—", "Default layout for a variant (throws for Custom)."),
+        new("SymbolsForVariant(variant)", "static KeyboardLayout?", "—", "Symbol face for a variant (only Full has one)."),
+    ];
+}
