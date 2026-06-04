@@ -29,7 +29,9 @@
     <Description>Free, open-source on-screen virtual keyboard for Blazor and MudBlazor apps. The keyboard core is JavaScript-free (pure C#/Blazor); an optional, tiny JS shim adds a global docked keyboard that pops up when any input is focused. Includes a full QWERTY keyboard, numpad, pence-first pricepad and custom layouts, themed automatically by MudBlazor (dark/light follows your theme). AOT and trim-friendly. Targets .NET 8, 9 and 10.</Description>
     <PackageTags>blazor;mudblazor;virtual-keyboard;onscreen-keyboard;on-screen-keyboard;touch-keyboard;touchscreen;numpad;keypad;kiosk;blazor-component;blazor-webassembly;dotnet;csharp</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/sardar97/mudkeyboard</PackageProjectUrl>
+    <!-- Project URL points to the documentation site (the package's primary landing page).
+         The source repository is declared separately via RepositoryUrl below. -->
+    <PackageProjectUrl>https://mudkeyboard.pages.dev</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/sardar97/mudkeyboard</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
