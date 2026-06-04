@@ -1,6 +1,12 @@
-/* Docked keyboard: a fixed, bottom-centre panel that slides up when a field is focused.
-   The container is always in the DOM (off-screen) so toggling --open animates the transform.
-   Colours come from MudPaper / the MudBlazor theme — nothing is hardcoded here. */
+/* MudKeyboard docked-keyboard styles.
+   Shipped as a plain static asset (not Blazor scoped CSS) and auto-loaded by MudKeyboardHost via a
+   <link>. Keeping the library free of any .razor.css is deliberate: a Razor Class Library that ships
+   scoped CSS forces the *consuming* app to generate its "{AppName}.styles.css" bundle, which clashes
+   with any stray physical file of that name. Plain CSS avoids being that trigger entirely.
+
+   Only the docked host needs these rules — the inline MudKeyboard / MudNumpad / MudPricepad
+   components carry no CSS of their own. Every class is prefixed `mudkeyboard-`, so global scope is
+   safe. Colours come from MudPaper / the MudBlazor theme — nothing is hardcoded here. */
 
 .mudkeyboard-dock {
     position: fixed;
@@ -28,12 +34,12 @@
 }
 
 /* Taller keys for the full keyboard (keys only, not the toolbar). Overrides KeyButton's inline min-height. */
-.mudkeyboard-dock--text ::deep .mudkeyboard-grid .mud-button-root {
+.mudkeyboard-dock--text .mudkeyboard-grid .mud-button-root {
     min-height: 4rem !important;
 }
 
 /* Slightly taller keys for the numeric/money keypads. */
-.mudkeyboard-dock--keypad ::deep .mudkeyboard-grid .mud-button-root {
+.mudkeyboard-dock--keypad .mudkeyboard-grid .mud-button-root {
     min-height: 4rem !important;
 }
 

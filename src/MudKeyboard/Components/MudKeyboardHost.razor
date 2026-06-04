@@ -2,6 +2,13 @@
 @implements IDisposable
 @inject KeyboardInteropService Interop
 
+@* The dock's styles ship as a plain static asset (wwwroot/MudKeyboard.css), not Blazor scoped CSS,
+   so the library never forces the consuming app to build its "{AppName}.styles.css" bundle. The host
+   pulls the sheet in itself via this <link>, so callers need no extra setup. A stylesheet <link> in
+   the body is valid HTML5 ("body-ok") and applies the same as one in <head>; it renders once because
+   the host is placed once. *@
+<link rel="stylesheet" href="_content/MudKeyboard/MudKeyboard.css" />
+
 @* Place ONCE in your layout. The container is always present (off-screen) so the slide-up
    transition animates whenever the --open class is toggled; the keyboard inside it renders once a
    field is focused. mousedown:preventDefault keeps the focused field focused while keys are tapped,
