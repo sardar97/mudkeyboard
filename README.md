@@ -6,26 +6,32 @@
 
 [![CI](https://github.com/sardar97/mudkeyboard/actions/workflows/ci.yml/badge.svg)](https://github.com/sardar97/mudkeyboard/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/MudKeyboard.svg)](https://www.nuget.org/packages/MudKeyboard)
+[![NuGet downloads](https://img.shields.io/nuget/dt/MudKeyboard.svg)](https://www.nuget.org/packages/MudKeyboard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A Blazor on-screen **virtual keyboard** for [MudBlazor](https://mudblazor.com) apps.
+A free, open-source on-screen **virtual keyboard** for [Blazor](https://learn.microsoft.com/aspnet/core/blazor)
+and [MudBlazor](https://mudblazor.com) applications. Built for touchscreens, kiosks, point-of-sale
+terminals and any interface where a hardware keyboard is unavailable or impractical.
 
-- 🧩 **JavaScript-free core.** Rendering, the text engine, shift/caps and the symbol toggle are
-  100% C#/Blazor. A single tiny optional ES module powers *one* feature: the global docked keyboard
-  that pops up on input focus.
-- 🎨 **Themed by MudBlazor.** Every colour comes from MudBlazor CSS variables, so dark/light mode and
-  your theme cascade to the keyboard automatically — no extra code.
-- ⚡ **AOT & trim friendly.** No reflection, no dynamic code. The library is marked
-  `IsAotCompatible`, so trim/AOT analyzers run on every build.
-- 🎯 **.NET 8, 9 and 10.** Interactive Server and WebAssembly render modes.
+**Documentation and live demo: [mudkeyboard.pages.dev](https://mudkeyboard.pages.dev)**
+
+## Highlights
+
+- **JavaScript-free core.** Rendering, the text engine, shift/caps and the symbol toggle are 100%
+  C# and Blazor. A single tiny, optional ES module powers exactly one feature: the global docked
+  keyboard that pops up on input focus.
+- **Themed by MudBlazor.** Every colour comes from MudBlazor CSS variables, so dark/light mode and
+  your theme cascade to the keyboard automatically, with no extra code.
+- **AOT and trim friendly.** No reflection, no dynamic code. The library is marked
+  `IsAotCompatible`, so trim and AOT analyzers run on every build.
+- **Multi-targeted.** Supports .NET 8, 9 and 10 with the Interactive Server and WebAssembly render
+  modes.
+- **Versatile.** Ships a full QWERTY keyboard, a numpad, a pence-first pricepad and a custom-layout
+  engine, plus an optional global docked keyboard.
 
 > **Render modes:** the library is render-mode agnostic — your app picks `InteractiveServer` or
-> `InteractiveWebAssembly`. Static SSR is **not** supported (a virtual keyboard needs interactivity).
-
-<!--
-Screenshots live in docs/images/. Capture them from the demo app (see the Demos section) and drop
-them in; the references below will light up automatically.
--->
+> `InteractiveWebAssembly`. Static SSR is **not** supported, as a virtual keyboard needs
+> interactivity.
 
 | Inline keyboard | Numpad / Pricepad | Global docked keyboard |
 | --- | --- | --- |
@@ -40,12 +46,12 @@ dotnet add package MudKeyboard
 ```
 
 MudBlazor is a **peer dependency** — MudKeyboard reuses your existing MudBlazor setup and does not
-bundle a second theme. If you don't have MudBlazor yet, follow its
+bundle a second theme. If you do not have MudBlazor yet, follow its
 [getting-started guide](https://mudblazor.com/getting-started/installation) first.
 
 ```xml
 <PackageReference Include="MudBlazor" Version="9.*" />
-<PackageReference Include="MudKeyboard" Version="1.0.0" />
+<PackageReference Include="MudKeyboard" Version="1.0.1" />
 ```
 
 Add the namespaces to `_Imports.razor`:
@@ -112,13 +118,16 @@ A layout is just data — rows of key tokens. Literal tokens are typed verbatim;
 }
 ```
 
+For the complete API reference and runnable examples, see the
+[documentation site](https://mudkeyboard.pages.dev).
+
 ---
 
 ## Global docked keyboard
 
 A single host component shows a keyboard that **slides up from the bottom when any input is focused**
-and types at the caret of that field. This is the one feature that uses JavaScript (a small focus-capture
-shim shipped as a static web asset).
+and types at the caret of that field. This is the one feature that uses JavaScript (a small
+focus-capture shim shipped as a static web asset).
 
 **1. Register the services** in `Program.cs`:
 
@@ -140,8 +149,8 @@ builder.Services.AddMudKeyboard();   // MudKeyboard docked-keyboard services
 <MudKeyboardHost />   @* once, anywhere in the layout *@
 ```
 
-That's it — every editable text/number field now raises the keyboard on focus. The layout is inferred
-per field (text → QWERTY, number → numpad, etc.).
+That is all — every editable text or number field now raises the keyboard on focus. The layout is
+inferred per field (text maps to QWERTY, number to numpad, and so on).
 
 ### Controlling which fields attach
 
@@ -166,12 +175,12 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
 
 > Use `Immediate="true"` on MudBlazor inputs so the bound value updates as keys are tapped.
 
-The docked panel also includes clear / copy / paste / cursor controls, and automatically docks one layer
-above the top-most element on the page, so it floats over dialogs and overlays.
+The docked panel also includes clear, copy, paste and cursor controls, and automatically docks one
+layer above the top-most element on the page, so it floats over dialogs and overlays.
 
 ---
 
-## Components & parameters
+## Components and parameters
 
 ### `<MudKeyboard>`
 
@@ -208,8 +217,8 @@ above the top-most element on the page, so it floats over dialogs and overlays.
 ## Theming
 
 The keyboard reads the **ambient MudBlazor theme** — toggle `MudThemeProvider`'s dark mode and every
-key follows, with zero extra code. To recolour a single keyboard without touching the app theme, pass a
-`KeyboardPalette`. Any slot you leave unset still follows the theme (so dark/light keeps working):
+key follows, with no extra code. To recolour a single keyboard without touching the app theme, pass a
+`KeyboardPalette`. Any slot you leave unset still follows the theme, so dark/light keeps working:
 
 ```razor
 <MudKeyboard @bind-Value="_value" Palette="Brand" />
@@ -258,7 +267,7 @@ character. The well-known tokens are constants on `KeyTokens`:
 
 ---
 
-## AOT & trimming
+## AOT and trimming
 
 The library targets `net8.0;net9.0;net10.0` and sets `<IsAotCompatible>true</IsAotCompatible>`, which
 enables the trim, AOT and single-file analyzers on every build — there is no reflection or dynamic code
@@ -277,16 +286,33 @@ dotnet run --project demo/MudKeyboard.Demo.Wasm     # Interactive WebAssembly
 ```
 
 The Server demo showcases every variant, two-way binding, the `OnEnter` callback, a custom layout, a
-`KeyboardPalette` override and the global docked keyboard.
+`KeyboardPalette` override and the global docked keyboard. A hosted version is available on the
+[documentation site](https://mudkeyboard.pages.dev).
 
 ---
 
-## Contributing & building
+## Contributing and building
+
+Contributions are welcome. To build and test locally:
 
 ```bash
 dotnet build                                   # build everything
-dotnet test tests/MudKeyboard.Tests            # run the unit + bUnit tests
+dotnet test tests/MudKeyboard.Tests            # run the unit and bUnit tests
 ```
+
+Please open an issue or pull request on [GitHub](https://github.com/sardar97/mudkeyboard).
+
+---
+
+## Support the project
+
+MudKeyboard is free and open source, maintained in spare time. If it saves you work and you would
+like to support its continued development, donations are gratefully received:
+
+**[Donate via PayPal](https://paypal.me/sardarqaslany)**
+
+Starring the [repository](https://github.com/sardar97/mudkeyboard) and reporting issues are equally
+appreciated and cost nothing.
 
 ---
 
