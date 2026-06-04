@@ -5,3 +5,6 @@ obj/
 .DS_Store
 /CLAUDE.md
 .idea
+
+# Cloudflare Pages build output (produced by build.sh)
+/publish/

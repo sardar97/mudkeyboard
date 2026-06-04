@@ -1,0 +1,6 @@
+# SPA fallback for Cloudflare Pages.
+# MudKeyboard.Docs is a Blazor WebAssembly single-page app with client-side routing,
+# so deep links and page refreshes (e.g. /docs, /numpad) must serve index.html with a
+# 200 instead of a 404. Existing static assets (_framework/*, css/*, …) are served
+# directly and are NOT affected by this rule — Pages matches real files first.
+/*    /index.html    200
