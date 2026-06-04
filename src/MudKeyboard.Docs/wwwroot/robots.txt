@@ -1,5 +1,5 @@
 # MudKeyboard documentation site — open to all crawlers and AI agents.
-# Replace https://YOUR-DOMAIN with the deployed origin.
+# Replace https://mudkeyboard.pages.dev with the deployed origin.
 
 User-agent: *
 Allow: /
@@ -35,4 +35,4 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
-Sitemap: https://YOUR-DOMAIN/sitemap.xml
+Sitemap: https://mudkeyboard.pages.dev/sitemap.xml

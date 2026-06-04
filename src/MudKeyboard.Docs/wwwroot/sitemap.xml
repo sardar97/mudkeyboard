@@ -1,68 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Replace https://YOUR-DOMAIN with the deployed origin. -->
+<!-- Replace https://mudkeyboard.pages.dev with the deployed origin. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://YOUR-DOMAIN/</loc>
+    <loc>https://mudkeyboard.pages.dev/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/getting-started</loc>
+    <loc>https://mudkeyboard.pages.dev/getting-started</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/components/keyboard</loc>
+    <loc>https://mudkeyboard.pages.dev/components/keyboard</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/components/numpad</loc>
+    <loc>https://mudkeyboard.pages.dev/components/numpad</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/components/pricepad</loc>
+    <loc>https://mudkeyboard.pages.dev/components/pricepad</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/components/docked-keyboard</loc>
+    <loc>https://mudkeyboard.pages.dev/components/docked-keyboard</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/features/layouts</loc>
+    <loc>https://mudkeyboard.pages.dev/features/layouts</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/features/custom-layouts</loc>
+    <loc>https://mudkeyboard.pages.dev/features/custom-layouts</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/features/theming</loc>
+    <loc>https://mudkeyboard.pages.dev/features/theming</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/features/emit-mode</loc>
+    <loc>https://mudkeyboard.pages.dev/features/emit-mode</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/features/aot</loc>
+    <loc>https://mudkeyboard.pages.dev/features/aot</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/playground</loc>
+    <loc>https://mudkeyboard.pages.dev/playground</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://YOUR-DOMAIN/api</loc>
+    <loc>https://mudkeyboard.pages.dev/api</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

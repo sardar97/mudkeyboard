@@ -2,25 +2,25 @@
 
 > MudKeyboard is a free, open-source on-screen virtual keyboard library for Blazor and MudBlazor apps. The keyboard core is 100% C#/Blazor (no JavaScript); a single optional JS shim powers one feature — a global docked keyboard that pops up when any input is focused. It is themed automatically by MudBlazor (dark/light follows your theme), and is AOT- and trim-friendly. Targets .NET 8, 9 and 10 (interactive Server and WebAssembly; no static SSR).
 
-Install from NuGet as `MudKeyboard` (MudBlazor is a peer dependency). Replace https://YOUR-DOMAIN with this site's deployed origin.
+Install from NuGet as `MudKeyboard` (MudBlazor is a peer dependency). Replace https://mudkeyboard.pages.dev with this site's deployed origin.
 
 ## Components
-- MudKeyboard: full QWERTY keyboard with shift/caps and a 123 toggle to a numbers/symbols face; two-way `@bind-Value`, `OnEnter`, `MaxLength`, `DropShadow`, `Palette`. [Docs](https://YOUR-DOMAIN/components/keyboard)
-- MudNumpad: calculator-style numeric pad with optional `AllowDecimal`. [Docs](https://YOUR-DOMAIN/components/numpad)
-- MudPricepad: pence-first money entry (type 5·2·3 → £5.23) with `CurrencySymbol` and `DecimalPlaces`. [Docs](https://YOUR-DOMAIN/components/pricepad)
-- MudKeyboardHost: global docked keyboard that slides up on input focus and types at the caret; register with `AddMudKeyboard()`. [Docs](https://YOUR-DOMAIN/components/docked-keyboard)
+- MudKeyboard: full QWERTY keyboard with shift/caps and a 123 toggle to a numbers/symbols face; two-way `@bind-Value`, `OnEnter`, `MaxLength`, `DropShadow`, `Palette`. [Docs](https://mudkeyboard.pages.dev/components/keyboard)
+- MudNumpad: calculator-style numeric pad with optional `AllowDecimal`. [Docs](https://mudkeyboard.pages.dev/components/numpad)
+- MudPricepad: pence-first money entry (type 5·2·3 → £5.23) with `CurrencySymbol` and `DecimalPlaces`. [Docs](https://mudkeyboard.pages.dev/components/pricepad)
+- MudKeyboardHost: global docked keyboard that slides up on input focus and types at the caret; register with `AddMudKeyboard()`. [Docs](https://mudkeyboard.pages.dev/components/docked-keyboard)
 
 ## Guides
-- Getting started (install, MudBlazor setup, render modes): [Docs](https://YOUR-DOMAIN/getting-started)
-- Layouts & key tokens (built-in layouts, `{bksp}`/`{enter}`/`{shift}`/`{sym}` tokens): [Docs](https://YOUR-DOMAIN/features/layouts)
-- Custom layouts (a `KeyboardLayout` is just rows of key tokens): [Docs](https://YOUR-DOMAIN/features/custom-layouts)
-- Theming & palette (inherit the MudBlazor theme or override with `KeyboardPalette`): [Docs](https://YOUR-DOMAIN/features/theming)
-- Emit mode (`OnInput` routes each press elsewhere instead of editing `Value`): [Docs](https://YOUR-DOMAIN/features/emit-mode)
-- AOT & trimming (`IsAotCompatible`, reflection-free, primitive-only interop): [Docs](https://YOUR-DOMAIN/features/aot)
+- Getting started (install, MudBlazor setup, render modes): [Docs](https://mudkeyboard.pages.dev/getting-started)
+- Layouts & key tokens (built-in layouts, `{bksp}`/`{enter}`/`{shift}`/`{sym}` tokens): [Docs](https://mudkeyboard.pages.dev/features/layouts)
+- Custom layouts (a `KeyboardLayout` is just rows of key tokens): [Docs](https://mudkeyboard.pages.dev/features/custom-layouts)
+- Theming & palette (inherit the MudBlazor theme or override with `KeyboardPalette`): [Docs](https://mudkeyboard.pages.dev/features/theming)
+- Emit mode (`OnInput` routes each press elsewhere instead of editing `Value`): [Docs](https://mudkeyboard.pages.dev/features/emit-mode)
+- AOT & trimming (`IsAotCompatible`, reflection-free, primitive-only interop): [Docs](https://mudkeyboard.pages.dev/features/aot)
 
 ## Tools
-- Playground (tweak parameters live and copy the generated markup): [Docs](https://YOUR-DOMAIN/playground)
-- API reference (every public type: components, models, services, layouts): [Docs](https://YOUR-DOMAIN/api)
+- Playground (tweak parameters live and copy the generated markup): [Docs](https://mudkeyboard.pages.dev/playground)
+- API reference (every public type: components, models, services, layouts): [Docs](https://mudkeyboard.pages.dev/api)
 
 ## Package & source
 - NuGet package: https://www.nuget.org/packages/MudKeyboard
