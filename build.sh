@@ -1,22 +1,5 @@
 #!/usr/bin/env bash
-#
-# Cloudflare Pages build script for the MudKeyboard docs site (Blazor WebAssembly).
-#
-# Cloudflare's build image ships with Node/Python/etc. but NOT the .NET SDK, so the
-# previous build died at "dotnet: not found". This script installs .NET, adds the
-# wasm-tools workload (required for the AOT publish), and publishes the WASM app.
-#
-# The static, deployable output lands in ./publish/wwwroot.
-#
-# Cloudflare Pages → Settings must match:
-#   Production branch:       docs               (deploys come from the `docs` branch, never master)
-#   Build command:           bash build.sh
-#   Build output directory:  publish/wwwroot
-#   Root directory:          /                  (repo root — leave blank/default)
-#   Automatic deployments:   production branch only (so library-only pushes to master don't rebuild)
-#
-# To deploy the current master: git push origin origin/master:docs  (see RELEASE.md).
-#
+
 set -euo pipefail
 
 DOTNET_CHANNEL="10.0"                 # docs site targets net10.0
@@ -38,12 +21,10 @@ export PATH="${DOTNET_INSTALL_DIR}:${PATH}"
 
 dotnet --info
 
-echo "==> Installing wasm-tools workload (required for RunAOTCompilation)"
+echo "==> Installing wasm-tools workload (enables runtime relinking to trim dotnet.native.wasm)"
 dotnet workload install wasm-tools
 
-echo "==> Publishing docs site (Release, AOT)"
-# AOT is passed on the command line (not set in the .csproj) so that an ordinary restore/build — e.g. CI —
-# doesn't require the wasm-tools workload. See the comment in MudKeyboard.Docs.csproj.
-dotnet publish src/MudKeyboard.Docs/MudKeyboard.Docs.csproj -c Release -p:RunAOTCompilation=true -o publish
+echo "==> Publishing docs site (Release)"
+dotnet publish src/MudKeyboard.Docs/MudKeyboard.Docs.csproj -c Release -o publish
 
 echo "==> Done. Static site is in ./publish/wwwroot"
