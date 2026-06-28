@@ -1,0 +1,63 @@
+<svg width="100%" viewBox="0 0 340 320" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>MudKeyboard logo</title>
+  <desc>A stylized virtual keyboard icon with the text MUD highlighted on the keys, and the tagline Pure Blazor below.</desc>
+
+  <defs>
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CFF"/>
+      <stop offset="100%" stop-color="#7C4DFF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Keyboard body -->
+  <rect x="60" y="60" width="220" height="150" rx="18" fill="url(#bodyGradient)"/>
+
+  <!-- Row 1 keys -->
+  <rect x="76" y="76" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="102" y="76" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="128" y="76" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="154" y="76" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="180" y="76" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="206" y="76" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="232" y="76" width="36" height="18" rx="4" fill="#FFFFFF" opacity="0.3"/>
+
+  <!-- Row 2 keys -->
+  <rect x="76" y="100" width="28" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="108" y="100" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="134" y="100" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="160" y="100" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="186" y="100" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="212" y="100" width="56" height="18" rx="4" fill="#FFFFFF" opacity="0.3"/>
+
+  <!-- Row 3 — M U D highlighted -->
+  <rect x="76" y="124" width="22" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="87" y="137.5" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" font-weight="700" fill="#7C4DFF">M</text>
+
+  <rect x="102" y="124" width="22" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="113" y="137.5" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" font-weight="700" fill="#7C4DFF">U</text>
+
+  <rect x="128" y="124" width="22" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="139" y="137.5" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" font-weight="700" fill="#7C4DFF">D</text>
+
+  <rect x="154" y="124" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="180" y="124" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="206" y="124" width="62" height="18" rx="4" fill="#5C35CC"/>
+
+  <!-- Row 4 — spacebar row -->
+  <rect x="76" y="148" width="30" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="110" y="148" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="136" y="148" width="96" height="18" rx="4" fill="#FFFFFF" opacity="0.5"/>
+  <rect x="236" y="148" width="22" height="18" rx="4" fill="#5C35CC"/>
+  <rect x="262" y="148" width="16" height="18" rx="4" fill="#5C35CC"/>
+
+  <!-- Shine -->
+  <rect x="70" y="62" width="200" height="3" rx="1" fill="white" opacity="0.15"/>
+
+  <!-- Wordmark -->
+  <text x="86" y="245" text-anchor="start" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="26" font-weight="800">
+    <tspan fill="#1A1A2E">Mud</tspan><tspan fill="#7C4DFF">Keyboard</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="150" y="270" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="14" font-weight="500" letter-spacing="1.5" fill="#7C4DFF" opacity="0.75">PURE BLAZOR</text>
+</svg>
