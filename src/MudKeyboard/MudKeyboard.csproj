@@ -17,16 +17,6 @@
 
     <!-- Produce the XML doc file so public API docs flow into the NuGet package (Phase 6). -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-
-    <!--
-      MUD0002 (MudBlazor's "illegal attribute" analyzer) fires on MudKeyboardTextField, which forwards
-      the consumer's bound expression to the inner MudTextField via an explicit ValueExpression
-      attribute. That forwarding is intentional and required so @bind-Value field identification and
-      EditForm validation work through the generic wrapper. The diagnostic is raised against the
-      Razor-generated source, so it cannot be scoped with a file-targeted .editorconfig section; it is
-      suppressed here for the library project only (the demo and docs projects keep the analyzer on).
-    -->
-    <NoWarn>$(NoWarn);MUD0002</NoWarn>
   </PropertyGroup>
 
   <!-- NuGet package metadata -->

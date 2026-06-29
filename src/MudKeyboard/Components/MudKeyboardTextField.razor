@@ -1,6 +1,5 @@
 @namespace MudKeyboard.Components
 @typeparam T
-@using System.Linq.Expressions
 
 @* A thin, generic wrapper around MudTextField<T> that opts a field into the global docked keyboard
    without the caller having to remember the data-* attribute names. It forwards the common
@@ -95,9 +94,7 @@
 
     // Merge caller-supplied attributes with the docked-keyboard markers, then splat the result onto
     // MudTextField. MudBlazor forwards unmatched attributes to the real <input>, which is the element the
-    // focus-capture shim watches — so data-mudkeyboard lands where it needs to. (ValueExpression is a
-    // real MudTextField parameter and is forwarded as a normal attribute above, not through this splat,
-    // so the binding/validation expression reaches the parameter rather than the input element.)
+    // focus-capture shim watches — so data-mudkeyboard lands where it needs to.
     private Dictionary<string, object> BuildUserAttributes()
     {
         var attributes = UserAttributes is null

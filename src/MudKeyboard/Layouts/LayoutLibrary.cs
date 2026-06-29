@@ -44,7 +44,7 @@ public static class LayoutLibrary
         },
     };
 
-    /// <summary>Calculator-style numeric pad: 7-8-9 / 4-5-6 / 1-2-3 / backspace-0-00-enter.</summary>
+    /// <summary>Calculator-style numeric pad: 7-8-9 / 4-5-6 / 1-2-3 / 0-00-backspace / enter.</summary>
     public static KeyboardLayout Numpad { get; } = new()
     {
         Rows = new string[][]
@@ -52,12 +52,12 @@ public static class LayoutLibrary
             ["7", "8", "9"],
             ["4", "5", "6"],
             ["1", "2", "3"],
-            [ "0", "00",".",KeyTokens.Backspace],
-            [KeyTokens.Enter]
+            ["0", "00", KeyTokens.Backspace],
+            [KeyTokens.Enter],
         },
     };
 
-    /// <summary>Calculator-style numeric pad with an extra decimal-point key and a "00" quick key.</summary>
+    /// <summary>Like <see cref="Numpad"/> but with an extra decimal-point key in the bottom number row.</summary>
     public static KeyboardLayout NumpadWithDecimal { get; } = new()
     {
         Rows = new string[][]
@@ -65,7 +65,7 @@ public static class LayoutLibrary
             ["7", "8", "9"],
             ["4", "5", "6"],
             ["1", "2", "3"],
-            [ "0", "00",".",KeyTokens.Backspace],
+            ["0", "00", ".", KeyTokens.Backspace],
             [KeyTokens.Enter],
         },
     };
