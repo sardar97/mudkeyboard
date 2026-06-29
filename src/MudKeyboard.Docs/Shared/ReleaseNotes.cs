@@ -61,9 +61,26 @@ public static class ReleaseNotes
     public static IReadOnlyList<ReleaseNote> All { get; } =
     [
         new ReleaseNote(
-            Version: "1.1.0",
+            Version: "1.2.0",
             Date: "2026-06-29",
             Status: ReleaseStatus.Latest,
+            Groups:
+            [
+                new ChangeGroup("Added",
+                [
+                    new ChangeItem("Live value preview with edit & cancel on the docked keyboard",
+                        "Set MudKeyboardHost.ShowValuePreview=\"true\" to show a bar at the top of the docked keyboard with the focused field's live value — so the user always sees what they're editing, even when the field sits behind the panel. Focusing a field that already contains text (say \"sardar\") shows it immediately; the keys edit it live, preserving all existing binding, EditForm validation and SSR-form behaviour. Backed by a new OnValueChanged interop callback (the JS shim reports the value back on every change — on-screen and hardware typing — gated on the feature, so there's no overhead when it's off) and KeyboardInteropService.CurrentValue."),
+                    new ChangeItem("Cancel / revert and an optional backdrop",
+                        "ShowBackdrop renders a dimming backdrop behind the docked keyboard (themed via the MudBlazor --mud-palette-overlay-dark variable); a backdrop click cancels the edit — reverting the field to the value it held when it was focused (OriginalValue / CancelAsync) — and closes. DisableBackdropClick keeps the backdrop from dismissing and shows a Cancel button in the preview bar instead, so the keyboard stays open until the user confirms (⏎ or the ⌄ Hide button) or cancels; rename it with CancelLabel. All opt-in."),
+                    new ChangeItem("Key click sound on every keyboard — still 100% JavaScript-free",
+                        "A new Sound parameter on MudKeyboard, MudNumpad, MudPricepad and MudKeyboardHost plays a short click on every key press, rendered as a Blazor <audio> element (re-mounted per press so the browser autoplays it) — no IJSRuntime, no JS file, so it works for the inline keyboards and the docked keyboard and keeps the JS-free-core rule intact. The default click is synthesised in pure C# (a windowed sine burst exposed as a data: URI — no shipped asset, AOT/trim-safe); point SoundSrc at any URL or data: URI to use your own. Off by default."),
+                ]),
+            ]),
+
+        new ReleaseNote(
+            Version: "1.1.0",
+            Date: "2026-06-29",
+            Status: ReleaseStatus.Stable,
             Groups:
             [
                 new ChangeGroup("Added",

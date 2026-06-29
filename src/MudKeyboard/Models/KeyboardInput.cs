@@ -20,6 +20,9 @@ public enum KeyboardInputKind
 
     /// <summary>Toggle the sign of the numeric value (positive ↔ negative).</summary>
     Sign,
+
+    /// <summary>The Cancel key was pressed (revert the edit and dismiss).</summary>
+    Cancel,
 }
 
 /// <summary>
@@ -47,4 +50,7 @@ public readonly record struct KeyboardInput(KeyboardInputKind Kind, string Text 
 
     /// <summary>A sign-toggle input (the <c>±</c> key).</summary>
     public static KeyboardInput Sign { get; } = new(KeyboardInputKind.Sign);
+
+    /// <summary>A cancel input (the Cancel key) — revert the edit and dismiss.</summary>
+    public static KeyboardInput Cancel { get; } = new(KeyboardInputKind.Cancel);
 }

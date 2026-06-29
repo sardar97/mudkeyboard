@@ -35,6 +35,12 @@ public static class KeyTokens
     public const string Escape = "{esc}";
 
     /// <summary>
+    /// Cancels the current edit: reverts to the value held before editing began and dismisses. Token:
+    /// <c>{cancel}</c>. Used by the global docked keyboard, which renders it next to the Enter key.
+    /// </summary>
+    public const string Cancel = "{cancel}";
+
+    /// <summary>
     /// Toggles the sign of a numeric value (positive ↔ negative). Token: <c>{sign}</c>. Shown as
     /// <c>±</c> on the signed numeric keypads; opt-in, so it is absent from the default keypads.
     /// </summary>

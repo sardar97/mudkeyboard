@@ -12,7 +12,7 @@ shell to a plain HTTP fetch. Everything an LLM or coding agent needs is below. A
 
 - Package: `MudKeyboard` on NuGet — <https://www.nuget.org/packages/MudKeyboard>
 - Source (MIT): <https://github.com/sardar97/mudkeyboard>
-- Current version documented here: **1.1.0** (.NET 8/9/10, MudBlazor 9.x)
+- Current version documented here: **1.2.0** (.NET 8/9/10, MudBlazor 9.x)
 - MudBlazor (required peer dependency): <https://mudblazor.com>
 
 ---
@@ -158,6 +158,8 @@ need no static assets.
 | `MaxLength` | `int?` | `null` | Optional cap on value length. |
 | `Disabled` | `bool` | `false` | Disables every key. |
 | `DropShadow` | `bool` | `true` | Flat keys when `false`. |
+| `Sound` | `bool` | `false` | Plays a click sound on key press (pure-Blazor `<audio>`, no JavaScript). |
+| `SoundSrc` | `string?` | `null` | Custom click-sound source (URL or `data:` URI); defaults to the built-in click. |
 | `Palette` | `KeyboardPalette?` | `null` | Per-keyboard colour overrides. |
 | `AriaLabel` | `string?` | `"On-screen keyboard"` | Accessible name for the root `role="group"`. |
 | `Class` / `Style` | `string?` | `null` | Passthrough CSS. |
@@ -167,18 +169,37 @@ need no static assets.
 
 ### `<MudNumpad>`
 
-`Value`/`ValueChanged`, `AllowDecimal` (bool), `MaxLength`, `Disabled`, `OnEnter`, `Palette`, `AriaLabel`
-(default `"Numeric keypad"`), `Class`, `Style`.
+`Value`/`ValueChanged`, `AllowDecimal` (bool), `AllowNegative` (bool), `MaxLength`, `Disabled`,
+`Sound` (bool), `SoundSrc` (`string?`), `OnEnter`, `Palette`, `AriaLabel` (default `"Numeric keypad"`),
+`Class`, `Style`.
 
 ### `<MudPricepad>`
 
-`Value`/`ValueChanged`, `CurrencySymbol` (default `"£"`), `DecimalPlaces` (default `2`), `MaxLength`,
-`Disabled`, `OnEnter`, `Palette`, `AriaLabel` (default `"Price entry keypad"`), `Class`, `Style`.
+`Value`/`ValueChanged`, `CurrencySymbol` (default `"£"`), `DecimalPlaces` (default `2`), `AllowNegative`
+(bool), `MaxLength`, `Disabled`, `Sound` (bool), `SoundSrc` (`string?`), `OnEnter`, `Palette`,
+`AriaLabel` (default `"Price entry keypad"`), `Class`, `Style`.
 
 ### `<MudKeyboardHost>`
 
 `Palette` (`KeyboardPalette?`), `Elevation` (`int`, default `8`), `MinZIndex` (`int`, default `1400`),
-`Style` (`string?`).
+`Style` (`string?`), `VisibleActions`/`DisabledActions` (`KeyboardAction`), `AllowNegative` (`bool`).
+
+New in 1.2.0 (all opt-in, default off):
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `ShowValuePreview` | `bool` | `true` | Shows a bar at the top of the docked keyboard with the focused field's live value and a caret at the cursor position. Edits apply live. |
+| `ShowCancel` | `bool` | `true` | Renders a **Cancel** key next to Enter that reverts to the value at focus-in and closes. While shown, the chevron-down Hide button is suppressed. |
+| `CancelLabel` | `string` | `"Cancel"` | Text shown on the Cancel key. |
+| `DefaultCapsLock` | `bool?` | `null` | Whether the keyboard starts caps-locked. `null` = use the global `MudKeyboardOptions.DefaultCapsLock`. |
+| `ShowBackdrop` | `bool` | `false` | Dims the page behind the docked keyboard; a backdrop click cancels (reverts) and closes — unless `DisableBackdropClick` is set. |
+| `DisableBackdropClick` | `bool` | `false` | Backdrop clicks no longer dismiss, requiring an explicit Enter or Cancel. Effective only with `ShowBackdrop`. |
+| `Sound` | `bool` | `false` | Plays a click sound on key press (pure-Blazor `<audio>`, no JavaScript). |
+| `SoundSrc` | `string?` | `null` | Custom click-sound source; defaults to the built-in click. |
+
+The number and money keypads **replace** the field's existing value on the first digit pressed after
+focus (a pre-filled `6.00` becomes the typed amount, not `6.005`); backspace, sign or a caret move resumes
+editing the existing value.
 
 ### `<MudKeyboardTextField>` (`@typeparam T`)
 
@@ -230,6 +251,7 @@ are constants on `KeyTokens`:
 | `{caps}` | `KeyTokens.Caps` | Caps lock |
 | `{sym}` | `KeyTokens.SymbolToggle` | Flip between letters and numbers/symbols |
 | `{esc}` | `KeyTokens.Escape` | Dismiss (raises `OnEscape`) |
+| `{cancel}` | `KeyTokens.Cancel` | Revert and dismiss (raises `OnCancel`); docked keyboard renders it next to Enter |
 
 Built-in layouts on `LayoutLibrary`: `Qwerty`, `Symbols`, `Numeric`, `Numpad`, `NumpadWithDecimal`,
 `Price`. Helpers: `LayoutLibrary.ForVariant(variant)` (throws for `Custom`) and
@@ -354,6 +376,34 @@ currency from a plain decimal. `MudKeyboardNumericField<T>` resolves the keypad 
 ```
 
 You can also force money on any field with `data-mudkeyboard-layout="money"`.
+
+### Value preview, cancel & caps lock
+
+`ShowValuePreview` (on by default) shows a bar at the top of the docked keyboard with the focused field's
+live value and a blinking caret at the cursor position — handy when the field is hidden behind the panel,
+and so caret moves (the ◂ ▸ arrows) are visible. `ShowCancel` (on by default) renders a **Cancel** key next
+to Enter: Enter commits and closes, Cancel reverts to the value the field held at focus-in and closes;
+rename the key with `CancelLabel`, or set `ShowCancel="false"` to drop it (which restores the chevron-down
+Hide button). `DefaultCapsLock="true"` starts the keyboard caps-locked (or globally:
+`AddMudKeyboard(o => o.DefaultCapsLock = true)`). `ShowBackdrop="true"` dims the page; a backdrop tap
+cancels (reverts and closes) unless `DisableBackdropClick="true"`.
+
+```razor
+<MudKeyboardHost ShowValuePreview="true" ShowCancel="true" CancelLabel="Cancel" DefaultCapsLock="false" />
+```
+
+### Key click sound (opt-in, JavaScript-free)
+
+`Sound="true"` plays a short click on every key press — a Blazor-rendered `<audio>` element (no
+JavaScript), so the same parameter works on the docked keyboard and the inline `MudKeyboard` /
+`MudNumpad` / `MudPricepad`. The default click is synthesised in pure C# and exposed as a `data:` URI;
+set `SoundSrc` to any URL or `data:` URI to use your own. (Browsers allow sound only after the first
+user interaction, so the very first tap on a fresh page may be silent.)
+
+```razor
+<MudKeyboardHost Sound="true" />
+<MudNumpad @bind-Value="_qty" Sound="true" SoundSrc="/sounds/tap.mp3" />
+```
 
 ---
 

@@ -14,7 +14,7 @@ public static class BuildInfo
 {
     /// <summary>The MudKeyboard NuGet package version these docs are built against (e.g. <c>1.0.2</c>).</summary>
     public static string PackageVersion { get; } =
-        Read(typeof(global::MudKeyboard.Services.KeyboardAttachMode).Assembly) ?? "1.1.0";
+        Read(typeof(global::MudKeyboard.Services.KeyboardAttachMode).Assembly) ?? "1.2.0";
 
     /// <summary>The version of this documentation website itself.</summary>
     public static string DocsVersion { get; } =

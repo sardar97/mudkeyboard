@@ -5,6 +5,55 @@ All notable changes to **MudKeyboard** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-06-29
+
+### Added
+- **Live value preview with edit & cancel on the docked keyboard.** Set
+  **`MudKeyboardHost.ShowValuePreview="true"`** to show a bar at the top of the docked keyboard with the
+  focused field's *live* value — so the user always sees what they're editing, even when the field sits
+  behind the panel. Focusing a field that already contains text (say `sardar`) shows it immediately; the
+  keys edit it live (all existing binding, `EditForm` validation and SSR-form behaviour is preserved).
+  Backed by a new `OnValueChanged` interop callback (the JS shim reports the focused field's value back
+  on every change — on-screen *and* hardware typing — gated on the feature, so there's no overhead when
+  it's off) and a new `KeyboardInteropService.CurrentValue`.
+- **Cancel / revert and an optional backdrop on the docked keyboard.** New
+  **`MudKeyboardHost.ShowBackdrop`** renders a dimming backdrop behind the docked keyboard (themed via the
+  MudBlazor `--mud-palette-overlay-dark` variable); a backdrop click **cancels** the edit — reverting the
+  field to the value it held when it was focused (`KeyboardInteropService.OriginalValue` /
+  `CancelAsync()`) — and closes. New **`DisableBackdropClick`** keeps the backdrop from dismissing and
+  shows a **Cancel** button in the preview bar instead (so the keyboard stays open until the user
+  confirms with ⏎ / the ⌄ Hide button, or cancels); rename it with **`CancelLabel`** (default
+  `"Cancel"`). All opt-in.
+- **Key click sound on every keyboard — still 100% JavaScript-free.** A new **`Sound`** parameter on
+  `MudKeyboard`, `MudNumpad`, `MudPricepad` and `MudKeyboardHost` plays a short click on every key press,
+  rendered as a Blazor `<audio>` element (re-mounted per press so the browser autoplays it) — no
+  `IJSRuntime`, no JS file, so it works for the inline keyboards *and* the docked keyboard and keeps the
+  JS-free-core rule intact. The default click is synthesised in pure C# (a windowed sine burst exposed as
+  a `data:` URI — no shipped asset, AOT/trim-safe); point **`SoundSrc`** at any URL or `data:` URI to use
+  your own sound. Off by default. Documented on the *MudKeyboard* and *Docked keyboard* pages (with live
+  toggles), demonstrated in both demos, and covered by tests.
+
+### Documentation
+_Documentation-site (`src/MudKeyboard.Docs`) changes only — no change to the published library/package._
+- **"What's new" badges across the docs.** Small **New** / **Updated** pills now flag per-release changes
+  on the navigation links, section headings and parameter tables (so *Key click sound* is badged **New**
+  and the *Docked keyboard* nav entry carries both **New** and **Updated**). A single `WhatsNew.Version`
+  constant drives every badge's tooltip ("New in v1.2.0"), so advertising the next release is a one-line
+  bump plus moving the markers.
+- **Each docked-keyboard option now has its own runnable example.** The *Live value preview*,
+  *Cancel & backdrop*, *Caps lock by default* and *Key click sound* options were split out of one shared
+  control panel into self-contained example cards — each with its own toggle(s), a focusable demo field
+  and *Show code* — so you can try an option and read the result in place instead of scrolling back up to
+  a shared field at the top of the page. The *Toolbar buttons* example gained a focusable field too.
+- **The API reference page is now full width with a live "On this page" highlight.** The `/api` page
+  widens to the full container so its reference grid has more room (the *On this page* card stays on the
+  right), and the current section's entry is highlighted in the primary colour as you scroll or click —
+  a scroll-spy backed by an `IntersectionObserver` in the docs site's `docs.js`.
+- **System / Light / Dark theme, with the choice remembered.** The docs site now defaults to matching the
+  operating-system colour scheme (and follows it live via `MudThemeProvider`), exposes a
+  System / Light / Dark switch in the app bar, and persists the visitor's choice in `localStorage` across
+  visits — replacing the previous always-light default.
+
 ## [1.1.0] — 2026-06-29
 
 ### Added
@@ -153,6 +202,7 @@ First public preview.
 - Multi-targeting for `net8.0`, `net9.0` and `net10.0`, with `IsAotCompatible` enabled (trim/AOT
   analyzers run on every build) and XML documentation shipped in the package.
 
+[1.2.0]: https://github.com/sardar97/mudkeyboard/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/sardar97/mudkeyboard/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/sardar97/mudkeyboard/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/sardar97/mudkeyboard/compare/v0.1.0-alpha...v1.0.0

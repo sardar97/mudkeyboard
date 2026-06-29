@@ -91,6 +91,12 @@ html, body {
     max-width: 920px;
 }
 
+/* Full-bleed pages (the API reference) drop the reading-width cap so their multi-column grid can use
+   the whole container width. */
+.docs-page--wide {
+    max-width: none;
+}
+
 .docs-h1 {
     font-family: "Roboto", system-ui, sans-serif;
     font-size: 2.4rem;
@@ -138,6 +144,26 @@ html, body {
     padding: 0.1em 0.42em;
     color: var(--mud-palette-primary);
     white-space: nowrap;
+}
+
+/* Filled (solid-colour) alerts render their body text white. The default pink inline-code and
+   primary-coloured MudLink are unreadable on that fill, so recolour both to white — matching the
+   alert's own text — with a translucent chip behind the code so it still reads as inline code. */
+.docs-alert-filled code {
+    font-family: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86em;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 6px;
+    padding: 0.1em 0.42em;
+}
+
+.docs-alert-filled a,
+.docs-alert-filled .mud-link {
+    color: #fff !important;
+    text-decoration: underline;
+    font-weight: 600;
 }
 
 /* ---------- Example card ---------- */
@@ -216,6 +242,53 @@ html, body {
     tab-size: 4;
 }
 
+/* ---------- Brand wordmark (inline SVG logo) ----------
+   Rendered inline (via <BrandLogo>) rather than as an <img>, so the wordmark text can follow the
+   active MudBlazor theme through CSS variables. An <img>-referenced SVG is colour-frozen, which is
+   why the old near-white "Keyboard" disappeared on light backgrounds. The keyboard glyph stays a
+   solid purple shape (legible on either background); only the wordmark + tagline are themed. */
+.brand-logo {
+    display: block;
+    height: auto;
+}
+
+/* "Mud" carries the brand purple; "Keyboard" + tagline use palette text colours so they stay
+   legible in light mode (dark text) and dark mode (light text) automatically. */
+.brand-logo__mud {
+    fill: var(--mud-palette-primary, var(--docs-brand));
+}
+
+.brand-logo__kbd {
+    fill: var(--mud-palette-text-primary, #1a1a2e);
+}
+
+.brand-logo__tag {
+    fill: var(--mud-palette-primary, var(--docs-brand));
+    opacity: 0.65;
+}
+
+/* On a solid accent surface (the purple app bar) the whole wordmark goes light so it reads against
+   the accent, instead of the brand purple blending into the purple bar. */
+.brand-logo--on-accent .brand-logo__mud,
+.brand-logo--on-accent .brand-logo__kbd {
+    fill: var(--mud-palette-appbar-text, #fff);
+}
+
+.brand-logo--on-accent .brand-logo__tag {
+    fill: var(--mud-palette-appbar-text, #fff);
+    opacity: 0.7;
+}
+
+.brand-logo--appbar {
+    height: 34px;
+    width: auto;
+}
+
+.brand-logo--footer {
+    height: 24px;
+    width: auto;
+}
+
 /* ---------- Hero (home page) ---------- */
 .docs-hero {
     position: relative;
@@ -278,6 +351,54 @@ html, body {
 .docs-feature__icon {
     color: var(--docs-brand);
     margin-bottom: 0.5rem;
+}
+
+/* ---------- "What's new" badges ----------
+   Small New/Updated pills shown next to nav links, section headings and parameter rows. Colours come
+   from MudBlazor palette variables (success = New, warning = Updated) so they follow light/dark mode. */
+.docs-badge {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    margin-left: 0.4rem;
+    padding: 0.02rem 0.4rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-family: "Roboto", system-ui, sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    line-height: 1.55;
+    text-transform: uppercase;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.docs-badge--new {
+    color: var(--mud-palette-success);
+    border-color: var(--mud-palette-success);
+    background: color-mix(in srgb, var(--mud-palette-success) 14%, transparent);
+}
+
+.docs-badge--updated {
+    color: var(--mud-palette-warning);
+    border-color: var(--mud-palette-warning);
+    background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent);
+}
+
+/* ---------- API reference: "On this page" table of contents ---------- */
+.docs-toc-link {
+    border-radius: 6px;
+    padding-top: 0.12rem;
+    padding-bottom: 0.12rem;
+    transition: color 0.12s ease;
+}
+
+/* The section currently in view (scroll-spy) / just clicked. Primary colour + weight so the reader
+   always knows where they are on the page. */
+.docs-toc-link--active {
+    color: var(--mud-palette-primary) !important;
+    font-weight: 700;
 }
 
 /* ---------- Misc helpers ---------- */

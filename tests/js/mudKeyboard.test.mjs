@@ -322,6 +322,39 @@ test('onFocusIn forwards the data-mudkeyboard-allow-negative attribute to .NET',
   assert.equal(calls[0][3], 'true');
 });
 
+// ---- Caret reporting for the value-preview bar --------------------------------------------------
+// When value reporting is on, a caret move (no 'input' event fires) reports the value AND caret to .NET
+// so the preview bar can draw the cursor where the caret is.
+
+test('moveCaret reports the new value and caret to .NET when value reporting is on', () => {
+  const el = makeField('INPUT', 'abcd'); // selectionStart starts at 4 (end)
+  const calls = [];
+  mod.initialize({ invokeMethodAsync: (m, ...rest) => { calls.push([m, ...rest]); return Promise.resolve(); } }, 'AllInputs', true);
+  focusInHandler({ target: el });
+  runTimers();
+  calls.length = 0;
+
+  mod.moveCaret(-1); // 4 -> 3
+
+  const report = calls.find((c) => c[0] === 'OnValueChanged');
+  assert.ok(report, 'OnValueChanged should have been invoked');
+  assert.equal(report[1], 'abcd'); // value unchanged
+  assert.equal(report[2], 3);      // caret moved left one
+});
+
+test('moveCaret does NOT report when value reporting is off', () => {
+  const el = makeField('INPUT', 'abcd');
+  const calls = [];
+  mod.initialize({ invokeMethodAsync: (m, ...rest) => { calls.push([m, ...rest]); return Promise.resolve(); } }, 'AllInputs', false);
+  focusInHandler({ target: el });
+  runTimers();
+  calls.length = 0;
+
+  mod.moveCaret(-1);
+
+  assert.ok(!calls.some((c) => c[0] === 'OnValueChanged'));
+});
+
 test('edits without a focused field are a safe no-op', () => {
   // dispose() clears activeEl; subsequent edits must not throw.
   mod.dispose();

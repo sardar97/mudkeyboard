@@ -1,77 +1,263 @@
 @page "/playground"
 @namespace MudKeyboard.Docs.Pages
+@implements IDisposable
+@inject DocsKeyboardToolbarState Toolbar
 
 <PageTitle>Playground · MudKeyboard</PageTitle>
 
 <PageHeader Overline="Tools"
             Title="Playground"
-            Lead="Tweak the parameters and watch a real MudKeyboard update live. The generated markup below always matches what you see — copy it straight into your app." />
+            Lead="Tweak the parameters and watch a real MudKeyboard update live — both the inline keyboards and the global docked keyboard. The generated markup always matches what you see, so you can copy it straight into your app." />
 
-<MudGrid Spacing="4">
-    <MudItem xs="12" md="4">
-        <MudPaper Outlined="true" Class="pa-4" Style="border-radius:14px;position:sticky;top:88px;">
-            <MudText Typo="Typo.subtitle1" Style="font-weight:600;" Class="mb-3">Parameters</MudText>
+<MudTabs Elevation="0" Rounded="true" Border="true" ApplyEffectsToContainer="true" TabPanelsClass="pt-6" Class="mb-2">
 
-            <MudSelect T="KeyboardVariant" @bind-Value="_variant" Label="Variant" Dense="true" Variant="Variant.Outlined" Class="mb-3">
-                <MudSelectItem Value="KeyboardVariant.Full">Full (QWERTY)</MudSelectItem>
-                <MudSelectItem Value="KeyboardVariant.Numpad">Numpad</MudSelectItem>
-                <MudSelectItem Value="KeyboardVariant.Pricepad">Pricepad (layout)</MudSelectItem>
-            </MudSelect>
+    @* ─────────────────────────── Inline keyboard ─────────────────────────── *@
+    <MudTabPanel Text="Inline keyboard" Icon="@Icons.Material.Filled.Keyboard">
+        <MudGrid Spacing="4">
+            <MudItem xs="12" md="4">
+                <MudPaper Outlined="true" Class="pa-4" Style="border-radius:14px;">
+                    <MudText Typo="Typo.subtitle1" Style="font-weight:600;" Class="mb-3">Parameters</MudText>
 
-            <MudSwitch T="bool" @bind-Value="_dropShadow" Color="Color.Primary" Class="mb-1" Label="Drop shadow" />
-            <MudSwitch T="bool" @bind-Value="_disabled" Color="Color.Primary" Class="mb-1" Label="Disabled" />
-            <MudSwitch T="bool" @bind-Value="_limit" Color="Color.Primary" Class="mb-2" Label="Limit length" />
+                    <MudSelect T="InlineKind" Value="_inlineKind" ValueChanged="OnInlineKindChanged" Label="Component" Dense="true" Variant="Variant.Outlined" Class="mb-3">
+                        <MudSelectItem Value="InlineKind.Keyboard">MudKeyboard (Full QWERTY)</MudSelectItem>
+                        <MudSelectItem Value="InlineKind.Numpad">MudNumpad</MudSelectItem>
+                        <MudSelectItem Value="InlineKind.Pricepad">MudPricepad</MudSelectItem>
+                    </MudSelect>
 
-            @if (_limit)
-            {
-                <MudNumericField T="int" @bind-Value="_maxLength" Label="MaxLength" Min="1" Max="60" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" />
-            }
-
-            <MudDivider Class="my-2" />
-            <MudSwitch T="bool" @bind-Value="_useAccent" Color="Color.Primary" Class="mb-2" Label="Brand accent (Palette)" />
-            @if (_useAccent)
-            {
-                <div class="d-flex flex-wrap" style="gap:0.4rem;">
-                    @foreach (var (name, hex) in Accents)
+                    @if (_inlineKind == InlineKind.Keyboard)
                     {
-                        var current = hex;
-                        <MudButton Size="Size.Small"
-                                   Variant="@(_accent == current ? Variant.Filled : Variant.Outlined)"
-                                   Style="@($"min-width:0;border-color:{current};background:{(_accent == current ? current : "transparent")};color:{(_accent == current ? "#fff" : current)};")"
-                                   OnClick="@(() => _accent = current)">@name</MudButton>
+                        <MudSwitch T="bool" @bind-Value="_dropShadow" Color="Color.Primary" Class="mb-1" Label="Drop shadow" />
                     }
-                </div>
-            }
-        </MudPaper>
-    </MudItem>
+                    @if (_inlineKind == InlineKind.Numpad)
+                    {
+                        <MudSwitch T="bool" @bind-Value="_allowDecimal" Color="Color.Primary" Class="mb-1" Label="Allow decimal (.)" />
+                    }
+                    @if (_inlineKind is InlineKind.Numpad or InlineKind.Pricepad)
+                    {
+                        <MudSwitch T="bool" @bind-Value="_allowNegative" Color="Color.Primary" Class="mb-1" Label="Allow negative (±)" />
+                    }
 
-    <MudItem xs="12" md="8">
-        <MudPaper Outlined="true" Class="pa-4 mb-4" Style="border-radius:14px;">
-            <MudTextField @bind-Value="_value" Label="Bound value" Variant="Variant.Outlined" Immediate="true" Class="mb-3" />
-            <div style="@PreviewWidth">
-                <MudKeyboard @bind-Value="_value"
-                             Variant="_variant"
-                             DropShadow="_dropShadow"
-                             Disabled="_disabled"
-                             MaxLength="EffectiveMaxLength"
-                             Palette="@EffectivePalette" />
-            </div>
-        </MudPaper>
+                    <MudSwitch T="bool" @bind-Value="_disabled" Color="Color.Primary" Class="mb-1" Label="Disabled" />
+                    <MudSwitch T="bool" @bind-Value="_sound" Color="Color.Primary" Class="mb-1" Label="Key click sound" />
+                    <MudSwitch T="bool" @bind-Value="_limit" Color="Color.Primary" Class="mb-2" Label="Limit length" />
 
-        <MudText Typo="Typo.subtitle2" Class="mb-2">Generated markup</MudText>
-        <CodeBlock Code="@GeneratedCode" />
-    </MudItem>
-</MudGrid>
+                    @if (_limit)
+                    {
+                        <MudNumericField T="int" @bind-Value="_maxLength" Label="MaxLength" Min="1" Max="60" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" />
+                    }
+
+                    @if (_inlineKind == InlineKind.Pricepad)
+                    {
+                        <MudDivider Class="my-2" />
+                        <MudTextField @bind-Value="_currencySymbol" Label="CurrencySymbol" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" />
+                        <MudNumericField T="int" @bind-Value="_decimalPlaces" Label="DecimalPlaces" Min="0" Max="4" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" />
+                    }
+
+                    <MudDivider Class="my-2" />
+                    <MudSwitch T="bool" @bind-Value="_useAccent" Color="Color.Primary" Class="mb-2" Label="Brand accent (Palette)" />
+                    @if (_useAccent)
+                    {
+                        <div class="d-flex flex-wrap" style="gap:0.4rem;">
+                            @foreach (var (name, hex) in Accents)
+                            {
+                                var current = hex;
+                                <MudButton Size="Size.Small"
+                                           Variant="@(_accent == current ? Variant.Filled : Variant.Outlined)"
+                                           Style="@($"min-width:0;border-color:{current};background:{(_accent == current ? current : "transparent")};color:{(_accent == current ? "#fff" : current)};")"
+                                           OnClick="@(() => _accent = current)">@name</MudButton>
+                            }
+                        </div>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="8">
+                <MudPaper Outlined="true" Class="pa-4 mb-4" Style="border-radius:14px;">
+                    <MudTextField @bind-Value="_value" Label="Bound value" Variant="Variant.Outlined" Immediate="true" Class="mb-3" />
+                    <div style="@PreviewWidth">
+                        @switch (_inlineKind)
+                        {
+                            case InlineKind.Numpad:
+                                <MudNumpad @bind-Value="_value"
+                                           AllowDecimal="_allowDecimal"
+                                           AllowNegative="_allowNegative"
+                                           Disabled="_disabled"
+                                           Sound="_sound"
+                                           MaxLength="EffectiveMaxLength"
+                                           Palette="@EffectivePalette" />
+                                break;
+                            case InlineKind.Pricepad:
+                                <MudPricepad @bind-Value="_value"
+                                             CurrencySymbol="@_currencySymbol"
+                                             DecimalPlaces="_decimalPlaces"
+                                             AllowNegative="_allowNegative"
+                                             Disabled="_disabled"
+                                             Sound="_sound"
+                                             MaxLength="EffectiveMaxLength"
+                                             Palette="@EffectivePalette" />
+                                break;
+                            default:
+                                <MudKeyboard @bind-Value="_value"
+                                             DropShadow="_dropShadow"
+                                             Disabled="_disabled"
+                                             Sound="_sound"
+                                             MaxLength="EffectiveMaxLength"
+                                             Palette="@EffectivePalette" />
+                                break;
+                        }
+                    </div>
+                </MudPaper>
+
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Generated markup</MudText>
+                <CodeBlock Code="@GeneratedInlineCode" />
+            </MudItem>
+        </MudGrid>
+    </MudTabPanel>
+
+    @* ─────────────────────────── Docked keyboard ─────────────────────────── *@
+    <MudTabPanel Text="Docked keyboard" Icon="@Icons.Material.Filled.KeyboardHide">
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+            The docked keyboard is <strong>global</strong> — one <code>MudKeyboardHost</code> placed once in your
+            layout. The switches below drive this site's real host live: toggle one, then <strong>focus a field</strong>
+            in the panel on the right and the docked keyboard slides up from the bottom of the page. Settings reset
+            when you leave this page.
+        </MudAlert>
+
+        <MudGrid Spacing="4">
+            <MudItem xs="12" md="5">
+                <MudPaper Outlined="true" Class="pa-4 mb-4" Style="border-radius:14px;">
+                    <div class="d-flex justify-space-between align-center mb-2 flex-wrap" style="gap:.5rem">
+                        <MudText Typo="Typo.subtitle1" Style="font-weight:600;">Host parameters</MudText>
+                        <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Restore"
+                                   OnClick="@(() => Toolbar.Reset())">Reset</MudButton>
+                    </div>
+
+                    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowValuePreview"
+                               ValueChanged="@(v => Toolbar.ShowValuePreview = v)" Class="mb-1" Label="Value preview (with caret)" />
+                    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowCancel"
+                               ValueChanged="@(v => Toolbar.ShowCancel = v)" Class="mb-1" Label="Cancel key (next to Enter)" />
+                    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.DefaultCapsLock"
+                               ValueChanged="@(v => Toolbar.DefaultCapsLock = v)" Class="mb-1" Label="Caps lock on by default" />
+                    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowBackdrop"
+                               ValueChanged="@(v => Toolbar.ShowBackdrop = v)" Class="mb-1" Label="Backdrop (dim page)" />
+                    <MudSwitch T="bool" Color="Color.Secondary" Value="@Toolbar.DisableBackdropClick"
+                               ValueChanged="@(v => Toolbar.DisableBackdropClick = v)" Class="mb-1"
+                               Label="Disable backdrop click" />
+                    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.AllowNegative"
+                               ValueChanged="@(v => Toolbar.AllowNegative = v)" Class="mb-1" Label="Allow negative (± on keypads)" />
+                    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.Sound"
+                               ValueChanged="@(v => Toolbar.Sound = v)" Class="mb-1" Label="Key click sound" />
+
+                    @if (Toolbar.ShowCancel)
+                    {
+                        <MudTextField Value="@Toolbar.CancelLabel" ValueChanged="@((string v) => Toolbar.CancelLabel = v)"
+                                      T="string" Label="CancelLabel" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2 mb-1" />
+                    }
+
+                    <MudDivider Class="my-3" />
+                    <MudText Typo="Typo.subtitle2" Class="mb-1">Toolbar buttons</MudText>
+                    <MudSimpleTable Dense="true" Hover="false" Bordered="false" Elevation="0" Style="background:transparent">
+                        <thead>
+                            <tr><th>Button</th><th style="width:6rem">Visible</th><th style="width:6rem">Disabled</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (action, label) in ToolbarButtons)
+                            {
+                                <tr>
+                                    <td>@label</td>
+                                    <td>
+                                        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.IsVisible(action)"
+                                                   ValueChanged="@(v => Toolbar.SetVisible(action, v))"
+                                                   aria-label="@($"Show {label} button")" />
+                                    </td>
+                                    <td>
+                                        <MudSwitch T="bool" Color="Color.Secondary" Value="@Toolbar.IsDisabled(action)"
+                                                   ValueChanged="@(v => Toolbar.SetDisabled(action, v))"
+                                                   Disabled="@(!Toolbar.IsVisible(action))"
+                                                   aria-label="@($"Disable {label} button")" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                    <MudText Typo="Typo.caption">Hiding wins over disabling. The cursor arrows never appear on the money keypad.</MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="7">
+                <MudPaper Outlined="true" Class="pa-4 mb-4" Style="border-radius:14px;">
+                    <MudText Typo="Typo.subtitle1" Style="font-weight:600;" Class="mb-1">Focus a field</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                        Each field picks its own layout. The numeric fields use <code>MudKeyboardNumericField&lt;T&gt;</code>,
+                        which chooses the keypad from the bound type.
+                    </MudText>
+
+                    <MudTextField @bind-Value="_text" Label="Text (QWERTY)" Variant="Variant.Outlined" Immediate="true" Class="mb-3"
+                                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+                    <MudTextField @bind-Value="_money" Label="Money (pence-first → type 5·2·3 → 5.23)" Variant="Variant.Outlined" Immediate="true" Class="mb-3"
+                                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true", ["data-mudkeyboard-layout"] = "money" })" />
+                    <MudKeyboardNumericField @bind-Value="_price" T="decimal" Format="N2" Label="Price (decimal → money £)"
+                                             Variant="Variant.Outlined" Immediate="true" Min="0m" DockedKeyboard="true" Class="mb-3"
+                                             Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound" />
+                    <MudKeyboardNumericField @bind-Value="_quantity" T="int" Label="Quantity (int → numpad)"
+                                             Variant="Variant.Outlined" Immediate="true" DockedKeyboard="true" />
+
+                    <MudText Typo="Typo.body2" Class="mt-3">
+                        Bound: <b>@(string.IsNullOrEmpty(_text) ? "—" : _text)</b>
+                        · <b>@(string.IsNullOrEmpty(_money) ? "—" : _money)</b>
+                        · <b>@_price.ToString("N2")</b>
+                        · <b>@_quantity</b>
+                    </MudText>
+                </MudPaper>
+
+                <MudText Typo="Typo.subtitle2" Class="mb-2">1 · Register the services (<code>Program.cs</code>)</MudText>
+                <CodeBlock Language="csharp" Code="@DockedRegisterCode" />
+
+                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">2 · Place the host once (your layout)</MudText>
+                <CodeBlock Code="@GeneratedHostCode" />
+
+                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">3 · Opt a field in</MudText>
+                <CodeBlock Code="@DockedFieldsCode" />
+            </MudItem>
+        </MudGrid>
+    </MudTabPanel>
+</MudTabs>
 
 @code {
+    private enum InlineKind { Keyboard, Numpad, Pricepad }
+
+    // ── Inline keyboard state ────────────────────────────────────────────────
+    private InlineKind _inlineKind = InlineKind.Keyboard;
     private string _value = string.Empty;
-    private KeyboardVariant _variant = KeyboardVariant.Full;
     private bool _dropShadow = true;
     private bool _disabled;
+    private bool _sound;
     private bool _limit;
     private int _maxLength = 20;
+    private bool _allowDecimal;
+    private bool _allowNegative;
+    private string _currencySymbol = "£";
+    private int _decimalPlaces = 2;
     private bool _useAccent;
     private string _accent = "#00897b";
+
+    // ── Docked keyboard live fields ──────────────────────────────────────────
+    private string _text = string.Empty;
+    private string _money = string.Empty;
+    private decimal _price;
+    private int _quantity;
+
+    // Switching components clears the bound value so a formatted price or stray text
+    // never carries over into a different surface.
+    private void OnInlineKindChanged(InlineKind kind)
+    {
+        _inlineKind = kind;
+        _value = string.Empty;
+    }
+
+    // Restore the global host's toolbar to defaults when leaving, so the playground's live
+    // changes don't leak onto the rest of the site (the host is global, in MainLayout).
+    public void Dispose() => Toolbar.Reset();
 
     private static readonly (string Name, string Hex)[] Accents =
     [
@@ -81,47 +267,207 @@
         ("Indigo", "#3f51b5"),
     ];
 
+    // The toggleable toolbar buttons, in render order. CursorControl is the left+right arrow pair.
+    private static readonly (KeyboardAction Action, string Label)[] ToolbarButtons =
+    [
+        (KeyboardAction.Clear, "Clear"),
+        (KeyboardAction.Copy, "Copy"),
+        (KeyboardAction.Paste, "Paste"),
+        (KeyboardAction.CursorControl, "Cursor arrows"),
+        (KeyboardAction.Hide, "Hide"),
+    ];
+
     private int? EffectiveMaxLength => _limit ? _maxLength : null;
     private KeyboardPalette? EffectivePalette => _useAccent ? new KeyboardPalette { AccentColor = _accent, AccentTextColor = "#ffffff" } : null;
-    private string PreviewWidth => _variant == KeyboardVariant.Full ? "max-width:560px;" : "max-width:320px;";
+    private string PreviewWidth => _inlineKind == InlineKind.Keyboard ? "max-width:560px;" : "max-width:320px;";
 
-    private string GeneratedCode
+    // ── Inline generated markup ──────────────────────────────────────────────
+    private string GeneratedInlineCode
     {
         get
         {
-            var attrs = new List<string> { "@bind-Value=\"_value\"" };
+            var (tag, attrs) = _inlineKind switch
+            {
+                InlineKind.Numpad => ("MudNumpad", NumpadAttrs()),
+                InlineKind.Pricepad => ("MudPricepad", PricepadAttrs()),
+                _ => ("MudKeyboard", KeyboardAttrs()),
+            };
 
-            if (_variant != KeyboardVariant.Full)
-            {
-                attrs.Add($"Variant=\"KeyboardVariant.{_variant}\"");
-            }
-            if (!_dropShadow)
-            {
-                attrs.Add("DropShadow=\"false\"");
-            }
-            if (_disabled)
-            {
-                attrs.Add("Disabled=\"true\"");
-            }
-            if (_limit)
-            {
-                attrs.Add($"MaxLength=\"{_maxLength}\"");
-            }
-            if (_useAccent)
-            {
-                attrs.Add("Palette=\"Brand\"");
-            }
-
-            var markup = "<MudKeyboard " + string.Join("\n             ", attrs) + " />";
-
-            if (!_useAccent)
-            {
-                return markup;
-            }
-
-            return markup + "\n\n@code {\n    private static readonly KeyboardPalette Brand = new()\n    {\n"
-                + $"        AccentColor = \"{_accent}\",\n        AccentTextColor = \"#ffffff\",\n"
-                + "    };\n}";
+            var indent = "\n" + new string(' ', tag.Length + 2);
+            var markup = $"<{tag} " + string.Join(indent, attrs) + " />";
+            return _useAccent ? markup + BrandPaletteBlock : markup;
         }
     }
+
+    // Disabled / MaxLength / Sound / Palette are common to all three inline components.
+    private List<string> CommonInlineTail()
+    {
+        var attrs = new List<string>();
+        if (_disabled)
+        {
+            attrs.Add("Disabled=\"true\"");
+        }
+        if (_limit)
+        {
+            attrs.Add($"MaxLength=\"{_maxLength}\"");
+        }
+        if (_sound)
+        {
+            attrs.Add("Sound=\"true\"");
+        }
+        if (_useAccent)
+        {
+            attrs.Add("Palette=\"Brand\"");
+        }
+
+        return attrs;
+    }
+
+    private List<string> KeyboardAttrs()
+    {
+        var attrs = new List<string> { "@bind-Value=\"_value\"" };
+        if (!_dropShadow)
+        {
+            attrs.Add("DropShadow=\"false\"");
+        }
+
+        attrs.AddRange(CommonInlineTail());
+        return attrs;
+    }
+
+    private List<string> NumpadAttrs()
+    {
+        var attrs = new List<string> { "@bind-Value=\"_value\"" };
+        if (_allowDecimal)
+        {
+            attrs.Add("AllowDecimal=\"true\"");
+        }
+        if (_allowNegative)
+        {
+            attrs.Add("AllowNegative=\"true\"");
+        }
+
+        attrs.AddRange(CommonInlineTail());
+        return attrs;
+    }
+
+    private List<string> PricepadAttrs()
+    {
+        var attrs = new List<string> { "@bind-Value=\"_value\"" };
+        if (_currencySymbol != "£")
+        {
+            attrs.Add($"CurrencySymbol=\"{_currencySymbol}\"");
+        }
+        if (_decimalPlaces != 2)
+        {
+            attrs.Add($"DecimalPlaces=\"{_decimalPlaces}\"");
+        }
+        if (_allowNegative)
+        {
+            attrs.Add("AllowNegative=\"true\"");
+        }
+
+        attrs.AddRange(CommonInlineTail());
+        return attrs;
+    }
+
+    private string BrandPaletteBlock =>
+        "\n\n@code {\n    private static readonly KeyboardPalette Brand = new()\n    {\n"
+        + $"        AccentColor = \"{_accent}\",\n        AccentTextColor = \"#ffffff\",\n"
+        + "    };\n}";
+
+    // ── Docked generated markup ──────────────────────────────────────────────
+    private string GeneratedHostCode
+    {
+        get
+        {
+            var attrs = new List<string>();
+            if (Toolbar.VisibleActions != KeyboardAction.All)
+            {
+                attrs.Add($"VisibleActions=\"{FormatActions(Toolbar.VisibleActions)}\"");
+            }
+            if (Toolbar.DisabledActions != KeyboardAction.None)
+            {
+                attrs.Add($"DisabledActions=\"{FormatActions(Toolbar.DisabledActions)}\"");
+            }
+            if (Toolbar.AllowNegative)
+            {
+                attrs.Add("AllowNegative=\"true\"");
+            }
+            // ShowValuePreview and ShowCancel default to true, so only emit them when turned off.
+            if (!Toolbar.ShowValuePreview)
+            {
+                attrs.Add("ShowValuePreview=\"false\"");
+            }
+            if (!Toolbar.ShowCancel)
+            {
+                attrs.Add("ShowCancel=\"false\"");
+            }
+            if (Toolbar.DefaultCapsLock)
+            {
+                attrs.Add("DefaultCapsLock=\"true\"");
+            }
+            if (Toolbar.ShowBackdrop)
+            {
+                attrs.Add("ShowBackdrop=\"true\"");
+            }
+            if (Toolbar.DisableBackdropClick)
+            {
+                attrs.Add("DisableBackdropClick=\"true\"");
+            }
+            if (Toolbar.ShowCancel && Toolbar.CancelLabel != "Cancel")
+            {
+                attrs.Add($"CancelLabel=\"{Toolbar.CancelLabel}\"");
+            }
+            if (Toolbar.Sound)
+            {
+                attrs.Add("Sound=\"true\"");
+            }
+
+            return attrs.Count == 0
+                ? "<MudKeyboardHost />"
+                : "<MudKeyboardHost " + string.Join("\n                 ", attrs) + " />";
+        }
+    }
+
+    private static string FormatActions(KeyboardAction actions)
+    {
+        if (actions == KeyboardAction.None)
+        {
+            return "KeyboardAction.None";
+        }
+
+        if (actions == KeyboardAction.All)
+        {
+            return "KeyboardAction.All";
+        }
+
+        var parts = ToolbarButtons
+            .Where(b => (actions & b.Action) == b.Action)
+            .Select(b => "KeyboardAction." + b.Action);
+        return string.Join(" | ", parts);
+    }
+
+    private const string DockedRegisterCode = """
+using MudKeyboard.Extensions;
+
+builder.Services.AddMudServices();   // MudBlazor
+builder.Services.AddMudKeyboard();   // MudKeyboard docked-keyboard services
+""";
+
+    private const string DockedFieldsCode = """
+@* In the default AllInputs mode every editable field raises the keyboard automatically.
+   This site runs in OptIn mode, so each field below is opted in explicitly. *@
+<MudTextField @bind-Value="_text" Label="Text" Immediate="true"
+              UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+
+<MudTextField @bind-Value="_money" Label="Money" Immediate="true"
+              UserAttributes="@(new() {
+                  ["data-mudkeyboard"] = "true",
+                  ["data-mudkeyboard-layout"] = "money" })" />
+
+@* MudKeyboardNumericField picks the keypad from T — decimal → money, int → numpad. *@
+<MudKeyboardNumericField @bind-Value="_price" T="decimal" Format="N2" DockedKeyboard="true" />
+<MudKeyboardNumericField @bind-Value="_quantity" T="int" DockedKeyboard="true" />
+""";
 }

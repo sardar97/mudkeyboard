@@ -115,6 +115,8 @@
         new("AllowNegative", "bool", "false", "Shows a ± key that flips the amount's sign (-£1.23)."),
         new("MaxLength", "int?", "null", "Optional cap on the number of entered digits."),
         new("Disabled", "bool", "false", "Disables every key."),
+        new("Sound", "bool", "false", "Plays a click sound on key press (pure-Blazor <audio>, no JavaScript).", BadgeKind.New),
+        new("SoundSrc", "string?", "null", "Custom click-sound source (URL or data: URI); defaults to the built-in click. Ignored unless Sound is set.", BadgeKind.New),
         new("Palette", "KeyboardPalette?", "null", "Per-pricepad colour overrides; unset slots follow the theme."),
         new("AriaLabel", "string?", "\"Price entry keypad\"", "Accessible name for the root role=\"group\"."),
         new("Class / Style", "string?", "null", "Passthrough CSS for the root surface."),

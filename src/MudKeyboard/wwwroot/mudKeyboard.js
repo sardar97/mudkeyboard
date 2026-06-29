@@ -6,8 +6,10 @@
 // at the caret. It exposes a tiny API consumed by KeyboardInteropService over JS interop.
 //
 // Contract:
-//   initialize(dotnetRef, attachMode) — start listening; calls back .NET OnFocusIn / OnFocusOut
-//   insertText(text), backspace(), enter(), blurActive() — edit the active field
+//   initialize(dotnetRef, attachMode, reportValue) — start listening; calls back .NET OnFocusIn /
+//       OnFocusOut, and (when reportValue is set) OnValueChanged on every edit so the host can show a
+//       live value-preview bar
+//   insertText(text), backspace(), enter(), setValue(text), blurActive() — edit the active field
 //   dispose() — stop listening
 //
 // No bundler, no dependencies — a plain ES module served from _content/MudKeyboard/mudKeyboard.js.
@@ -16,12 +18,16 @@ let dotnet = null;
 let attachMode = 'AllInputs'; // 'AllInputs' (opt-out) | 'OptIn'
 let activeEl = null;
 let closing = 0;
+// When true, the focused field's value is pushed back to .NET (OnValueChanged) on every change so the
+// docked keyboard can show a live value-preview bar. Off unless MudKeyboardHost.ShowValuePreview is set.
+let reportValue = false;
 
 // Input types we treat as free-text editable. Pickers (date/color/checkbox/file/range…) are
 // excluded — an on-screen text keyboard cannot meaningfully drive them.
 const TEXT_TYPES = new Set(['text', 'search', 'email', 'url', 'tel', 'password', 'number', '']);
 
 const DOCK_SELECTOR = '.mudkeyboard-dock';
+const BACKDROP_SELECTOR = '.mudkeyboard-backdrop';
 
 function isEditable(el) {
     if (!el || el.nodeType !== 1) return false;
@@ -56,6 +62,26 @@ function inferLayout(el) {
 
 function insideDock(el) {
     return !!(el && el.closest && el.closest(DOCK_SELECTOR));
+}
+
+function insideBackdrop(el) {
+    return !!(el && el.closest && el.closest(BACKDROP_SELECTOR));
+}
+
+// The caret offset of a field, or the end of its value when selection is unavailable (number/email
+// inputs disallow selectionStart). Used to position the preview bar's cursor.
+function caretOf(el) {
+    const len = (el.value ?? '').length;
+    const pos = el.selectionStart;
+    return typeof pos === 'number' ? pos : len;
+}
+
+// Push the focused field's current value AND caret position to .NET so the value-preview bar can mirror
+// the value and show a cursor where the caret is. One-way and display-only — it never writes back to the
+// field, so it cannot race the field's own re-render.
+function reportValueChanged(el) {
+    if (!reportValue || !dotnet || !el) return;
+    dotnet.invokeMethodAsync('OnValueChanged', el.value ?? '', caretOf(el));
 }
 
 // Highest z-index currently used anywhere on the page, ignoring our own dock (which carries the
@@ -131,16 +157,53 @@ function onPointerDownCapture(e) {
     const el = activeEl;
     if (!el) return;
     const target = e && e.target;
-    if (target === el || insideDock(target)) return;
+    // The backdrop is part of the keyboard UI: pressing it cancels (handled in Blazor), so skip the
+    // commit here too — otherwise we would commit the edited value an instant before reverting it.
+    if (target === el || insideDock(target) || insideBackdrop(target)) return;
     commitField(el);
 }
 
-export function initialize(dotnetRef, mode) {
+// Mirror hardware-keyboard typing into the value-preview bar: when the user types into the focused
+// field directly (not via the on-screen keys), report the new value too.
+function onInputCapture(e) {
+    if (reportValue && activeEl && e && e.target === activeEl) {
+        reportValueChanged(activeEl);
+    }
+}
+
+// Snap the field's caret to the very end of its value (and keep the preview cursor in step).
+function caretToEnd(el) {
+    if (!el) return;
+    setCaret(el, (el.value ?? '').length);
+    reportValueChanged(el);
+}
+
+// The docked keyboard always types at the END of the field. A tap inside the field makes the browser
+// drop the caret wherever the user pressed, so the next key would insert mid-text (e.g. typing into
+// "sardar" tapped before "rdar" gives "sa…rdar"). Override that here: on pointerup — which fires AFTER
+// the browser has positioned the caret from the tap — move it back to the end. This covers both the
+// first focusing tap and any later re-tap inside the same already-focused field (where focusin never
+// fires again), so the cursor is always at the end after the user clicks anywhere in the field.
+function onPointerUpCapture(e) {
+    const el = activeEl;
+    if (!el) return;
+    if (e && e.target === el) caretToEnd(el);
+}
+
+export function initialize(dotnetRef, mode, report) {
     dotnet = dotnetRef;
     if (mode) attachMode = mode;
+    reportValue = !!report;
     document.addEventListener('focusin', onFocusIn, true);
     document.addEventListener('focusout', onFocusOut, true);
     document.addEventListener('pointerdown', onPointerDownCapture, true);
+    document.addEventListener('pointerup', onPointerUpCapture, true);
+    document.addEventListener('input', onInputCapture, true);
+}
+
+// Turn live value reporting on/off after initialize (the host toggling ShowValuePreview at runtime).
+export function setReportValue(value) {
+    reportValue = !!value;
 }
 
 export function insertText(text) {
@@ -256,6 +319,8 @@ export function moveCaret(delta) {
         ? (delta < 0 ? start : end)
         : Math.max(0, Math.min(value.length, start + delta));
     setCaret(el, pos);
+    // No 'input' event fires for a pure caret move, so report it explicitly to keep the preview cursor synced.
+    reportValueChanged(el);
 }
 
 export function blurActive() {
@@ -274,6 +339,8 @@ export function dispose() {
     document.removeEventListener('focusin', onFocusIn, true);
     document.removeEventListener('focusout', onFocusOut, true);
     document.removeEventListener('pointerdown', onPointerDownCapture, true);
+    document.removeEventListener('pointerup', onPointerUpCapture, true);
+    document.removeEventListener('input', onInputCapture, true);
     dotnet = null;
     activeEl = null;
 }

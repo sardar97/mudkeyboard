@@ -27,7 +27,10 @@
             the screen; the layout is inferred from the field (text → QWERTY, number → numpad, and
             <c>data-mudkeyboard-layout="money"</c> forces the pence-first money keypad). For fields bound
             to a numeric type, <c>MudKeyboardNumericField</c> picks the keypad automatically — see below.
-            Powered by a small optional JS shim.
+            Powered by a small optional JS shim. This demo's host also has <c>ShowValuePreview</c>,
+            <c>ShowBackdrop</c>, <c>DisableBackdropClick</c> and <c>Sound</c> enabled — so the focused
+            field's value shows at the top, the page dims, a <strong>Cancel</strong> button reverts your
+            edits (⏎ / ⌄ confirm) and each key clicks.
         </MudText>
         <MudStack Spacing="3">
             <MudTextField @bind-Value="_dockText" Label="Text (QWERTY)" Variant="Variant.Outlined" Immediate="true" />
@@ -66,9 +69,9 @@
     </MudPaper>
 
     <MudPaper Class="pa-4" Outlined="true">
-        <MudText Typo="Typo.h6" GutterBottom="true">Full QWERTY · two-way binding + OnEnter</MudText>
+        <MudText Typo="Typo.h6" GutterBottom="true">Full QWERTY · two-way binding + OnEnter + Sound</MudText>
         <MudTextField @bind-Value="_text" Label="Bound value" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
-        <MudKeyboard @bind-Value="_text" OnEnter="@OnEnterPressed" MaxLength="40" />
+        <MudKeyboard @bind-Value="_text" OnEnter="@OnEnterPressed" MaxLength="40" Sound="true" />
         <MudText Typo="Typo.caption" Class="mt-2">Last Enter: <b>@_lastEnter</b></MudText>
     </MudPaper>
 
@@ -76,7 +79,7 @@
         <MudText Typo="Typo.h6" GutterBottom="true">Numpad · AllowDecimal + AllowNegative (±)</MudText>
         <MudTextField @bind-Value="_number" Label="Number" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
         <div style="max-width: 320px">
-            <MudNumpad @bind-Value="_number" AllowDecimal="true" AllowNegative="true" />
+            <MudNumpad @bind-Value="_number" AllowDecimal="true" AllowNegative="true" Sound="true" />
         </div>
     </MudPaper>
 

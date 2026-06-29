@@ -60,6 +60,27 @@
     </div>
 </ExampleCard>
 
+<MudText id="sound" Typo="Typo.h5" Class="docs-section-title">Key click sound <FeatureBadge Kind="BadgeKind.New" /></MudText>
+<div class="docs-prose">
+    <p>
+        Set <code class="docs-inline-code">Sound="true"</code> to play a short click on every key press — a
+        Blazor-rendered <code class="docs-inline-code">&lt;audio&gt;</code> element, <strong>no JavaScript</strong>,
+        so it stays true to the JS-free core. Supply your own audio with
+        <code class="docs-inline-code">SoundSrc</code> (any URL or <code class="docs-inline-code">data:</code> URI).
+        The same parameters exist on <MudLink Href="components/numpad">MudNumpad</MudLink>,
+        <MudLink Href="components/pricepad">MudPricepad</MudLink> and the docked
+        <MudLink Href="components/docked-keyboard#sound">MudKeyboardHost</MudLink>.
+    </p>
+</div>
+<ExampleCard Title="Sound on key press"
+             Description="Toggle the switch, then tap a key. (Browsers allow sound only after the first user interaction.)"
+             Code="@SoundCode">
+    <MudSwitch T="bool" @bind-Value="_sound" Color="Color.Primary" Label="Key click sound" Class="mb-2" />
+    <div style="max-width:560px;">
+        <MudKeyboard @bind-Value="_soundValue" Sound="@_sound" />
+    </div>
+</ExampleCard>
+
 <MudText id="variants" Typo="Typo.h5" Class="docs-section-title">Variants</MudText>
 <div class="docs-prose">
     <p>
@@ -107,6 +128,8 @@
     private string _capped = string.Empty;
     private string _flat = "42";
     private string _variant = string.Empty;
+    private string _soundValue = string.Empty;
+    private bool _sound = true;
     private string _lastEnter = "(none yet)";
 
     private void OnEnter()
@@ -143,6 +166,14 @@
 <MudKeyboard @bind-Value="_value" Variant="KeyboardVariant.Numpad" />
 """;
 
+    private const string SoundCode = """
+@* A click on every key press — pure Blazor <audio>, no JavaScript. *@
+<MudKeyboard @bind-Value="_value" Sound="true" />
+
+@* …or supply your own sound: *@
+<MudKeyboard @bind-Value="_value" Sound="true" SoundSrc="/sounds/tap.mp3" />
+""";
+
     private static readonly IReadOnlyList<ApiMember> Parameters =
     [
         new("Value / ValueChanged", "string", "\"\"", "Two-way bindable current value (@bind-Value)."),
@@ -152,6 +183,8 @@
         new("MaxLength", "int?", "null", "Optional cap on value length (ignored in emit mode)."),
         new("Disabled", "bool", "false", "Disables every key."),
         new("DropShadow", "bool", "true", "Flat keys when false."),
+        new("Sound", "bool", "false", "Plays a short click sound on key press (pure-Blazor <audio>, no JavaScript).", BadgeKind.New),
+        new("SoundSrc", "string?", "null", "Custom click-sound source (URL or data: URI); defaults to the built-in click. Ignored unless Sound is set.", BadgeKind.New),
         new("Palette", "KeyboardPalette?", "null", "Per-keyboard colour overrides; unset slots follow the theme."),
         new("AriaLabel", "string?", "\"On-screen keyboard\"", "Accessible name for the root role=\"group\" (screen-reader announcement)."),
         new("Class / Style", "string?", "null", "Passthrough CSS for the root surface."),

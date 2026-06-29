@@ -37,6 +37,11 @@ terminals and any interface where a hardware keyboard is unavailable or impracti
   [Static SSR support](#static-ssr-support)).
 - **Versatile.** Ships a full QWERTY keyboard, a numpad, a pence-first pricepad and a custom-layout
   engine, plus an optional global docked keyboard.
+- **Docked editing extras (opt-in).** The docked keyboard can show the focused field's **live value**
+  with edit/cancel (`ShowValuePreview`), dim the page behind a **backdrop** (`ShowBackdrop`) that taps to
+  cancel — or stays open with a **Cancel** button (`DisableBackdropClick`), and play a **key-click sound**
+  (`Sound`) — the sound is a pure-Blazor `<audio>` element, so it works on every keyboard with no
+  JavaScript.
 
 > **Render modes:** the library is render-mode agnostic — your app picks `InteractiveServer` or
 > `InteractiveWebAssembly` for the inline keyboards. The global docked keyboard **also works on static
@@ -300,6 +305,8 @@ A runnable example lives in the Server demo at `/components/ssr-login-demo`
 | `MaxLength` | `int?` | `null` | Optional cap on value length. |
 | `Disabled` | `bool` | `false` | Disables every key. |
 | `DropShadow` | `bool` | `true` | Flat keys when `false`. |
+| `Sound` | `bool` | `false` | Plays a click sound on key press (pure-Blazor `<audio>`, no JavaScript). |
+| `SoundSrc` | `string?` | `null` | Custom click-sound source (URL or `data:` URI); defaults to the built-in click. |
 | `Palette` | `KeyboardPalette?` | `null` | Per-keyboard colour overrides. |
 | `AriaLabel` | `string?` | `"On-screen keyboard"` | Accessible name for the root `role="group"`. |
 | `Class` / `Style` | `string?` | `null` | Passthrough CSS. |
@@ -310,19 +317,32 @@ A runnable example lives in the Server demo at `/components/ssr-login-demo`
 ### `<MudNumpad>`
 
 `Value`/`ValueChanged`, `AllowDecimal`, `AllowNegative` (adds a `±` sign-toggle key; default `false`),
-`MaxLength`, `Disabled`, `OnEnter`, `Palette`, `AriaLabel` (default `"Numeric keypad"`), `Class`, `Style`.
+`MaxLength`, `Disabled`, `Sound` + `SoundSrc` (key-click sound, no JavaScript), `OnEnter`, `Palette`,
+`AriaLabel` (default `"Numeric keypad"`), `Class`, `Style`.
 
 ### `<MudPricepad>`
 
 `Value`/`ValueChanged`, `CurrencySymbol` (default `£`), `DecimalPlaces` (default `2`), `AllowNegative`
-(adds a `±` key → `-£1.23`; default `false`), `MaxLength`, `Disabled`, `OnEnter`, `Palette`, `AriaLabel`
-(default `"Price entry keypad"`), `Class`, `Style`.
+(adds a `±` key → `-£1.23`; default `false`), `MaxLength`, `Disabled`, `Sound` + `SoundSrc` (key-click
+sound, no JavaScript), `OnEnter`, `Palette`, `AriaLabel` (default `"Price entry keypad"`), `Class`, `Style`.
 
 ### `<MudKeyboardHost>`
 
 `Palette`, `Elevation` (default `8`), `MinZIndex` (default `1400`), `Style`, `VisibleActions`
 (`KeyboardAction`, default `All`), `DisabledActions` (`KeyboardAction`, default `None`), `AllowNegative`
 (global default for the `±` sign-toggle key on numeric keypads; default `false`).
+
+It also supports an opt-in **live value preview with edit/cancel**, an optional **backdrop**, and a
+**key-click sound** — all off by default:
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `ShowValuePreview` | `bool` | `false` | Shows a bar at the top with the focused field's live value. Edits apply live; Cancel reverts to the value at focus-in. |
+| `ShowBackdrop` | `bool` | `false` | Dims the page behind the keyboard; a backdrop click cancels (reverts) and closes — unless `DisableBackdropClick` is set. |
+| `DisableBackdropClick` | `bool` | `false` | Backdrop clicks no longer dismiss; a **Cancel** button is shown in the preview bar instead (requires `ShowValuePreview`). |
+| `CancelLabel` | `string` | `"Cancel"` | Text for the Cancel button. |
+| `Sound` | `bool` | `false` | Plays a click sound on key press (pure-Blazor `<audio>`, no JavaScript). |
+| `SoundSrc` | `string?` | `null` | Custom click-sound source; defaults to the built-in click. |
 
 `VisibleActions` and `DisabledActions` control the dock's toolbar buttons (Clear, Copy, Paste, the
 cursor arrows, Hide). `KeyboardAction` is a `[Flags]` enum, so you can hide or disable any button —

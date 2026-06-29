@@ -66,7 +66,6 @@ public class MudKeyboardHostTests : MudComponentTestContext, IAsyncLifetime
             Assert.Contains("Clear", titles);
             Assert.Contains("Copy", titles);
             Assert.Contains("Paste", titles);
-            Assert.Contains("Hide keyboard", titles);
             // No MudTooltip means no popover markup — which is exactly why no MudPopoverProvider is needed.
             Assert.DoesNotContain("mud-tooltip", cut.Markup);
         });
@@ -119,10 +118,10 @@ public class MudKeyboardHostTests : MudComponentTestContext, IAsyncLifetime
     [Fact]
     public void VisibleActions_HidingButtons_RemovesThemFromTheToolbar()
     {
-        // Hide Copy and Paste; everything else stays.
-        var (cut, interop) = RenderHost(p => p.Add(
-            c => c.VisibleActions,
-            KeyboardAction.All & ~(KeyboardAction.Copy | KeyboardAction.Paste)));
+        // Hide Copy and Paste; everything else stays. ShowCancel is off so the Hide button is also present.
+        var (cut, interop) = RenderHost(p => p
+            .Add(c => c.ShowCancel, false)
+            .Add(c => c.VisibleActions, KeyboardAction.All & ~(KeyboardAction.Copy | KeyboardAction.Paste)));
 
         cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000));
 
@@ -199,5 +198,170 @@ public class MudKeyboardHostTests : MudComponentTestContext, IAsyncLifetime
         cut.FindAll("button").Single(b => b.TextContent.Trim() == "⏎").Click();
 
         cut.WaitForAssertion(() => Assert.DoesNotContain("mudkeyboard-dock--open", cut.Markup));
+    }
+
+    [Fact]
+    public void ShowValuePreview_ShowsTheFocusedFieldsCurrentValueAtTheTop()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.ShowValuePreview, true));
+
+        // Focusing a field that already contains "sardar" seeds the preview bar with it.
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+
+        cut.WaitForAssertion(() =>
+            Assert.Equal("sardar", cut.Find(".mudkeyboard-dock__preview-text").TextContent.Trim()));
+    }
+
+    [Fact]
+    public void ShowValuePreview_PreviewBarTracksLiveValueChanges()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.ShowValuePreview, true));
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sar"));
+
+        // A value change reported from JS flows into the preview bar.
+        cut.InvokeAsync(() => interop.OnValueChanged("sardar"));
+
+        cut.WaitForAssertion(() =>
+            Assert.Equal("sardar", cut.Find(".mudkeyboard-dock__preview-text").TextContent.Trim()));
+    }
+
+    [Fact]
+    public void WithoutShowValuePreview_NoPreviewBarIsRendered()
+    {
+        // The preview bar is on by default now, so turn it off explicitly for this test.
+        var (cut, interop) = RenderHost(p => p.Add(c => c.ShowValuePreview, false));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("mudkeyboard-dock--open", cut.Markup);
+            Assert.Empty(cut.FindAll(".mudkeyboard-dock__preview"));
+        });
+    }
+
+    [Fact]
+    public void ShowBackdrop_RendersTheBackdrop_OnlyWhileOpen()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.ShowBackdrop, true));
+
+        // Closed: no backdrop.
+        Assert.Empty(cut.FindAll(".mudkeyboard-backdrop"));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000));
+
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".mudkeyboard-backdrop")));
+    }
+
+    [Fact]
+    public void BackdropClick_CancelsAndClosesThePanel()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.ShowBackdrop, true));
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+        cut.WaitForAssertion(() => Assert.Contains("mudkeyboard-dock--open", cut.Markup));
+
+        cut.Find(".mudkeyboard-backdrop").Click();
+
+        cut.WaitForAssertion(() => Assert.DoesNotContain("mudkeyboard-dock--open", cut.Markup));
+    }
+
+    [Fact]
+    public void DisableBackdropClick_KeepsThePanelOpenOnBackdropClick()
+    {
+        var (cut, interop) = RenderHost(p => p
+            .Add(c => c.ShowBackdrop, true)
+            .Add(c => c.DisableBackdropClick, true));
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+        cut.WaitForAssertion(() => Assert.Contains("mudkeyboard-dock--open", cut.Markup));
+
+        // The backdrop click no longer closes; the user must press Enter or the Cancel key instead.
+        cut.Find(".mudkeyboard-backdrop").Click();
+
+        cut.WaitForAssertion(() => Assert.Contains("mudkeyboard-dock--open", cut.Markup));
+    }
+
+    [Fact]
+    public void CancelKey_IsShownNextToEnterByDefault()
+    {
+        var (cut, interop) = RenderHost();
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+
+        cut.WaitForAssertion(() =>
+        {
+            var labels = cut.FindAll("button").Select(b => b.TextContent.Trim()).ToList();
+            Assert.Contains("Cancel", labels);
+            Assert.Contains("⏎", labels);
+        });
+    }
+
+    [Fact]
+    public void CancelKey_ClosesThePanel()
+    {
+        var (cut, interop) = RenderHost();
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+        cut.WaitForAssertion(() => Assert.Contains("mudkeyboard-dock--open", cut.Markup));
+
+        // The Cancel key (next to Enter) reverts to the focus-in value and closes the keyboard.
+        cut.FindAll("button").Single(b => b.TextContent.Trim() == "Cancel").Click();
+
+        cut.WaitForAssertion(() => Assert.DoesNotContain("mudkeyboard-dock--open", cut.Markup));
+    }
+
+    [Fact]
+    public void ShowCancelFalse_DropsTheCancelKey_AndRestoresTheHideButton()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.ShowCancel, false));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.DoesNotContain(cut.FindAll("button"), b => b.TextContent.Trim() == "Cancel");
+            var titles = cut.FindAll("button").Select(b => b.GetAttribute("title")).ToList();
+            Assert.Contains("Hide keyboard", titles);
+        });
+    }
+
+    [Fact]
+    public void HideButton_IsSuppressed_WhileCancelKeyIsShown()
+    {
+        var (cut, interop) = RenderHost();
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000));
+
+        cut.WaitForAssertion(() =>
+        {
+            var titles = cut.FindAll("button").Select(b => b.GetAttribute("title")).ToList();
+            Assert.DoesNotContain("Hide keyboard", titles);
+        });
+    }
+
+    [Fact]
+    public void CustomCancelLabel_IsRenderedOnTheCancelKey()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.CancelLabel, "Abandon"));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+
+        cut.WaitForAssertion(() =>
+            Assert.Contains(cut.FindAll("button"), b => b.TextContent.Trim() == "Abandon"));
+    }
+
+    [Fact]
+    public void ShowValuePreview_RendersACaret_SplittingTheValueAtTheCaretPosition()
+    {
+        var (cut, interop) = RenderHost();
+
+        // Caret at offset 3 of "sardar": preview shows "sar" + caret + "dar".
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+        cut.InvokeAsync(() => interop.OnValueChanged("sardar", 3));
+
+        cut.WaitForAssertion(() =>
+        {
+            var caret = cut.Find(".mudkeyboard-dock__caret");
+            Assert.Equal("sar", caret.PreviousSibling?.TextContent);
+            Assert.Equal("dar", caret.NextSibling?.TextContent);
+        });
     }
 }

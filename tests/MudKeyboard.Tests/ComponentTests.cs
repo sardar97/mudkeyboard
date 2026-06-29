@@ -92,4 +92,37 @@ public class MudKeyboardCustomLayoutTests : MudComponentTestContext
         Assert.Equal(3, cut.FindAll(".mudkeyboard-row").Count);
         Assert.Equal(7, cut.FindAll("button").Count); // 3 + 2 + 2
     }
+
+    [Fact]
+    public void StartCapsLocked_RendersUppercaseLetters_AndTypesUppercase()
+    {
+        string? captured = null;
+        var cut = Render<MudKeyboard.Components.MudKeyboard>(p => p
+            .Add(c => c.StartCapsLocked, true)
+            .Add(c => c.ValueChanged, v => captured = v));
+
+        // The QWERTY letters render upper-cased from the first paint…
+        Assert.Contains(cut.FindAll("button"), b => b.TextContent.Trim() == "Q");
+
+        // …and typing emits the upper-case character.
+        cut.FindAll("button").Single(b => b.TextContent.Trim() == "Q").Click();
+
+        Assert.Equal("Q", captured);
+    }
+
+    [Fact]
+    public void CustomCancelLabel_RelabelsTheCancelKey()
+    {
+        var layout = new KeyboardLayout
+        {
+            Rows = new string[][] { [KeyTokens.Cancel, KeyTokens.Enter] },
+        };
+
+        var cut = Render<MudKeyboard.Components.MudKeyboard>(p => p
+            .Add(c => c.Variant, KeyboardVariant.Custom)
+            .Add(c => c.Layout, layout)
+            .Add(c => c.CancelLabel, "Abandon"));
+
+        Assert.Contains(cut.FindAll("button"), b => b.TextContent.Trim() == "Abandon");
+    }
 }

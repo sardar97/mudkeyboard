@@ -1,10 +1,11 @@
 @namespace MudKeyboard.Docs.Layout
 @inherits LayoutComponentBase
 @implements IDisposable
-@using MudKeyboard.Docs.Services
 @inject DocsKeyboardToolbarState ToolbarState
+@inject NavigationManager Nav
+@inject DocsInterop Interop
 
-<MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
+<MudThemeProvider @ref="_themeProvider" Theme="_theme" IsDarkMode="_isDarkMode" ObserveSystemDarkModeChange="false" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -14,7 +15,15 @@
    parameters are driven by DocsKeyboardToolbarState so the live "Toolbar buttons" example on that page
    can show/hide/disable buttons on this one global host. *@
 <MudKeyboardHost VisibleActions="@ToolbarState.VisibleActions"
-                 DisabledActions="@ToolbarState.DisabledActions" />
+                 DisabledActions="@ToolbarState.DisabledActions"
+                 AllowNegative="@ToolbarState.AllowNegative"
+                 ShowValuePreview="@ToolbarState.ShowValuePreview"
+                 ShowCancel="@ToolbarState.ShowCancel"
+                 DefaultCapsLock="@ToolbarState.DefaultCapsLock"
+                 ShowBackdrop="@ToolbarState.ShowBackdrop"
+                 DisableBackdropClick="@ToolbarState.DisableBackdropClick"
+                 CancelLabel="@ToolbarState.CancelLabel"
+                 Sound="@ToolbarState.Sound" />
 
 @* Keyboard users can skip the app bar and navigation and jump straight to the page content.
    Hidden off-screen until focused (see .docs-skip-link in docs.css). *@
@@ -28,15 +37,28 @@
                        OnClick="@ToggleDrawer"
                        aria-label="Toggle navigation" />
         <MudLink Href="" Underline="Underline.None" Class="d-flex align-center ml-1" Color="Color.Inherit">
-            <MudImage Src="_content/MudKeyboard/mudkeyboard_logo.svg" Alt="MudKeyboard" Height="34" />
+            <BrandLogo SmallLogo="true" Class="brand-logo--appbar brand-logo--on-accent"/>
         </MudLink>
         <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" Class="ml-2 d-none d-sm-flex">docs</MudChip>
         <MudSpacer />
-        <MudTooltip Text="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")">
-            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
-                           Color="Color.Inherit"
-                           OnClick="@(() => _isDarkMode = !_isDarkMode)"
-                           aria-label="Toggle dark mode" />
+        <MudTooltip Text="@ThemeTooltip">
+            <MudMenu Icon="@ThemeIcon" Color="Color.Inherit" Dense="true"
+                     AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight"
+                     AriaLabel="Theme mode">
+                @foreach (var (mode, label, icon) in ThemeChoices)
+                {
+                    <MudMenuItem OnClick="@(() => SetThemeModeAsync(mode))">
+                        <div class="d-flex align-center" style="gap:.6rem;min-width:9.5rem;">
+                            <MudIcon Icon="@icon" Size="Size.Small" />
+                            <span>@label</span>
+                            @if (_themeMode == mode)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Primary" Class="ml-auto" />
+                            }
+                        </div>
+                    </MudMenuItem>
+                }
+            </MudMenu>
         </MudTooltip>
         <MudTooltip Text="NuGet">
             <MudIconButton Icon="@Icons.Material.Filled.Inventory2"
@@ -59,8 +81,8 @@
     </MudDrawer>
 
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="my-6">
-            <div id="main-content" class="docs-page" tabindex="-1">
+        <MudContainer MaxWidth="@(_wide ? MaxWidth.False : MaxWidth.Large)" Class="my-6">
+            <div id="main-content" class="docs-page @(_wide ? "docs-page--wide" : null)" tabindex="-1">
                 @Body
             </div>
         </MudContainer>
@@ -70,7 +92,7 @@
             <MudContainer MaxWidth="MaxWidth.Large">
                 <div class="docs-footer__inner">
                     <div class="docs-footer__brand">
-                        <MudImage Src="_content/MudKeyboard/mudkeyboard_logo.svg" Alt="MudKeyboard" Height="24" />
+                        <BrandLogo Class="brand-logo--footer" />
                         <MudText Typo="Typo.caption" Class="docs-footer__copy">Open-source · MIT licensed</MudText>
                     </div>
                     <div class="docs-footer__versions">
@@ -96,13 +118,119 @@
 
 @code {
     private bool _drawerOpen = true;
-    private bool _isDarkMode;
 
-    protected override void OnInitialized() => ToolbarState.Changed += OnToolbarStateChanged;
+    // The /api page renders full width so its reference grid has room to breathe; every other page
+    // stays MaxWidth.Large. Recomputed on every navigation.
+    private bool _wide;
+
+    // ── Theme: System (match OS) / Light / Dark, with the visitor's choice persisted across visits ──
+    private enum ThemeMode { System, Light, Dark }
+
+    private const string ThemeStorageKey = "mudkeyboard-docs-theme";
+
+    private MudThemeProvider _themeProvider = default!;
+    private ThemeMode _themeMode = ThemeMode.System;
+    private bool _systemDark;
+
+    // What the MudThemeProvider actually renders: explicit for Light/Dark, the live OS preference for System.
+    private bool _isDarkMode => _themeMode switch
+    {
+        ThemeMode.Light => false,
+        ThemeMode.Dark => true,
+        _ => _systemDark,
+    };
+
+    private static readonly (ThemeMode Mode, string Label, string Icon)[] ThemeChoices =
+    [
+        (ThemeMode.System, "System", Icons.Material.Filled.SettingsBrightness),
+        (ThemeMode.Light, "Light", Icons.Material.Filled.LightMode),
+        (ThemeMode.Dark, "Dark", Icons.Material.Filled.DarkMode),
+    ];
+
+    private string ThemeIcon => _themeMode switch
+    {
+        ThemeMode.Light => Icons.Material.Filled.LightMode,
+        ThemeMode.Dark => Icons.Material.Filled.DarkMode,
+        _ => Icons.Material.Filled.SettingsBrightness,
+    };
+
+    private string ThemeTooltip => $"Theme: {_themeMode}";
+
+    protected override void OnInitialized()
+    {
+        ToolbarState.Changed += OnToolbarStateChanged;
+        Nav.LocationChanged += OnLocationChanged;
+        UpdateWide();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        // Seed from the OS preference and keep following it while in System mode...
+        _systemDark = await _themeProvider.GetSystemDarkModeAsync();
+        await _themeProvider.WatchSystemDarkModeAsync(OnSystemDarkModeChanged);
+
+        // ...then apply any explicit choice the visitor saved on a previous visit (defaults to System).
+        var saved = await Interop.GetStoredAsync(ThemeStorageKey);
+        if (Enum.TryParse<ThemeMode>(saved, ignoreCase: true, out var mode))
+        {
+            _themeMode = mode;
+        }
+
+        StateHasChanged();
+    }
+
+    private Task OnSystemDarkModeChanged(bool isDark)
+    {
+        _systemDark = isDark;
+        if (_themeMode == ThemeMode.System)
+        {
+            StateHasChanged();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task SetThemeModeAsync(ThemeMode mode)
+    {
+        _themeMode = mode;
+        await Interop.SetStoredAsync(ThemeStorageKey, mode.ToString());
+    }
 
     private void OnToolbarStateChanged() => InvokeAsync(StateHasChanged);
 
-    public void Dispose() => ToolbarState.Changed -= OnToolbarStateChanged;
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        var wasWide = _wide;
+        UpdateWide();
+        if (_wide != wasWide)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // True only on the /api route (ignoring any query string or #anchor).
+    private void UpdateWide()
+    {
+        var path = Nav.ToBaseRelativePath(Nav.Uri);
+        var cut = path.IndexOfAny(['?', '#']);
+        if (cut >= 0)
+        {
+            path = path[..cut];
+        }
+
+        _wide = path.Trim('/').Equals("api", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public void Dispose()
+    {
+        ToolbarState.Changed -= OnToolbarStateChanged;
+        Nav.LocationChanged -= OnLocationChanged;
+    }
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 

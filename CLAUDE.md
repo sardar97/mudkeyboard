@@ -2,6 +2,24 @@
 
 ## Important!! never commit i do commit myself
 
+## Important!! always update the changelog
+Every change MUST be recorded in `CHANGELOG.md` in the same edit as the change itself — no exceptions.
+This applies to **any** new feature, behaviour change, bug fix, refactor with user-visible effect, or
+documentation-site change. Do not consider a task done until the changelog is updated.
+
+Rules:
+- Add the entry under the **topmost / current version heading** in `CHANGELOG.md`, in the correct
+  [Keep a Changelog](https://keepachangelog.com/) category: `### Added`, `### Changed`, `### Fixed`,
+  `### Removed`, `### Deprecated`, `### Security`. Create the category subheading if it doesn't exist yet.
+- Changes to the **documentation site only** (`src/MudKeyboard.Docs`) — anything that does not affect the
+  published NuGet library/package — go under a `### Documentation` subsection of that version, and must say
+  so, so a package consumer is never misled into thinking the library changed.
+- Match the existing entry style: a **bold lead-in** naming the feature, then a sentence or two of detail;
+  reference the public API names involved.
+- `CHANGELOG.md` is the source of truth and may be more detailed than
+  `src/MudKeyboard.Docs/Shared/ReleaseNotes.cs` (the curated /releases-page mirror). When a library
+  feature/fix is added, keep `ReleaseNotes.cs` in sync; docs-site-only notes need not be mirrored there.
+
 ## What is this project?
 MudKeyboard is an open-source Blazor virtual on-screen keyboard library.
 - Keyboard core is JavaScript-free — pure C# and Blazor. A single optional JS shim powers ONE feature: the global docked keyboard that auto-shows on input focus (see "JavaScript policy" below).

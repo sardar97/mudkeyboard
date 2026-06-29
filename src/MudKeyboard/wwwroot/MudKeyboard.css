@@ -65,6 +65,63 @@
     min-height: 4rem !important;
 }
 
+/* Dimming backdrop behind the docked keyboard (opt-in via MudKeyboardHost.ShowBackdrop). The host sets
+   an inline z-index equal to the dock's; the backdrop is emitted before the dock in the DOM, so the dock
+   paints on top. Colour comes from the MudBlazor palette so it follows dark/light themes. */
+.mudkeyboard-backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--mud-palette-overlay-dark, rgba(33, 33, 33, 0.5));
+}
+
+/* Value-preview / edit bar at the top of the docked keyboard (opt-in via ShowValuePreview). Colours come
+   from the MudBlazor palette — nothing hardcoded — so it tracks the active theme. */
+.mudkeyboard-dock__preview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    margin-bottom: 0.25rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+    border-radius: 8px;
+    background: var(--mud-palette-background-grey, var(--mud-palette-surface));
+    border: 1px solid var(--mud-palette-lines-inputs, var(--mud-palette-divider));
+}
+
+.mudkeyboard-dock__preview-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-primary);
+}
+
+/* The blinking cursor in the value-preview bar, sitting between the text before and after the caret so
+   the user sees where edits land. Colour comes from the MudBlazor palette so it tracks the theme. */
+.mudkeyboard-dock__caret {
+    display: inline-block;
+    width: 2px;
+    height: 1.15em;
+    margin: 0 1px;
+    vertical-align: text-bottom;
+    background: var(--mud-palette-primary);
+    animation: mudkeyboard-caret-blink 1.06s step-end infinite;
+}
+
+@keyframes mudkeyboard-caret-blink {
+    from, to { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mudkeyboard-dock__caret {
+        animation: none;
+    }
+}
+
 .mudkeyboard-dock__bar {
     display: flex;
     align-items: center;
