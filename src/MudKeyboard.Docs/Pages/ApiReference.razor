@@ -1,5 +1,7 @@
 @page "/api"
 @namespace MudKeyboard.Docs.Pages
+@implements IAsyncDisposable
+@inject DocsInterop Interop
 
 <PageTitle>API reference · MudKeyboard</PageTitle>
 
@@ -84,7 +86,13 @@
             <div class="d-flex flex-column" style="gap:0.15rem;">
                 @foreach (var (anchor, label, indent) in Toc)
                 {
-                    <MudLink Href="@($"api#{anchor}")" Typo="Typo.body2" Color="Color.Inherit" Style="@($"padding-left:{indent}rem;")">@label</MudLink>
+                    var isActive = anchor == _activeSection;
+                    <MudLink Href="@($"api#{anchor}")"
+                             Typo="Typo.body2"
+                             Color="@(isActive ? Color.Primary : Color.Inherit)"
+                             Class="@($"docs-toc-link{(isActive ? " docs-toc-link--active" : "")}")"
+                             Style="@($"padding-left:{indent}rem;")"
+                             OnClick="@(() => _activeSection = anchor)">@label</MudLink>
                 }
             </div>
         </MudPaper>
@@ -92,6 +100,53 @@
 </MudGrid>
 
 @code {
+    // The anchor of the section currently in view (or just clicked), highlighted in the TOC.
+    private string? _activeSection;
+    private DotNetObjectReference<ApiReference>? _selfRef;
+    private IJSObjectReference? _scrollSpy;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        // Start the scroll-spy: JS reports the section nearest the top back via SetActiveSection.
+        _selfRef = DotNetObjectReference.Create(this);
+        var ids = Toc.Select(t => t.Anchor).ToArray();
+        _scrollSpy = await Interop.ObserveSectionsAsync(_selfRef, ids);
+    }
+
+    /// <summary>Called from the scroll-spy as the active section changes.</summary>
+    [JSInvokable]
+    public void SetActiveSection(string id)
+    {
+        if (_activeSection != id)
+        {
+            _activeSection = id;
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_scrollSpy is not null)
+            {
+                await _scrollSpy.InvokeVoidAsync("dispose");
+                await _scrollSpy.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // Runtime already gone — nothing to clean up on the JS side.
+        }
+
+        _selfRef?.Dispose();
+    }
+
     private static readonly (string Anchor, string Label, double Indent)[] Toc =
     [
         ("components", "Components", 0),

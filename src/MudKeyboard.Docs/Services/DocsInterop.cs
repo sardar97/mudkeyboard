@@ -34,6 +34,32 @@ public sealed class DocsInterop : IAsyncDisposable
         return await module.InvokeAsync<bool>("copy", text);
     }
 
+    /// <summary>
+    /// Starts a scroll-spy over the given section anchor ids, calling back the JS-invokable
+    /// <c>SetActiveSection</c> on <paramref name="dotnetRef"/> as the active section changes. Returns a
+    /// JS controller — call <c>dispose</c> on it and dispose it when the page is torn down.
+    /// </summary>
+    public async ValueTask<IJSObjectReference> ObserveSectionsAsync<TRef>(DotNetObjectReference<TRef> dotnetRef, string[] ids)
+        where TRef : class
+    {
+        var module = await ModuleAsync();
+        return await module.InvokeAsync<IJSObjectReference>("observeSections", dotnetRef, ids);
+    }
+
+    /// <summary>Reads a persisted string value by key, or <see langword="null"/> if unset/unavailable.</summary>
+    public async ValueTask<string?> GetStoredAsync(string key)
+    {
+        var module = await ModuleAsync();
+        return await module.InvokeAsync<string?>("getStored", key);
+    }
+
+    /// <summary>Persists a string value by key (best-effort; silently ignored if storage is unavailable).</summary>
+    public async ValueTask SetStoredAsync(string key, string value)
+    {
+        var module = await ModuleAsync();
+        await module.InvokeVoidAsync("setStored", key, value);
+    }
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {

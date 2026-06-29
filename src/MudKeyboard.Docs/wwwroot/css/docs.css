@@ -91,6 +91,12 @@ html, body {
     max-width: 920px;
 }
 
+/* Full-bleed pages (the API reference) drop the reading-width cap so their multi-column grid can use
+   the whole container width. */
+.docs-page--wide {
+    max-width: none;
+}
+
 .docs-h1 {
     font-family: "Roboto", system-ui, sans-serif;
     font-size: 2.4rem;
@@ -345,6 +351,54 @@ html, body {
 .docs-feature__icon {
     color: var(--docs-brand);
     margin-bottom: 0.5rem;
+}
+
+/* ---------- "What's new" badges ----------
+   Small New/Updated pills shown next to nav links, section headings and parameter rows. Colours come
+   from MudBlazor palette variables (success = New, warning = Updated) so they follow light/dark mode. */
+.docs-badge {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    margin-left: 0.4rem;
+    padding: 0.02rem 0.4rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-family: "Roboto", system-ui, sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    line-height: 1.55;
+    text-transform: uppercase;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.docs-badge--new {
+    color: var(--mud-palette-success);
+    border-color: var(--mud-palette-success);
+    background: color-mix(in srgb, var(--mud-palette-success) 14%, transparent);
+}
+
+.docs-badge--updated {
+    color: var(--mud-palette-warning);
+    border-color: var(--mud-palette-warning);
+    background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent);
+}
+
+/* ---------- API reference: "On this page" table of contents ---------- */
+.docs-toc-link {
+    border-radius: 6px;
+    padding-top: 0.12rem;
+    padding-bottom: 0.12rem;
+    transition: color 0.12s ease;
+}
+
+/* The section currently in view (scroll-spy) / just clicked. Primary colour + weight so the reader
+   always knows where they are on the page. */
+.docs-toc-link--active {
+    color: var(--mud-palette-primary) !important;
+    font-weight: 700;
 }
 
 /* ---------- Misc helpers ---------- */

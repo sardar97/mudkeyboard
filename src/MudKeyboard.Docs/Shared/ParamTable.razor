@@ -16,7 +16,13 @@
         @foreach (var m in Members)
         {
             <tr>
-                <td><code class="docs-inline-code">@m.Name</code></td>
+                <td style="white-space:nowrap;">
+                    <code class="docs-inline-code">@m.Name</code>
+                    @if (m.Badge is { } badge)
+                    {
+                        <FeatureBadge Kind="badge" />
+                    }
+                </td>
                 <td><code class="docs-inline-code" style="white-space:normal;">@m.Type</code></td>
                 @if (ShowDefault)
                 {

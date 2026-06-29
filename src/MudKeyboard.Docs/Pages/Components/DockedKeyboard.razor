@@ -216,25 +216,41 @@
         </tbody>
     </MudSimpleTable>
     <MudText Typo="Typo.caption" Class="mt-1">Hiding wins over disabling — a hidden button isn't rendered at all. The cursor arrows never appear on the money keypad regardless.</MudText>
+    <MudDivider Class="my-3" />
+    <MudTextField @bind-Value="_toolbarField" Label="Focus me to see the toolbar above the keys" Variant="Variant.Outlined" Immediate="true"
+                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
 </MudPaper>
 <CodeBlock Language="razor" Code="@ToolbarCode" />
 
-<MudText id="edit-cancel" Typo="Typo.h5" Class="docs-section-title">Value preview, cancel &amp; backdrop</MudText>
+@* Each option below is self-contained: its own switch(es), its own focusable field and its own code —
+   so you can try it and read the result without scrolling back up to the fields at the top. *@
+<MudText id="preview" Typo="Typo.h5" Class="docs-section-title">Live value preview <FeatureBadge Kind="BadgeKind.New" /></MudText>
 <div class="docs-prose">
     <p>
         <code class="docs-inline-code">ShowValuePreview</code> (on by default) shows a bar at the top of the
         docked keyboard with the focused field's <strong>live value</strong> and a <strong>blinking caret</strong>
         at the cursor position — so the user always sees what they are editing and where the caret sits, even
-        when the field is behind the panel. Focus a field that already contains text (say <em>"sardar"</em>)
-        and it appears immediately; the keys edit it live, and the cursor moves with the ◂ ▸ arrows.
+        when the field is behind the panel. The field below already contains <em>"sardar"</em>: focus it and the
+        value appears immediately; the keys edit it live, and the caret moves with the ◂ ▸ arrows.
     </p>
+</div>
+<ExampleCard Title="Value preview with caret"
+             Description="Toggle the preview, then focus the pre-filled field — the bar mirrors its value and caret position."
+             Code="@PreviewCode">
+    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowValuePreview"
+               ValueChanged="@(v => Toolbar.ShowValuePreview = v)" Label="Value preview (with caret)" />
+    <MudTextField @bind-Value="_previewField" Label="Name (already contains text)" Variant="Variant.Outlined" Immediate="true"
+                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+</ExampleCard>
+
+<MudText id="edit-cancel" Typo="Typo.h5" Class="docs-section-title">Cancel key &amp; backdrop <FeatureBadge Kind="BadgeKind.New" /></MudText>
+<div class="docs-prose">
     <p>
         <code class="docs-inline-code">ShowCancel</code> (on by default) renders a <strong>Cancel</strong> key
         next to <strong>Enter</strong>: Enter commits and closes, Cancel reverts to the value the field held at
         focus-in and closes. Rename the key with <code class="docs-inline-code">CancelLabel</code>, or set
         <code class="docs-inline-code">ShowCancel="false"</code> to drop it (which brings back the chevron-down
-        Hide button). <code class="docs-inline-code">DefaultCapsLock="true"</code> makes the keyboard start
-        with caps lock on; set it globally with <code class="docs-inline-code">AddMudKeyboard(o =&gt; o.DefaultCapsLock = true)</code>.
+        Hide button).
     </p>
     <p>
         <code class="docs-inline-code">ShowBackdrop="true"</code> dims the page behind the keyboard; a tap on
@@ -243,30 +259,44 @@
         requiring an explicit Enter or Cancel.
     </p>
 </div>
-<MudPaper Class="pa-4 mb-3" Outlined="true">
-    <div class="d-flex justify-space-between align-center mb-2 flex-wrap" style="gap:.5rem">
-        <MudText Typo="Typo.subtitle2">Live options — then focus a field at the top of this page</MudText>
-        <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Restore"
-                   OnClick="@(() => Toolbar.Reset())">Reset</MudButton>
-    </div>
+<ExampleCard Title="Cancel, rename it &amp; dim the page"
+             Description="Edit the field, then commit with ⏎ or revert with Cancel / a backdrop tap."
+             Code="@CancelBackdropCode">
     <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="4">
-        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowValuePreview"
-                   ValueChanged="@(v => Toolbar.ShowValuePreview = v)" Label="Value preview (with caret)" />
         <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowCancel"
                    ValueChanged="@(v => Toolbar.ShowCancel = v)" Label="Cancel key" />
-        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.DefaultCapsLock"
-                   ValueChanged="@(v => Toolbar.DefaultCapsLock = v)" Label="Caps lock by default" />
         <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowBackdrop"
                    ValueChanged="@(v => Toolbar.ShowBackdrop = v)" Label="Backdrop" />
         <MudSwitch T="bool" Color="Color.Secondary" Value="@Toolbar.DisableBackdropClick"
                    ValueChanged="@(v => Toolbar.DisableBackdropClick = v)" Label="Disable backdrop click" />
-        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.Sound"
-                   ValueChanged="@(v => Toolbar.Sound = v)" Label="Key click sound" />
     </MudStack>
-</MudPaper>
-<CodeBlock Language="razor" Code="@PreviewCode" />
+    @if (Toolbar.ShowCancel)
+    {
+        <MudTextField Value="@Toolbar.CancelLabel" ValueChanged="@((string v) => Toolbar.CancelLabel = v)"
+                      T="string" Label="CancelLabel" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:16rem;" />
+    }
+    <MudTextField @bind-Value="_cancelField" Label="Edit me, then Cancel or tap the backdrop" Variant="Variant.Outlined" Immediate="true"
+                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+</ExampleCard>
 
-<MudText id="sound" Typo="Typo.h5" Class="docs-section-title">Key click sound</MudText>
+<MudText id="caps" Typo="Typo.h5" Class="docs-section-title">Caps lock by default</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">DefaultCapsLock="true"</code> makes the keyboard start with caps lock on.
+        Set it per host, or globally with <code class="docs-inline-code">AddMudKeyboard(o =&gt; o.DefaultCapsLock = true)</code>.
+        Focus the field below to see the QWERTY layout open already shifted.
+    </p>
+</div>
+<ExampleCard Title="Start shifted"
+             Description="With caps lock on, the letters you type are capitals until you tap shift to turn it off."
+             Code="@CapsCode">
+    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.DefaultCapsLock"
+               ValueChanged="@(v => Toolbar.DefaultCapsLock = v)" Label="Caps lock on by default" />
+    <MudTextField @bind-Value="_capsField" Label="Text (QWERTY)" Variant="Variant.Outlined" Immediate="true"
+                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+</ExampleCard>
+
+<MudText id="sound" Typo="Typo.h5" Class="docs-section-title">Key click sound <FeatureBadge Kind="BadgeKind.New" /></MudText>
 <div class="docs-prose">
     <p>
         <code class="docs-inline-code">Sound="true"</code> plays a short click on every key press. It is a
@@ -276,12 +306,18 @@
         <MudLink Href="components/numpad">MudNumpad</MudLink> and
         <MudLink Href="components/pricepad">MudPricepad</MudLink>. Point
         <code class="docs-inline-code">SoundSrc</code> at your own audio file (any URL or
-        <code class="docs-inline-code">data:</code> URI) to replace the built-in click. Toggle it with the
-        switch above, then tap a key. (Browsers only allow sound after the first user interaction, so the
-        very first tap on a fresh page may be silent.)
+        <code class="docs-inline-code">data:</code> URI) to replace the built-in click. (Browsers only allow
+        sound after the first user interaction, so the very first tap on a fresh page may be silent.)
     </p>
 </div>
-<CodeBlock Language="razor" Code="@SoundCode" />
+<ExampleCard Title="Click on every key"
+             Description="Toggle the sound on, focus the field, then tap a key to hear the click."
+             Code="@SoundCode">
+    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.Sound"
+               ValueChanged="@(v => Toolbar.Sound = v)" Label="Key click sound" />
+    <MudTextField @bind-Value="_soundField" Label="Tap a key to hear the click" Variant="Variant.Outlined" Immediate="true"
+                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+</ExampleCard>
 
 <MudText id="parameters" Typo="Typo.h5" Class="docs-section-title">MudKeyboardHost parameters</MudText>
 <ParamTable Members="HostParameters" />
@@ -310,6 +346,14 @@
     private double _measure;
     private int _quantity;
     private int _rating;
+
+    // Per-example demo fields (each option below has its own focusable field, so the result is visible
+    // right where the option is documented — no scrolling back up to the fields at the top of the page).
+    private string _toolbarField = string.Empty;
+    private string _previewField = "sardar";
+    private string _cancelField = "edit me";
+    private string _capsField = string.Empty;
+    private string _soundField = string.Empty;
 
     // Restore the toolbar to defaults (all buttons visible) when leaving the page, so the live demo's
     // changes don't leak onto the rest of the site (the host is global, in MainLayout).
@@ -377,15 +421,26 @@
 """;
 
     private const string PreviewCode = """
-@* Value preview (with caret) and the Cancel key are on by default. Defaults shown explicitly here; you
-   can drop any line. Add a dimming backdrop and require an explicit Enter / Cancel to dismiss. *@
-<MudKeyboardHost ShowValuePreview="true"
-                 ShowCancel="true"
+@* The value preview is on by default — a bar atop the docked keyboard mirrors the focused field's
+   value and shows a blinking caret, even when the field sits behind the panel. *@
+<MudKeyboardHost ShowValuePreview="true" />
+
+@* Any opted-in field; focus it and its current text appears in the preview bar. *@
+<MudTextField @bind-Value="_name" Label="Name" Immediate="true"
+              UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+""";
+
+    private const string CancelBackdropCode = """
+@* Cancel reverts to the value the field had at focus-in; rename it with CancelLabel. The backdrop dims
+   the page and (by default) cancels the edit on tap — DisableBackdropClick keeps it open instead. *@
+<MudKeyboardHost ShowCancel="true"
                  CancelLabel="Cancel"
                  ShowBackdrop="true"
-                 DisableBackdropClick="true" />
+                 DisableBackdropClick="false" />
+""";
 
-@* Start with caps lock on — per host, or globally in Program.cs: *@
+    private const string CapsCode = """
+@* Start the keyboard with caps lock on — per host, or globally in Program.cs. *@
 <MudKeyboardHost DefaultCapsLock="true" />
 @* builder.Services.AddMudKeyboard(o => o.DefaultCapsLock = true); *@
 """;
@@ -497,13 +552,13 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("VisibleActions", "KeyboardAction", "All", "Which toolbar buttons render (Clear, Copy, Paste, the cursor arrows, Hide). A [Flags] set: remove buttons with & ~, or use None to drop the whole toolbar."),
         new("DisabledActions", "KeyboardAction", "None", "Which toolbar buttons render greyed-out and non-interactive. A [Flags] set; hiding via VisibleActions wins over disabling."),
         new("AllowNegative", "bool", "false", "Global default for whether numeric keypads show the ± sign-toggle key. A field's data-mudkeyboard-allow-negative (or MudKeyboardNumericField.AllowNegative) overrides it."),
-        new("ShowValuePreview", "bool", "true", "Shows a bar at the top of the docked keyboard with the focused field's live value and a caret at the cursor position. Edits apply live."),
-        new("ShowCancel", "bool", "true", "Renders a Cancel key next to Enter that reverts to the value the field had at focus-in and closes. While shown, the chevron-down Hide button is suppressed."),
-        new("CancelLabel", "string", "\"Cancel\"", "Text shown on the Cancel key next to Enter."),
+        new("ShowValuePreview", "bool", "true", "Shows a bar at the top of the docked keyboard with the focused field's live value and a caret at the cursor position. Edits apply live.", BadgeKind.New),
+        new("ShowCancel", "bool", "true", "Renders a Cancel key next to Enter that reverts to the value the field had at focus-in and closes. While shown, the chevron-down Hide button is suppressed.", BadgeKind.New),
+        new("CancelLabel", "string", "\"Cancel\"", "Text shown on the Cancel key next to Enter.", BadgeKind.New),
         new("DefaultCapsLock", "bool?", "null", "Whether the keyboard starts with caps lock on. null = use the global MudKeyboardOptions.DefaultCapsLock; set here to override per host."),
-        new("ShowBackdrop", "bool", "false", "Dims the page behind the docked keyboard while it is open. A backdrop click cancels (reverts) and closes — unless DisableBackdropClick is set."),
-        new("DisableBackdropClick", "bool", "false", "Backdrop clicks no longer dismiss the keyboard, so closing requires an explicit Enter or Cancel. Effective only when ShowBackdrop is set."),
-        new("Sound", "bool", "false", "Plays a short click sound on every key press, via a Blazor <audio> element (no JavaScript)."),
-        new("SoundSrc", "string?", "null", "Custom click-sound source (URL or data: URI). Defaults to the built-in synthesised click. Ignored unless Sound is set."),
+        new("ShowBackdrop", "bool", "false", "Dims the page behind the docked keyboard while it is open. A backdrop click cancels (reverts) and closes — unless DisableBackdropClick is set.", BadgeKind.New),
+        new("DisableBackdropClick", "bool", "false", "Backdrop clicks no longer dismiss the keyboard, so closing requires an explicit Enter or Cancel. Effective only when ShowBackdrop is set.", BadgeKind.New),
+        new("Sound", "bool", "false", "Plays a short click sound on every key press, via a Blazor <audio> element (no JavaScript).", BadgeKind.New),
+        new("SoundSrc", "string?", "null", "Custom click-sound source (URL or data: URI). Defaults to the built-in synthesised click. Ignored unless Sound is set.", BadgeKind.New),
     ];
 }

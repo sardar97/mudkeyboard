@@ -1,0 +1,21 @@
+@namespace MudKeyboard.Docs.Shared
+
+@* A tiny "New" / "Updated" pill that advertises a per-release change. Used inline next to nav links,
+   section headings and parameter rows. The tooltip names the release (e.g. "New in v1.2.0"). *@
+<MudTooltip Text="@TooltipText" Arrow="true">
+    <span class="docs-badge @KindClass" aria-label="@TooltipText">@Label</span>
+</MudTooltip>
+
+@code {
+    /// <summary>Whether this badge marks a brand-new feature or a change to an existing one.</summary>
+    [Parameter, EditorRequired] public BadgeKind Kind { get; set; }
+
+    /// <summary>The release the badge refers to. Defaults to the current <see cref="WhatsNew.Version"/>.</summary>
+    [Parameter] public string Version { get; set; } = WhatsNew.Version;
+
+    private string Label => Kind == BadgeKind.New ? "New" : "Updated";
+
+    private string KindClass => Kind == BadgeKind.New ? "docs-badge--new" : "docs-badge--updated";
+
+    private string TooltipText => $"{Label} in v{Version}";
+}

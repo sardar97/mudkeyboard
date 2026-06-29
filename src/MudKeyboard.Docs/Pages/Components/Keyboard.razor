@@ -60,7 +60,7 @@
     </div>
 </ExampleCard>
 
-<MudText id="sound" Typo="Typo.h5" Class="docs-section-title">Key click sound</MudText>
+<MudText id="sound" Typo="Typo.h5" Class="docs-section-title">Key click sound <FeatureBadge Kind="BadgeKind.New" /></MudText>
 <div class="docs-prose">
     <p>
         Set <code class="docs-inline-code">Sound="true"</code> to play a short click on every key press — a
@@ -183,8 +183,8 @@
         new("MaxLength", "int?", "null", "Optional cap on value length (ignored in emit mode)."),
         new("Disabled", "bool", "false", "Disables every key."),
         new("DropShadow", "bool", "true", "Flat keys when false."),
-        new("Sound", "bool", "false", "Plays a short click sound on key press (pure-Blazor <audio>, no JavaScript)."),
-        new("SoundSrc", "string?", "null", "Custom click-sound source (URL or data: URI); defaults to the built-in click. Ignored unless Sound is set."),
+        new("Sound", "bool", "false", "Plays a short click sound on key press (pure-Blazor <audio>, no JavaScript).", BadgeKind.New),
+        new("SoundSrc", "string?", "null", "Custom click-sound source (URL or data: URI); defaults to the built-in click. Ignored unless Sound is set.", BadgeKind.New),
         new("Palette", "KeyboardPalette?", "null", "Per-keyboard colour overrides; unset slots follow the theme."),
         new("AriaLabel", "string?", "\"On-screen keyboard\"", "Accessible name for the root role=\"group\" (screen-reader announcement)."),
         new("Class / Style", "string?", "null", "Passthrough CSS for the root surface."),
