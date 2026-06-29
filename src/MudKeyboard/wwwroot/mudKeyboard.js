@@ -125,7 +125,7 @@ export function insertText(text) {
         next = next.slice(0, max);
     }
 
-    el.value = next;
+    setNativeValue(el, next);
     const caret = Math.min(start + text.length, el.value.length);
     setCaret(el, caret);
     dispatchInput(el);
@@ -140,10 +140,10 @@ export function backspace() {
     const end = el.selectionEnd ?? value.length;
 
     if (start !== end) {
-        el.value = value.slice(0, start) + value.slice(end);
+        setNativeValue(el, value.slice(0, start) + value.slice(end));
         setCaret(el, start);
     } else if (start > 0) {
-        el.value = value.slice(0, start - 1) + value.slice(start);
+        setNativeValue(el, value.slice(0, start - 1) + value.slice(start));
         setCaret(el, start - 1);
     } else {
         return;
@@ -166,7 +166,7 @@ export function enter() {
 export function clear() {
     const el = activeEl;
     if (!el) return;
-    el.value = '';
+    setNativeValue(el, '');
     setCaret(el, 0);
     dispatchInput(el);
 }
@@ -200,7 +200,7 @@ export function getValue() {
 export function setValue(text) {
     const el = activeEl;
     if (!el) return;
-    el.value = text ?? '';
+    setNativeValue(el, text ?? '');
     setCaret(el, el.value.length);
     dispatchInput(el);
 }
@@ -238,8 +238,28 @@ function setCaret(el, pos) {
     try { el.setSelectionRange(pos, pos); } catch { /* number/email inputs disallow selection — ignore */ }
 }
 
-// Tell Blazor the value changed. Immediate fields bind on 'input'; this also keeps MudBlazor's
-// own input in sync. 'change' is dispatched on enter/blur for non-immediate bindings.
+// Write the field's value through the *native* prototype value setter rather than `el.value = …`.
+// Frameworks that track inputs by patching the value setter (React et al.) — and, crucially, Blazor's
+// static-SSR/EditForm machinery and any plain HTML form — only observe the new value when it is set via
+// the prototype descriptor. Without this, text typed by the on-screen keyboard would not be picked up
+// by an SSR form POST. Textarea and input expose the setter on different prototypes.
+function setNativeValue(el, value) {
+    const proto = el.tagName === 'TEXTAREA'
+        ? window.HTMLTextAreaElement.prototype
+        : window.HTMLInputElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+    if (setter) {
+        setter.call(el, value);
+    } else {
+        el.value = value; // very old browsers without a descriptor setter — fall back to direct assignment
+    }
+}
+
+// Tell the page the value changed. We fire BOTH 'input' and 'change' after every keystroke so that
+// MudBlazor immediate bindings (which listen on 'input'), non-immediate bindings and plain/SSR HTML
+// forms (which commit on 'change'), and any non-Blazor listeners all stay in sync. This is what lets
+// the docked keyboard drive static-SSR Blazor forms, ordinary <form> POSTs and bare inputs alike.
 function dispatchInput(el) {
     el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
 }

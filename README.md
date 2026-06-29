@@ -24,14 +24,16 @@ terminals and any interface where a hardware keyboard is unavailable or impracti
   your theme cascade to the keyboard automatically, with no extra code.
 - **AOT and trim friendly.** No reflection, no dynamic code. The library is marked
   `IsAotCompatible`, so trim and AOT analyzers run on every build.
-- **Multi-targeted.** Supports .NET 8, 9 and 10 with the Interactive Server and WebAssembly render
-  modes.
+- **Multi-targeted.** Supports .NET 8, 9 and 10. The inline keyboards run under Interactive Server or
+  WebAssembly; the global docked keyboard **additionally works on static SSR pages** (see
+  [Static SSR support](#static-ssr-support)).
 - **Versatile.** Ships a full QWERTY keyboard, a numpad, a pence-first pricepad and a custom-layout
   engine, plus an optional global docked keyboard.
 
 > **Render modes:** the library is render-mode agnostic — your app picks `InteractiveServer` or
-> `InteractiveWebAssembly`. Static SSR is **not** supported, as a virtual keyboard needs
-> interactivity.
+> `InteractiveWebAssembly` for the inline keyboards. The global docked keyboard **also works on static
+> SSR** pages (it drives the focused field through JavaScript, not Blazor binding) — see
+> [Static SSR support](#static-ssr-support).
 
 | Inline keyboard | Numpad / Pricepad | Global docked keyboard |
 | --- | --- | --- |
@@ -180,6 +182,73 @@ layer above the top-most element on the page, so it floats over dialogs and over
 
 ---
 
+## Static SSR support
+
+MudKeyboard supports Blazor **static Server-Side Rendering** (the static SSR introduced in .NET 8).
+A static-SSR page has no Blazor circuit or WebAssembly runtime of its own, so the *inline* keyboards
+(`MudKeyboard`, `MudNumpad`, `MudPricepad`) — which rely on Blazor event handlers — still need an
+interactive render mode. The **global docked keyboard**, however, works on static-SSR pages: it edits
+the focused `<input>` through JavaScript on `document.activeElement` and dispatches native `input` and
+`change` events, so the typed text lands in the field's value and is carried by an ordinary form POST —
+no per-page Blazor interactivity required.
+
+**1. Put the host in `App.razor`, outside `<Routes>`,** with its own interactive render mode. This
+gives the keyboard its own circuit, which stays live regardless of the render mode of whichever page is
+on screen — including statically rendered ones:
+
+```razor
+<body>
+    @* No global @rendermode on <Routes> → each page chooses its own; pages with no @rendermode
+       directive render with static SSR. *@
+    <Routes />
+
+    @* The docked keyboard host lives here, outside <Routes>, with its own circuit. *@
+    <MudKeyboardHost @rendermode="InteractiveServer" />
+
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+</body>
+```
+
+> Placing the host *inside* a layout that a static-SSR page uses would make the host static too (it
+> would never run its JavaScript). Keep it outside `<Routes>` so it has its own interactive island.
+
+**2. Opt fields into the docked keyboard** with `MudKeyboardTextField` and `DockedKeyboard="true"`.
+The page itself needs **no** `@rendermode` directive:
+
+```razor
+@page "/login"
+@* No @rendermode → this page is static SSR. *@
+
+<EditForm Model="Input" method="post" OnValidSubmit="SignIn" FormName="login">
+    <MudKeyboardTextField @bind-Value="Input.Username" Label="Username"
+                          DockedKeyboard="true" name="Input.Username" />
+
+    <MudKeyboardTextField @bind-Value="Input.Password" Label="Password"
+                          InputType="InputType.Password"
+                          DockedKeyboard="true" DockedKeyboardLayout="qwerty"
+                          name="Input.Password" />
+
+    <MudButton ButtonType="ButtonType.Submit">Sign in</MudButton>
+</EditForm>
+```
+
+`MudKeyboardTextField` is a thin generic wrapper over `MudTextField<T>` that adds `data-mudkeyboard`
+(and, when set, `data-mudkeyboard-layout`) for you. It is most useful with
+`KeyboardAttachMode.OptIn`, where only opted-in fields raise the keyboard.
+
+**Alternative — a plain `MudTextField`.** You don't have to use the wrapper: any input marked with the
+`data-mudkeyboard` attribute works the same way, which is handy in `AllInputs` mode or when you already
+have a `MudTextField`:
+
+```razor
+<MudTextField @bind-Value="Input.Email" Label="Email" data-mudkeyboard="true" name="Input.Email" />
+```
+
+A runnable example lives in the Server demo at `/components/ssr-login-demo`
+(`demo/MudKeyboard.Demo.Server`).
+
+---
+
 ## Components and parameters
 
 ### `<MudKeyboard>`
@@ -211,6 +280,18 @@ layer above the top-most element on the page, so it floats over dialogs and over
 ### `<MudKeyboardHost>`
 
 `Palette`, `Elevation` (default `8`), `MinZIndex` (default `1400`), `Style`.
+
+### `<MudKeyboardTextField>`
+
+A generic (`@typeparam T`) wrapper over `MudTextField<T>` that opts a field into the global docked
+keyboard. Forwards the common text-field parameters (`Value`/`ValueChanged`/`ValueExpression`, `Label`,
+`Placeholder`, `HelperText`, `InputType`, `Immediate`, `Disabled`, `ReadOnly`, `Variant`, `Adornment`,
+`AdornmentIcon`, `Lines`, `Class`, `Style`) plus any extra attributes (such as `name`).
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `DockedKeyboard` | `bool` | `false` | Adds `data-mudkeyboard="true"` so the docked keyboard attaches to this field. |
+| `DockedKeyboardLayout` | `string` | `""` | Forces the layout via `data-mudkeyboard-layout` (`qwerty`, `numpad`, `decimal`, `money`). Empty = infer. |
 
 ---
 
@@ -286,8 +367,9 @@ dotnet run --project demo/MudKeyboard.Demo.Wasm     # Interactive WebAssembly
 ```
 
 The Server demo showcases every variant, two-way binding, the `OnEnter` callback, a custom layout, a
-`KeyboardPalette` override and the global docked keyboard. A hosted version is available on the
-[documentation site](https://mudkeyboard.pages.dev).
+`KeyboardPalette` override and the global docked keyboard — plus a static-SSR login page at
+`/components/ssr-login-demo` that proves the docked keyboard works with no per-page render mode. A
+hosted version is available on the [documentation site](https://mudkeyboard.pages.dev).
 
 ---
 

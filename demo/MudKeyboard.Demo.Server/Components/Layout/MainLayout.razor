@@ -5,13 +5,17 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-@* Global on-screen keyboard: shows automatically when any input is focused. *@
-<MudKeyboardHost />
+@* The global on-screen keyboard now lives in App.razor (outside <Routes>) so it keeps working on
+   statically server-rendered pages too — see Components/App.razor. *@
 
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudImage Src="_content/MudKeyboard/mudkeyboard_logo.svg" Alt="MudKeyboard" Height="40" Class="mr-3" />
         <MudText Typo="Typo.subtitle1">Server demo</MudText>
+        @* Demo navigation: the inline keyboards live on Home; the SSR page proves the docked keyboard
+           also works with no per-page render mode. *@
+        <MudButton Href="/" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Home" Class="ml-4">Home</MudButton>
+        <MudButton Href="/components/ssr-login-demo" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Login">SSR login demo</MudButton>
         <MudSpacer />
         <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
                        Color="Color.Inherit"

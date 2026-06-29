@@ -1,0 +1,119 @@
+@namespace MudKeyboard.Components
+@typeparam T
+@using System.Linq.Expressions
+
+@* A thin, generic wrapper around MudTextField<T> that opts a field into the global docked keyboard
+   without the caller having to remember the data-* attribute names. It forwards the common
+   MudTextField parameters and, when DockedKeyboard is set, splats data-mudkeyboard (and optionally
+   data-mudkeyboard-layout) onto the underlying <input> so the focus-capture shim raises the keyboard
+   for it — handy on static-SSR pages and in OptIn mode. No reflection is used, so it stays AOT/trim
+   friendly. *@
+<MudTextField T="T"
+              Value="Value"
+              ValueChanged="@ValueChanged"
+              Label="@Label"
+              Placeholder="@Placeholder"
+              HelperText="@HelperText"
+              InputType="InputType"
+              Immediate="Immediate"
+              Disabled="Disabled"
+              ReadOnly="ReadOnly"
+              Variant="Variant"
+              Adornment="Adornment"
+              AdornmentIcon="@AdornmentIcon"
+              Lines="Lines"
+              Class="@Class"
+              Style="@Style"
+              @attributes="BuildUserAttributes()" />
+
+@code {
+    /// <summary>The field value, two-way bindable via <c>@bind-Value</c>.</summary>
+    [Parameter] public T? Value { get; set; }
+
+    /// <summary>Raised when <see cref="Value"/> changes.</summary>
+    [Parameter] public EventCallback<T> ValueChanged { get; set; }
+
+    /// <summary>The field label.</summary>
+    [Parameter] public string? Label { get; set; }
+
+    /// <summary>Placeholder text shown while the field is empty.</summary>
+    [Parameter] public string? Placeholder { get; set; }
+
+    /// <summary>Helper text shown beneath the field.</summary>
+    [Parameter] public string? HelperText { get; set; }
+
+    /// <summary>The HTML input type. Default <see cref="MudBlazor.InputType.Text"/>.</summary>
+    [Parameter] public InputType InputType { get; set; } = InputType.Text;
+
+    /// <summary>When <see langword="true"/>, the bound value updates on every keystroke. Default <see langword="false"/>.</summary>
+    [Parameter] public bool Immediate { get; set; }
+
+    /// <summary>Disables the field.</summary>
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Makes the field read-only.</summary>
+    [Parameter] public bool ReadOnly { get; set; }
+
+    /// <summary>The MudBlazor input variant. Default <see cref="MudBlazor.Variant.Text"/>.</summary>
+    [Parameter] public Variant Variant { get; set; } = Variant.Text;
+
+    /// <summary>Where to place the adornment, if any. Default <see cref="MudBlazor.Adornment.None"/>.</summary>
+    [Parameter] public Adornment Adornment { get; set; } = Adornment.None;
+
+    /// <summary>The adornment icon, used when <see cref="Adornment"/> is set.</summary>
+    [Parameter] public string? AdornmentIcon { get; set; }
+
+    /// <summary>Number of lines; a value greater than <c>1</c> renders a multi-line text area. Default <c>1</c>.</summary>
+    [Parameter] public int Lines { get; set; } = 1;
+
+    /// <summary>Extra CSS classes for the field.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>Extra inline styles for the field.</summary>
+    [Parameter] public string? Style { get; set; }
+
+    /// <summary>
+    /// When <see langword="true"/>, emits <c>data-mudkeyboard="true"</c> so the global
+    /// <see cref="MudKeyboardHost"/> raises the docked keyboard for this field. This is required when the
+    /// host runs in <see cref="KeyboardAttachMode.OptIn"/> mode. Default <see langword="false"/>.
+    /// </summary>
+    [Parameter] public bool DockedKeyboard { get; set; }
+
+    /// <summary>
+    /// Forces the docked keyboard layout for this field by emitting <c>data-mudkeyboard-layout</c> — for
+    /// example <c>"qwerty"</c>, <c>"numpad"</c>, <c>"decimal"</c> or <c>"money"</c>. Left empty, the layout
+    /// is inferred from the field's type/inputmode.
+    /// </summary>
+    [Parameter] public string DockedKeyboardLayout { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Any additional attributes (for example <c>name</c>, <c>autocomplete</c> or other <c>data-*</c>
+    /// markers) are forwarded to the underlying <see cref="MudTextField{T}"/> and onto its input element.
+    /// </summary>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object>? UserAttributes { get; set; }
+
+    // Merge caller-supplied attributes with the docked-keyboard markers, then splat the result onto
+    // MudTextField. MudBlazor forwards unmatched attributes to the real <input>, which is the element the
+    // focus-capture shim watches — so data-mudkeyboard lands where it needs to. (ValueExpression is a
+    // real MudTextField parameter and is forwarded as a normal attribute above, not through this splat,
+    // so the binding/validation expression reaches the parameter rather than the input element.)
+    private Dictionary<string, object> BuildUserAttributes()
+    {
+        var attributes = UserAttributes is null
+            ? new Dictionary<string, object>()
+            : new Dictionary<string, object>(UserAttributes);
+
+        if (DockedKeyboard)
+        {
+            attributes["data-mudkeyboard"] = "true";
+        }
+
+        if (!string.IsNullOrEmpty(DockedKeyboardLayout))
+        {
+            attributes["data-mudkeyboard-layout"] = DockedKeyboardLayout;
+        }
+
+        return attributes;
+    }
+}

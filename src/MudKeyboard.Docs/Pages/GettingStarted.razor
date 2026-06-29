@@ -65,10 +65,15 @@
     <ul>
         <li><strong>Interactive Server</strong> — <code class="docs-inline-code">@@rendermode InteractiveServer</code></li>
         <li><strong>Interactive WebAssembly</strong> — <code class="docs-inline-code">@@rendermode InteractiveWebAssembly</code> (this very site runs on WASM)</li>
+        <li><strong>Static SSR</strong> — supported by the global docked keyboard (see below)</li>
     </ul>
-    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="my-3" Dense="true">
-        Static SSR is <strong>not</strong> supported — a virtual keyboard needs interactivity. The component
-        only works under an interactive render mode.
+    <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Class="my-3" Dense="true">
+        <strong>Static SSR is supported.</strong> The inline keyboards
+        (<code class="docs-inline-code">MudKeyboard</code>, <code class="docs-inline-code">MudNumpad</code>,
+        <code class="docs-inline-code">MudPricepad</code>) need an interactive render mode, but the
+        <strong>global docked keyboard works on static-SSR pages</strong> — it drives the focused field
+        through JavaScript, not Blazor binding. See the
+        <MudLink Href="features/ssr">Static SSR guide</MudLink>.
     </MudAlert>
 </div>
 

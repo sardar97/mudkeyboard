@@ -1,0 +1,92 @@
+@page "/components/ssr-login-demo"
+@*
+    SSR Login Demo — this page intentionally declares NO @rendermode directive.
+
+    It therefore renders with **static Server-Side Rendering** (.NET 8+ static SSR): there is no Blazor
+    circuit or WebAssembly runtime for the page itself, so none of its own components are interactive.
+    The page exists to prove that the MudKeyboard docked keyboard still works on a static-SSR page.
+
+    Why it works without per-page interactivity:
+      • <MudKeyboardHost> is registered in Components/App.razor, OUTSIDE <Routes>, with its own
+        InteractiveServer render mode. It has its own circuit that stays live no matter what render
+        mode the current page uses.
+      • The host edits the focused <input> through JavaScript (document.activeElement) and fires native
+        'input' and 'change' events, so text typed on the on-screen keyboard lands in the input's value
+        and is carried by an ordinary form POST.
+
+    Type into either field with the docked keyboard, then submit: the posted username is echoed back
+    below, proving the value survived a full static-SSR form round-trip with zero per-page interactivity.
+*@
+
+<PageTitle>SSR Login Demo</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">SSR Login Demo</MudText>
+<MudText Typo="Typo.body1" Class="mb-4" Color="Color.Secondary">
+    This page uses <b>static SSR</b> — it sets no render mode. The docked keyboard still slides up on
+    focus and types into these fields because the keyboard host runs in its own interactive island in
+    <code>App.razor</code>, outside <code>&lt;Routes&gt;</code>. Tap a field, type with the on-screen
+    keyboard, then press <b>Sign in</b>.
+</MudText>
+
+<br/>
+
+<MudText>Username : @Input.Username</MudText>
+<MudText>Password : @Input.Password</MudText>
+
+<br/>
+
+
+<MudPaper Class="pa-6" Outlined="true" Style="max-width: 420px">
+    <EditForm Model="Input" method="post" OnValidSubmit="HandleSubmit" FormName="ssr-login">
+        <DataAnnotationsValidator />
+        <MudStack Spacing="4">
+            <MudKeyboardTextField @bind-Value="Input.Username"
+                                  Label="Username"
+                                  Variant="Variant.Outlined"
+                                  DockedKeyboard="true"
+                                  name="Input.Username" />
+
+            <MudKeyboardTextField @bind-Value="Input.Password"
+                                  Label="Password"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Password"
+                                  DockedKeyboard="true"
+                                  DockedKeyboardLayout="qwerty"
+                                  name="Input.Password" />
+
+            <MudButton ButtonType="ButtonType.Submit"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true">
+                Sign in
+            </MudButton>
+        </MudStack>
+    </EditForm>
+</MudPaper>
+
+@if (_submitted)
+{
+    <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mt-4" Style="max-width: 420px">
+        Posted via static SSR — received username <b>@Input.Username</b>
+        (password length @(Input.Password?.Length ?? 0)). The on-screen keyboard drove a real form POST.
+    </MudAlert>
+}
+
+@code {
+    // Bound from the posted form data on submit. Static-SSR form binding matches each input's
+    // name attribute ("Input.Username" / "Input.Password") to this model.
+#pragma warning disable BL0008 // The initializer is intentional: the form binder always supplies a non-null model on POST, and EditForm needs a non-null Model on the initial GET.
+    [SupplyParameterFromForm]
+    private LoginModel Input { get; set; } = new();
+#pragma warning restore BL0008
+
+    private bool _submitted;
+
+    private void HandleSubmit() => _submitted = true;
+
+    private sealed class LoginModel
+    {
+        public string? Username { get; set; }
+        public string? Password { get; set; }
+    }
+}

@@ -12,11 +12,20 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"/>
     <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css"/>
     <ImportMap/>
-    <HeadOutlet @rendermode="InteractiveServer"/>
+    <HeadOutlet/>
 </head>
 
 <body>
-<Routes @rendermode="InteractiveServer"/>
+@* No global @rendermode on <Routes>: each page chooses its own render mode, so pages that omit a
+   @rendermode directive (such as /components/ssr-login-demo) render with static SSR. *@
+<Routes/>
+
+@* The global docked keyboard lives OUTSIDE <Routes> with its own interactive render mode. That gives
+   it a circuit that persists across navigations and stays interactive even when the page on screen is
+   statically server-rendered — so the on-screen keyboard pops up for focused inputs on every page,
+   regardless of that page's render mode. Place it once, here. *@
+<MudKeyboardHost @rendermode="InteractiveServer"/>
+
 <ReconnectModal/>
 <script src="@Assets["_framework/blazor.web.js"]"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>

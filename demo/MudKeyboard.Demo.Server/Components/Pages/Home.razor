@@ -1,4 +1,7 @@
 ﻿@page "/"
+@* This page hosts inline keyboards and live two-way binding, so it opts into interactivity
+   explicitly now that <Routes> no longer sets a global render mode (see Components/App.razor). *@
+@rendermode InteractiveServer
 
 <PageTitle>MudKeyboard Demo</PageTitle>
 

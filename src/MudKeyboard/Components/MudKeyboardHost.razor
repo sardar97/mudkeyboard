@@ -1,4 +1,5 @@
 @namespace MudKeyboard.Components
+@using Microsoft.JSInterop
 @implements IDisposable
 @inject KeyboardInteropService Interop
 
@@ -23,46 +24,47 @@
         <MudPaper Elevation="@Elevation"
                   Class="pa-2"
                   Style="@PanelStyle">
+            @* Toolbar labels use the native title attribute rather than MudTooltip. MudTooltip needs a
+               MudPopoverProvider in scope, but this host is designed to be placed in its own interactive
+               island (in App.razor, outside <Routes>) so the docked keyboard works on static-SSR pages —
+               where no MudBlazor providers are ancestors. A native title keeps the host self-contained and
+               dependency-free; every button still carries an aria-label for assistive tech. *@
             <div class="mudkeyboard-dock__bar">
                 <div class="mudkeyboard-dock__tools">
-                    <MudTooltip Text="Clear">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       Size="Size.Medium"
-                                       OnClick="@ClearAsync"
-                                       aria-label="Clear field" />
-                    </MudTooltip>
-                    <MudTooltip Text="Copy">
-                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                       Size="Size.Medium"
-                                       OnClick="@CopyAsync"
-                                       aria-label="Copy" />
-                    </MudTooltip>
-                    <MudTooltip Text="Paste">
-                        <MudIconButton Icon="@Icons.Material.Filled.ContentPaste"
-                                       Size="Size.Medium"
-                                       OnClick="@PasteAsync"
-                                       aria-label="Paste" />
-                    </MudTooltip>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Size="Size.Medium"
+                                   OnClick="@ClearAsync"
+                                   title="Clear"
+                                   aria-label="Clear field" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                   Size="Size.Medium"
+                                   OnClick="@CopyAsync"
+                                   title="Copy"
+                                   aria-label="Copy" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentPaste"
+                                   Size="Size.Medium"
+                                   OnClick="@PasteAsync"
+                                   title="Paste"
+                                   aria-label="Paste" />
                     @* Cursor arrows are meaningless for pence-first money entry (always appends at the end). *@
                     @if (!IsMoney)
                     {
-                        <MudTooltip Text="Move cursor left">
-                            <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
-                                           Size="Size.Medium"
-                                           OnClick="@(() => MoveCaretAsync(-1))"
-                                           aria-label="Move cursor left" />
-                        </MudTooltip>
-                        <MudTooltip Text="Move cursor right">
-                            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
-                                           Size="Size.Medium"
-                                           OnClick="@(() => MoveCaretAsync(1))"
-                                           aria-label="Move cursor right" />
-                        </MudTooltip>
+                        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                                       Size="Size.Medium"
+                                       OnClick="@(() => MoveCaretAsync(-1))"
+                                       title="Move cursor left"
+                                       aria-label="Move cursor left" />
+                        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                                       Size="Size.Medium"
+                                       OnClick="@(() => MoveCaretAsync(1))"
+                                       title="Move cursor right"
+                                       aria-label="Move cursor right" />
                     }
                 </div>
                 <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown"
                                Size="Size.Medium"
                                OnClick="@HideAsync"
+                               title="Hide keyboard"
                                aria-label="Hide keyboard" />
             </div>
             <MudKeyboard Layout="Interop.CurrentLayout"
@@ -114,10 +116,35 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // JS interop is only available once the component is interactive.
+        // JS interop is only available once the component is interactive. During static SSR
+        // prerendering OnAfterRenderAsync does not run on the server at all, so the focus-capture
+        // module is never imported until the host hydrates in the browser. That is exactly what lets
+        // the docked keyboard work on static-SSR pages: place this host in its own interactive island
+        // (e.g. in App.razor, OUTSIDE <Routes>) and it stays live regardless of any page's render mode.
+        //
+        // The try/catch is a belt-and-braces guard. If the JS runtime is not yet available (a stray
+        // prerender pass throws InvalidOperationException) or the circuit has already gone
+        // (JSDisconnectedException, a subtype of JSException), the host silently does nothing instead
+        // of throwing.
+        //
+        // Note: we intentionally do NOT detect prerendering via a [CascadingParameter] HttpContext.
+        // HttpContext lives in the ASP.NET Core shared framework; depending on it would break this
+        // WebAssembly-friendly, AOT/trim-safe library for WASM consumers. Guarding the interop call is
+        // render-mode- and framework-agnostic and works identically on net8.0, net9.0 and net10.0.
         if (firstRender)
         {
-            await Interop.InitializeAsync();
+            try
+            {
+                await Interop.InitializeAsync();
+            }
+            catch (JSException)
+            {
+                // JS runtime unavailable / module failed to load (e.g. prerender, disconnected circuit).
+            }
+            catch (InvalidOperationException)
+            {
+                // "JavaScript interop calls cannot be issued at this time" — still statically rendering.
+            }
         }
     }
 

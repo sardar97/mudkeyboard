@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Static SSR support for the global docked keyboard.** The docked keyboard now works on Blazor
+  **static Server-Side Rendering** pages (.NET 8+). Because it edits the focused field through
+  JavaScript on `document.activeElement` rather than via Blazor binding, it needs no per-page
+  interactivity — place `<MudKeyboardHost>` in `App.razor` outside `<Routes>` (with its own
+  interactive render mode) and it works on every page, statically rendered ones included. See the new
+  *Static SSR support* section in the README and the runnable `/components/ssr-login-demo` page in the
+  Server demo.
+- **`MudKeyboardTextField`** — a generic (`@typeparam T`) wrapper over `MudTextField<T>` that opts a
+  field into the docked keyboard via `DockedKeyboard="true"` (emitting `data-mudkeyboard`) and an
+  optional `DockedKeyboardLayout` (emitting `data-mudkeyboard-layout`). It forwards the common
+  text-field parameters and any extra attributes (such as `name`), and is AOT/trim friendly. Lives in
+  the `MudKeyboard.Components` namespace.
+
+### Changed
+- **Focus-capture shim now writes through the native input setter and dispatches `change`.** Every
+  keystroke from the docked keyboard sets the field's value via the native
+  `HTMLInputElement`/`HTMLTextAreaElement` `value` setter and dispatches both `input` and `change`
+  events. This makes the typed value flow correctly into static-SSR Blazor forms, plain HTML form
+  POSTs and non-Blazor inputs, in addition to MudBlazor immediate and non-immediate bindings.
+- **The docked keyboard's toolbar tooltips now use the native `title` attribute** instead of
+  `MudTooltip`. `MudTooltip` requires a `MudPopoverProvider` in scope; dropping it makes
+  `MudKeyboardHost` fully self-contained, so it can be placed in its own interactive island (in
+  `App.razor`, outside `<Routes>`) — as the static-SSR setup requires — without a provider as an
+  ancestor and without rendering duplicate popovers when it sits in a normal layout. Every toolbar
+  button keeps its `aria-label`.
+
+### Fixed
+- **`MudKeyboardHost` no longer risks throwing during prerendering.** Its JavaScript initialization is
+  guarded so that, if the JS runtime is not yet available (for example a stray prerender pass) or the
+  circuit has already disconnected, the host silently does nothing instead of throwing.
+
 ## [1.0.1] — 2026-06-04
 
 ### Fixed
