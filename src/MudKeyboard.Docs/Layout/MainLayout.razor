@@ -1,7 +1,6 @@
 @namespace MudKeyboard.Docs.Layout
 @inherits LayoutComponentBase
-@implements IDisposable
-@using MudKeyboard.Docs.Services
+@implements IDisposable 
 @inject DocsKeyboardToolbarState ToolbarState
 
 <MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
@@ -36,7 +35,7 @@
                        OnClick="@ToggleDrawer"
                        aria-label="Toggle navigation" />
         <MudLink Href="" Underline="Underline.None" Class="d-flex align-center ml-1" Color="Color.Inherit">
-            <BrandLogo Class="brand-logo--appbar brand-logo--on-accent" />
+            <BrandLogo SmallLogo="true" Class="brand-logo--appbar brand-logo--on-accent"/>
         </MudLink>
         <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" Class="ml-2 d-none d-sm-flex">docs</MudChip>
         <MudSpacer />
