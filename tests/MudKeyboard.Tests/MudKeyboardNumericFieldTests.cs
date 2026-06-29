@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using MudKeyboard.Components;
 
@@ -8,76 +10,98 @@ namespace MudKeyboard.Tests;
 /// Covers the generic <see cref="MudKeyboardNumericField{T}"/> wrapper: it must resolve the docked
 /// keyboard layout from its bound CLR type (decimal → money, double/float → decimal keypad, integers →
 /// plain numpad), emit that as <c>data-mudkeyboard-layout</c> on the real input the focus-capture shim
-/// watches, honour an explicit override, and forward arbitrary attributes.
+/// watches, honour an explicit override, forward the numeric parameters, and — crucially — preserve the
+/// underlying field's accessibility semantics.
 /// </summary>
 public class MudKeyboardNumericFieldTests : MudComponentTestContext
 {
-    [Fact]
-    public void Decimal_EmitsMoneyLayout()
-    {
-        var cut = Render<MudKeyboardNumericField<decimal>>();
+    private static string? Layout<TComponent>(IRenderedComponent<TComponent> cut) where TComponent : IComponent =>
+        cut.Find("input").GetAttribute("data-mudkeyboard-layout");
 
-        Assert.Equal("money", cut.Find("input").GetAttribute("data-mudkeyboard-layout"));
+    // ---- Layout resolved from the bound type -------------------------------------------------
+
+    [Fact]
+    public void Decimal_EmitsMoneyLayout() =>
+        Assert.Equal("money", Layout(Render<MudKeyboardNumericField<decimal>>()));
+
+    [Fact]
+    public void NullableDecimal_EmitsMoneyLayout() =>
+        Assert.Equal("money", Layout(Render<MudKeyboardNumericField<decimal?>>()));
+
+    [Fact]
+    public void Double_EmitsDecimalLayout() =>
+        Assert.Equal("decimal", Layout(Render<MudKeyboardNumericField<double>>()));
+
+    [Fact]
+    public void NullableDouble_EmitsDecimalLayout() =>
+        Assert.Equal("decimal", Layout(Render<MudKeyboardNumericField<double?>>()));
+
+    [Fact]
+    public void Float_EmitsDecimalLayout() =>
+        Assert.Equal("decimal", Layout(Render<MudKeyboardNumericField<float>>()));
+
+    [Fact]
+    public void Int_EmitsNumpadLayout() =>
+        Assert.Equal("numpad", Layout(Render<MudKeyboardNumericField<int>>()));
+
+    [Fact]
+    public void NullableInt_EmitsNumpadLayout() =>
+        Assert.Equal("numpad", Layout(Render<MudKeyboardNumericField<int?>>()));
+
+    [Fact]
+    public void Long_EmitsNumpadLayout() =>
+        Assert.Equal("numpad", Layout(Render<MudKeyboardNumericField<long>>()));
+
+    [Fact]
+    public void Short_EmitsNumpadLayout() =>
+        Assert.Equal("numpad", Layout(Render<MudKeyboardNumericField<short>>()));
+
+    [Fact]
+    public void Byte_EmitsNumpadLayout() =>
+        Assert.Equal("numpad", Layout(Render<MudKeyboardNumericField<byte>>()));
+
+    // ---- Explicit override -------------------------------------------------------------------
+
+    [Theory]
+    [InlineData("numpad")]
+    [InlineData("decimal")]
+    [InlineData("qwerty")]
+    [InlineData("price")]
+    public void DockedKeyboardLayout_OverridesTheTypeInference(string layout)
+    {
+        // The decimal default (money) is overridden by whatever explicit layout is supplied.
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p.Add(c => c.DockedKeyboardLayout, layout));
+
+        Assert.Equal(layout, Layout(cut));
     }
 
     [Fact]
-    public void NullableDecimal_EmitsMoneyLayout()
+    public void EmptyOverride_FallsBackToTypeInference()
     {
-        var cut = Render<MudKeyboardNumericField<decimal?>>();
+        var cut = Render<MudKeyboardNumericField<int>>(p => p.Add(c => c.DockedKeyboardLayout, string.Empty));
 
-        Assert.Equal("money", cut.Find("input").GetAttribute("data-mudkeyboard-layout"));
+        Assert.Equal("numpad", Layout(cut));
     }
 
-    [Fact]
-    public void Double_EmitsDecimalLayout()
+    // ---- Opt-in marker -----------------------------------------------------------------------
+
+    [Theory]
+    [InlineData("money")]
+    [InlineData("decimal")]
+    [InlineData("numpad")]
+    public void LayoutMarker_IsAlwaysEmitted_EvenWithoutTheOptInFlag(string expected)
     {
-        var cut = Render<MudKeyboardNumericField<double>>();
-
-        Assert.Equal("decimal", cut.Find("input").GetAttribute("data-mudkeyboard-layout"));
-    }
-
-    [Fact]
-    public void Float_EmitsDecimalLayout()
-    {
-        var cut = Render<MudKeyboardNumericField<float>>();
-
-        Assert.Equal("decimal", cut.Find("input").GetAttribute("data-mudkeyboard-layout"));
-    }
-
-    [Fact]
-    public void Int_EmitsNumpadLayout()
-    {
-        var cut = Render<MudKeyboardNumericField<int>>();
-
-        Assert.Equal("numpad", cut.Find("input").GetAttribute("data-mudkeyboard-layout"));
-    }
-
-    [Fact]
-    public void Long_EmitsNumpadLayout()
-    {
-        var cut = Render<MudKeyboardNumericField<long>>();
-
-        Assert.Equal("numpad", cut.Find("input").GetAttribute("data-mudkeyboard-layout"));
-    }
-
-    [Fact]
-    public void DockedKeyboardLayout_OverridesTheTypeInference()
-    {
-        var cut = Render<MudKeyboardNumericField<decimal>>(p => p
-            .Add(c => c.DockedKeyboardLayout, "numpad"));
-
-        // The decimal default (money) is overridden by the explicit layout.
-        Assert.Equal("numpad", cut.Find("input").GetAttribute("data-mudkeyboard-layout"));
-    }
-
-    [Fact]
-    public void Default_DoesNotEmitTheOptInMarker_ButStillEmitsLayout()
-    {
-        var cut = Render<MudKeyboardNumericField<int>>();
-        var input = cut.Find("input");
+        // The layout marker is independent of DockedKeyboard, so the right keypad shows in AllInputs mode
+        // with zero extra configuration. (One representative render per token.)
+        var input = expected switch
+        {
+            "money" => Render<MudKeyboardNumericField<decimal>>().Find("input"),
+            "decimal" => Render<MudKeyboardNumericField<double>>().Find("input"),
+            _ => Render<MudKeyboardNumericField<int>>().Find("input"),
+        };
 
         Assert.False(input.HasAttribute("data-mudkeyboard"));
-        Assert.Equal("numpad", input.GetAttribute("data-mudkeyboard-layout"));
+        Assert.Equal(expected, input.GetAttribute("data-mudkeyboard-layout"));
     }
 
     [Fact]
@@ -89,6 +113,22 @@ public class MudKeyboardNumericFieldTests : MudComponentTestContext
         Assert.Equal("true", input.GetAttribute("data-mudkeyboard"));
         Assert.Equal("money", input.GetAttribute("data-mudkeyboard-layout"));
     }
+
+    // ---- Type & parameter forwarding ---------------------------------------------------------
+
+    // The bound type T is forwarded to the underlying MudNumericField, which renders inputmode per
+    // type: floating-point → "decimal", integer → "numeric". This proves T flows through the wrapper.
+    [Fact]
+    public void DecimalType_ForwardsToMudNumericField_AsDecimalInputMode() =>
+        Assert.Equal("decimal", Render<MudKeyboardNumericField<decimal>>().Find("input").GetAttribute("inputmode"));
+
+    [Fact]
+    public void DoubleType_ForwardsToMudNumericField_AsDecimalInputMode() =>
+        Assert.Equal("decimal", Render<MudKeyboardNumericField<double>>().Find("input").GetAttribute("inputmode"));
+
+    [Fact]
+    public void IntType_ForwardsToMudNumericField_AsNumericInputMode() =>
+        Assert.Equal("numeric", Render<MudKeyboardNumericField<int>>().Find("input").GetAttribute("inputmode"));
 
     [Fact]
     public void PassthroughAttributes_AreForwardedToTheInput_AndMergedWithMarkers()
@@ -104,6 +144,47 @@ public class MudKeyboardNumericFieldTests : MudComponentTestContext
     }
 
     [Fact]
+    public void Placeholder_IsForwardedToTheInput()
+    {
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p.Add(c => c.Placeholder, "0.00"));
+
+        Assert.Equal("0.00", cut.Find("input").GetAttribute("placeholder"));
+    }
+
+    [Fact]
+    public void HelperText_IsRendered()
+    {
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p.Add(c => c.HelperText, "Enter the price"));
+
+        Assert.Contains("Enter the price", cut.Markup);
+    }
+
+    [Fact]
+    public void MinMaxStep_AreForwardedToTheInput()
+    {
+        var cut = Render<MudKeyboardNumericField<int>>(p => p
+            .Add(c => c.Min, 0)
+            .Add(c => c.Max, 100)
+            .Add(c => c.Step, 5));
+        var input = cut.Find("input");
+
+        Assert.Equal("0", input.GetAttribute("min"));
+        Assert.Equal("100", input.GetAttribute("max"));
+        Assert.Equal("5", input.GetAttribute("step"));
+    }
+
+    [Fact]
+    public void AdornmentIcon_IsRendered()
+    {
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p
+            .Add(c => c.Adornment, Adornment.Start)
+            .Add(c => c.AdornmentIcon, Icons.Material.Filled.CurrencyPound));
+
+        // MudBlazor renders adornments inside the input control as SVG icons.
+        Assert.NotEmpty(cut.FindAll("svg"));
+    }
+
+    [Fact]
     public void Label_IsRendered()
     {
         var cut = Render<MudKeyboardNumericField<decimal>>(p => p.Add(c => c.Label, "Price"));
@@ -111,17 +192,97 @@ public class MudKeyboardNumericFieldTests : MudComponentTestContext
         Assert.Contains("Price", cut.Markup);
     }
 
-    // The bound type T is forwarded to the underlying MudNumericField, which renders inputmode per
-    // type: floating-point → "decimal", integer → "numeric". This proves T flows through the wrapper.
-    [Fact]
-    public void DecimalType_ForwardsToMudNumericField_AsDecimalInputMode() =>
-        Assert.Equal("decimal", Render<MudKeyboardNumericField<decimal>>().Find("input").GetAttribute("inputmode"));
+    // ---- Accessibility -----------------------------------------------------------------------
+    // The wrapper must not weaken MudNumericField's accessibility: the input keeps spinbutton semantics,
+    // exposes its value bounds, is programmatically associated with its visible label, and lets callers
+    // supply an explicit aria-label that coexists with the docked-keyboard data attributes.
 
     [Fact]
-    public void DoubleType_ForwardsToMudNumericField_AsDecimalInputMode() =>
-        Assert.Equal("decimal", Render<MudKeyboardNumericField<double>>().Find("input").GetAttribute("inputmode"));
+    public void Input_KeepsTheSpinButtonRole()
+    {
+        var cut = Render<MudKeyboardNumericField<decimal>>();
+
+        Assert.Equal("spinbutton", cut.Find("input").GetAttribute("role"));
+    }
 
     [Fact]
-    public void IntType_ForwardsToMudNumericField_AsNumericInputMode() =>
-        Assert.Equal("numeric", Render<MudKeyboardNumericField<int>>().Find("input").GetAttribute("inputmode"));
+    public void Input_ExposesAriaValueNow()
+    {
+        var cut = Render<MudKeyboardNumericField<int>>();
+
+        Assert.True(cut.Find("input").HasAttribute("aria-valuenow"));
+    }
+
+    [Fact]
+    public void MinAndMax_AreExposedAsAriaValueMinAndMax_ForAssistiveTech()
+    {
+        var cut = Render<MudKeyboardNumericField<int>>(p => p
+            .Add(c => c.Min, 0)
+            .Add(c => c.Max, 100));
+        var input = cut.Find("input");
+
+        Assert.Equal("0", input.GetAttribute("aria-valuemin"));
+        Assert.Equal("100", input.GetAttribute("aria-valuemax"));
+    }
+
+    [Fact]
+    public void Label_IsProgrammaticallyAssociatedWithTheInput()
+    {
+        // A <label for="{inputId}"> gives the field a programmatic accessible name — screen readers
+        // announce "Price" when the input is focused.
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p.Add(c => c.Label, "Price"));
+        var input = cut.Find("input");
+        var label = cut.Find("label");
+
+        Assert.Equal("Price", label.TextContent.Trim());
+        Assert.Equal(input.GetAttribute("id"), label.GetAttribute("for"));
+        Assert.False(string.IsNullOrEmpty(input.GetAttribute("id")));
+    }
+
+    [Fact]
+    public void ExplicitAriaLabel_IsForwarded_AndCoexistsWithTheLayoutMarker()
+    {
+        // For a field with no visible label, the caller can supply an aria-label; it must reach the input
+        // and must not be clobbered by the docked-keyboard data attributes.
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p
+            .Add(c => c.DockedKeyboard, true)
+            .AddUnmatched("aria-label", "Total price"));
+        var input = cut.Find("input");
+
+        Assert.Equal("Total price", input.GetAttribute("aria-label"));
+        Assert.Equal("money", input.GetAttribute("data-mudkeyboard-layout"));
+        Assert.Equal("true", input.GetAttribute("data-mudkeyboard"));
+    }
+
+    [Fact]
+    public void Disabled_DisablesTheInput()
+    {
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p.Add(c => c.Disabled, true));
+
+        Assert.True(cut.Find("input").HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public void ReadOnly_MarksTheInputReadOnly()
+    {
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p.Add(c => c.ReadOnly, true));
+
+        Assert.True(cut.Find("input").HasAttribute("readonly"));
+    }
+
+    // The user's headline scenario binds via @bind-Value with a validation expression
+    // (For="@(() => Model.Price)"). Forwarding For must not break rendering or the layout marker.
+    private decimal _forProbe = 12.34m;
+
+    [Fact]
+    public void For_ValidationExpression_IsForwarded_AndDoesNotBreakRenderingOrTheLayoutMarker()
+    {
+        Expression<Func<decimal>> forExpression = () => _forProbe;
+
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p
+            .Add(c => c.For, forExpression)
+            .Add(c => c.Format, "N2"));
+
+        Assert.Equal("money", cut.Find("input").GetAttribute("data-mudkeyboard-layout"));
+    }
 }

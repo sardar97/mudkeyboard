@@ -40,6 +40,80 @@ public class KeyboardInteropServiceStateTests
         Assert.Null(service.CurrentSymbolLayout);
     }
 
+    [Theory]
+    // Every numeric token the detection feature can surface (from MudKeyboardNumericField or a raw field's
+    // inferred inputmode/type) must resolve to the right keypad, and none of them have a symbol face.
+    [InlineData("money")]
+    [InlineData("price")]
+    public void OnFocusIn_MoneyKinds_ShowThePenceFirstPriceKeypad(string kind)
+    {
+        var service = NewService();
+
+        service.OnFocusIn(kind, 0);
+
+        Assert.Same(LayoutLibrary.Price, service.CurrentLayout);
+        Assert.Null(service.CurrentSymbolLayout);
+    }
+
+    [Fact]
+    public void OnFocusIn_DecimalKind_ShowsTheNumpadWithADecimalPointKey()
+    {
+        var service = NewService();
+
+        service.OnFocusIn("decimal", 0);
+
+        Assert.Same(LayoutLibrary.NumpadWithDecimal, service.CurrentLayout);
+        Assert.Null(service.CurrentSymbolLayout);
+    }
+
+    [Theory]
+    [InlineData("numeric")]
+    [InlineData("tel")]
+    public void OnFocusIn_IntegerKinds_ShowThePlainNumpad(string kind)
+    {
+        var service = NewService();
+
+        service.OnFocusIn(kind, 0);
+
+        Assert.Same(LayoutLibrary.Numpad, service.CurrentLayout);
+        Assert.Null(service.CurrentSymbolLayout);
+    }
+
+    [Theory]
+    // Unknown / empty / text hints fall back to the full QWERTY keyboard (with its symbol face).
+    [InlineData("")]
+    [InlineData("qwerty")]
+    [InlineData("something-unrecognised")]
+    public void OnFocusIn_UnknownKinds_FallBackToFullQwerty(string kind)
+    {
+        var service = NewService();
+
+        service.OnFocusIn(kind, 0);
+
+        Assert.Same(LayoutLibrary.Qwerty, service.CurrentLayout);
+        Assert.Same(LayoutLibrary.Symbols, service.CurrentSymbolLayout);
+    }
+
+    [Fact]
+    public void ResolveLayout_IsCaseSensitive_SoOnlyTheShimsLowercasedTokensMatch()
+    {
+        // The JS shim lowercases the hint before sending it; an upper-cased token is therefore treated as
+        // unknown and falls back to QWERTY. Pinning this documents the contract between the two halves.
+        var (layout, symbol) = KeyboardInteropService.ResolveLayout("MONEY");
+
+        Assert.Same(LayoutLibrary.Qwerty, layout);
+        Assert.Same(LayoutLibrary.Symbols, symbol);
+    }
+
+    [Fact]
+    public void ResolveLayout_Null_FallsBackToFullQwerty()
+    {
+        var (layout, symbol) = KeyboardInteropService.ResolveLayout(null);
+
+        Assert.Same(LayoutLibrary.Qwerty, layout);
+        Assert.Same(LayoutLibrary.Symbols, symbol);
+    }
+
     [Fact]
     public void OnFocusOut_WhenOpen_ClosesAndNotifies()
     {

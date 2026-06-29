@@ -289,3 +289,107 @@ public class MudKeyboardHostAccessibilityTests : MudComponentTestContext, IAsync
         });
     }
 }
+
+/// <summary>
+/// Accessibility of the numeric keypads the type-detection feature surfaces on the docked keyboard
+/// (money for <c>decimal</c>, the decimal-point pad for <c>double</c>/<c>float</c>, the plain pad for
+/// integers). These layouts have no visible text on several keys (⌫, ⏎, the "00" and "." keys), so each
+/// must carry a spoken <c>aria-label</c> and the panel must keep its grouping/toolbar semantics.
+/// </summary>
+public class DockedNumericKeypadAccessibilityTests : MudComponentTestContext, IAsyncLifetime
+{
+    public DockedNumericKeypadAccessibilityTests() => Services.AddMudKeyboard();
+
+    Task IAsyncLifetime.InitializeAsync() => Task.CompletedTask;
+
+    async Task IAsyncLifetime.DisposeAsync() => await base.DisposeAsync();
+
+    private List<string?> OpenAndReadKeyLabels(string layoutKind)
+    {
+        var cut = Render<MudKeyboardHost>();
+        var interop = Services.GetRequiredService<KeyboardInteropService>();
+
+        cut.InvokeAsync(() => interop.OnFocusIn(layoutKind, 1000));
+
+        List<string?> labels = [];
+        cut.WaitForAssertion(() =>
+        {
+            labels = cut.FindAll(".mudkeyboard-grid button")
+                .Select(b => b.GetAttribute("aria-label"))
+                .ToList();
+            Assert.NotEmpty(labels);
+        });
+        return labels;
+    }
+
+    [Theory]
+    [InlineData("money")]
+    [InlineData("decimal")]
+    [InlineData("numpad")]
+    public void EveryKeyOnEveryNumericKeypad_HasANonEmptyAriaLabel(string layoutKind) =>
+        Assert.All(OpenAndReadKeyLabels(layoutKind), l => Assert.False(string.IsNullOrWhiteSpace(l)));
+
+    [Theory]
+    [InlineData("money")]
+    [InlineData("decimal")]
+    [InlineData("numpad")]
+    public void EveryNumericKeypad_LabelsItsGlyphlessCommandKeysWithWords(string layoutKind)
+    {
+        var labels = OpenAndReadKeyLabels(layoutKind);
+
+        // ⌫, ⏎ and the "00" key have no meaningful spoken text on their own.
+        Assert.Contains("Backspace", labels);
+        Assert.Contains("Enter", labels);
+        Assert.Contains("Double zero", labels);
+    }
+
+    [Fact]
+    public void DecimalKeypad_HasASpokenDecimalPointKey()
+    {
+        var labels = OpenAndReadKeyLabels("decimal");
+
+        Assert.Contains("Decimal point", labels);
+    }
+
+    [Theory]
+    // The money pad (pence-first) and the integer pad have no decimal-point key — so none should be
+    // announced. This guards both the layout choice and its accessible projection at once.
+    [InlineData("money")]
+    [InlineData("numpad")]
+    public void MoneyAndIntegerKeypads_DoNotExposeADecimalPointKey(string layoutKind)
+    {
+        var labels = OpenAndReadKeyLabels(layoutKind);
+
+        Assert.DoesNotContain("Decimal point", labels);
+    }
+
+    [Theory]
+    [InlineData("money")]
+    [InlineData("decimal")]
+    [InlineData("numpad")]
+    public void NumericDock_KeepsGroupAndToolbarSemantics(string layoutKind)
+    {
+        var cut = Render<MudKeyboardHost>();
+        var interop = Services.GetRequiredService<KeyboardInteropService>();
+
+        cut.InvokeAsync(() => interop.OnFocusIn(layoutKind, 1000));
+
+        cut.WaitForAssertion(() =>
+        {
+            var dock = cut.Find(".mudkeyboard-dock");
+            Assert.Equal("group", dock.GetAttribute("role"));
+            Assert.False(dock.HasAttribute("inert"));            // open → reachable
+            Assert.False(dock.HasAttribute("aria-hidden"));
+
+            var bar = cut.Find(".mudkeyboard-dock__bar");
+            Assert.Equal("toolbar", bar.GetAttribute("role"));
+
+            // The inner keypad is its own labelled group, and every action button is labelled.
+            var groupLabels = cut.FindAll("[role='group']").Select(g => g.GetAttribute("aria-label")).ToList();
+            Assert.Contains("Keyboard keys", groupLabels);
+            Assert.All(
+                cut.FindAll(".mudkeyboard-dock__bar button").Select(b => b.GetAttribute("aria-label")),
+                l => Assert.False(string.IsNullOrWhiteSpace(l)));
+        });
+    }
+}
