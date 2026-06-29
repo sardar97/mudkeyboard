@@ -315,7 +315,13 @@ numpad with a decimal point. The docked panel also has clear / copy / paste / cu
 one layer above the top-most element on the page (floats over dialogs and overlays).
 
 `MudKeyboardHost` parameters: `Palette` (`KeyboardPalette?`), `Elevation` (`int`, default `8`),
-`MinZIndex` (`int`, default `1400`), `Style` (`string?`).
+`MinZIndex` (`int`, default `1400`), `Style` (`string?`), `VisibleActions` (`KeyboardAction`, default
+`All`) and `DisabledActions` (`KeyboardAction`, default `None`). `KeyboardAction` is a `[Flags]` enum
+(`Clear`, `Copy`, `Paste`, `CursorLeft`, `CursorRight`, `CursorControl`, `Hide`, `None`, `All`) that
+lets you hide or disable any toolbar button — globally or one at a time. Hide Copy + Paste with
+`VisibleActions="@(KeyboardAction.All & ~(KeyboardAction.Copy | KeyboardAction.Paste))"`, drop the whole
+toolbar with `VisibleActions="KeyboardAction.None"`, or grey one out with
+`DisabledActions="KeyboardAction.Clear"`. The cursor arrows never appear on the money keypad regardless.
 
 ### Controlling which fields attach
 

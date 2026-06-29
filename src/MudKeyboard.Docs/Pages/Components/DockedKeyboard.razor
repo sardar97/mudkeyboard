@@ -232,5 +232,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Elevation", "int", "8", "Drop-shadow elevation of the docked panel."),
         new("MinZIndex", "int", "1400", "Floor for the panel's z-index; it docks one above the top-most layer otherwise."),
         new("Style", "string?", "null", "Extra inline styles appended to the docked panel."),
+        new("VisibleActions", "KeyboardAction", "All", "Which toolbar buttons render (Clear, Copy, Paste, the cursor arrows, Hide). A [Flags] set: remove buttons with & ~, or use None to drop the whole toolbar."),
+        new("DisabledActions", "KeyboardAction", "None", "Which toolbar buttons render greyed-out and non-interactive. A [Flags] set; hiding via VisibleActions wins over disabling."),
     ];
 }

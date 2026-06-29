@@ -319,7 +319,23 @@ A runnable example lives in the Server demo at `/components/ssr-login-demo`
 
 ### `<MudKeyboardHost>`
 
-`Palette`, `Elevation` (default `8`), `MinZIndex` (default `1400`), `Style`.
+`Palette`, `Elevation` (default `8`), `MinZIndex` (default `1400`), `Style`, `VisibleActions`
+(`KeyboardAction`, default `All`), `DisabledActions` (`KeyboardAction`, default `None`).
+
+`VisibleActions` and `DisabledActions` control the dock's toolbar buttons (Clear, Copy, Paste, the
+cursor arrows, Hide). `KeyboardAction` is a `[Flags]` enum, so you can hide or disable any button —
+globally or one at a time:
+
+```razor
+@* Hide Copy and Paste everywhere *@
+<MudKeyboardHost VisibleActions="@(KeyboardAction.All & ~(KeyboardAction.Copy | KeyboardAction.Paste))" />
+
+@* Drop the whole toolbar *@
+<MudKeyboardHost VisibleActions="KeyboardAction.None" />
+
+@* Keep Clear visible but greyed-out *@
+<MudKeyboardHost DisabledActions="KeyboardAction.Clear" />
+```
 
 ### `<MudKeyboardTextField>`
 

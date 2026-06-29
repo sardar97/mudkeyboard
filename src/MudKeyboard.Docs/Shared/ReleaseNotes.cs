@@ -68,6 +68,8 @@ public static class ReleaseNotes
             [
                 new ChangeGroup("Added",
                 [
+                    new ChangeItem("Show, hide or disable any docked-keyboard toolbar button (#5)",
+                        "MudKeyboardHost gains VisibleActions (default All) and DisabledActions (default None), both typed as a new [Flags] enum KeyboardAction (Clear, Copy, Paste, CursorLeft, CursorRight, CursorControl, Hide, None, All). Hide a single button with VisibleActions=\"@(KeyboardAction.All & ~KeyboardAction.Paste)\", drop the whole toolbar with KeyboardAction.None, or grey one out with DisabledActions=\"KeyboardAction.Clear\" — globally or one at a time. Hiding wins over disabling, and hiding every action removes the role=\"toolbar\" element entirely."),
                     new ChangeItem("MudKeyboardNumericField",
                         "Type-aware numeric keypads for the docked keyboard. A generic wrapper over MudNumericField<T> that picks the docked keypad from the bound CLR type: decimal → the money keypad (pence-first, like MudPricepad), double/float → the numeric keypad with a decimal point, and integer types → the numeric keypad without one. AOT/trim friendly (a single trim-safe typeof comparison)."),
                     new ChangeItem("Accessibility, end to end",

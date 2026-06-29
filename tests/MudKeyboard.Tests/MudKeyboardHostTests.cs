@@ -1,7 +1,9 @@
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using MudKeyboard.Components;
 using MudKeyboard.Extensions;
+using MudKeyboard.Models;
 using MudKeyboard.Services;
 
 namespace MudKeyboard.Tests;
@@ -24,9 +26,10 @@ public class MudKeyboardHostTests : MudComponentTestContext, IAsyncLifetime
 
     async Task IAsyncLifetime.DisposeAsync() => await base.DisposeAsync();
 
-    private (IRenderedComponent<MudKeyboardHost> Cut, KeyboardInteropService Interop) RenderHost()
+    private (IRenderedComponent<MudKeyboardHost> Cut, KeyboardInteropService Interop) RenderHost(
+        Action<ComponentParameterCollectionBuilder<MudKeyboardHost>>? parameters = null)
     {
-        var cut = Render<MudKeyboardHost>();
+        var cut = parameters is null ? Render<MudKeyboardHost>() : Render(parameters);
         return (cut, Services.GetRequiredService<KeyboardInteropService>());
     }
 
@@ -111,6 +114,78 @@ public class MudKeyboardHostTests : MudComponentTestContext, IAsyncLifetime
         cut.InvokeAsync(() => interop.OnFocusOut());
 
         cut.WaitForAssertion(() => Assert.DoesNotContain("mudkeyboard-dock--open", cut.Markup));
+    }
+
+    [Fact]
+    public void VisibleActions_HidingButtons_RemovesThemFromTheToolbar()
+    {
+        // Hide Copy and Paste; everything else stays.
+        var (cut, interop) = RenderHost(p => p.Add(
+            c => c.VisibleActions,
+            KeyboardAction.All & ~(KeyboardAction.Copy | KeyboardAction.Paste)));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000));
+
+        cut.WaitForAssertion(() =>
+        {
+            var titles = cut.FindAll("button").Select(b => b.GetAttribute("title")).ToList();
+            Assert.DoesNotContain("Copy", titles);
+            Assert.DoesNotContain("Paste", titles);
+            Assert.Contains("Clear", titles);
+            Assert.Contains("Hide keyboard", titles);
+        });
+    }
+
+    [Fact]
+    public void VisibleActions_None_RendersNoToolbarButKeepsTheKeys()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.VisibleActions, KeyboardAction.None));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000));
+
+        cut.WaitForAssertion(() =>
+        {
+            // Panel is open with its keys, but the action toolbar is gone entirely.
+            Assert.Contains("mudkeyboard-dock--open", cut.Markup);
+            Assert.DoesNotContain("mudkeyboard-dock__bar", cut.Markup);
+            var titles = cut.FindAll("button").Select(b => b.GetAttribute("title")).ToList();
+            Assert.DoesNotContain("Clear", titles);
+            Assert.DoesNotContain("Hide keyboard", titles);
+        });
+    }
+
+    [Fact]
+    public void DisabledActions_GreysOutTheButtonButKeepsItVisible()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.DisabledActions, KeyboardAction.Clear));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000));
+
+        cut.WaitForAssertion(() =>
+        {
+            var buttons = cut.FindAll("button");
+            var clear = buttons.Single(b => b.GetAttribute("title") == "Clear");
+            var copy = buttons.Single(b => b.GetAttribute("title") == "Copy");
+            // Clear is rendered but disabled; Copy is untouched.
+            Assert.True(clear.HasAttribute("disabled"));
+            Assert.False(copy.HasAttribute("disabled"));
+        });
+    }
+
+    [Fact]
+    public void HidingWinsOverDisabling_WhenAButtonIsInBothSets()
+    {
+        var (cut, interop) = RenderHost(p => p
+            .Add(c => c.VisibleActions, KeyboardAction.All & ~KeyboardAction.Clear)
+            .Add(c => c.DisabledActions, KeyboardAction.Clear));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000));
+
+        cut.WaitForAssertion(() =>
+        {
+            var titles = cut.FindAll("button").Select(b => b.GetAttribute("title")).ToList();
+            Assert.DoesNotContain("Clear", titles);
+        });
     }
 
     [Fact]

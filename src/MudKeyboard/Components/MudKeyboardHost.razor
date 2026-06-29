@@ -35,44 +35,71 @@
                island (in App.razor, outside <Routes>) so the docked keyboard works on static-SSR pages —
                where no MudBlazor providers are ancestors. A native title keeps the host self-contained and
                dependency-free; every button still carries an aria-label for assistive tech. *@
-            <div class="mudkeyboard-dock__bar" role="toolbar" aria-label="Keyboard actions">
-                <div class="mudkeyboard-dock__tools">
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                   Size="Size.Medium"
-                                   OnClick="@ClearAsync"
-                                   title="Clear"
-                                   aria-label="Clear field" />
-                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                   Size="Size.Medium"
-                                   OnClick="@CopyAsync"
-                                   title="Copy"
-                                   aria-label="Copy" />
-                    <MudIconButton Icon="@Icons.Material.Filled.ContentPaste"
-                                   Size="Size.Medium"
-                                   OnClick="@PasteAsync"
-                                   title="Paste"
-                                   aria-label="Paste" />
-                    @* Cursor arrows are meaningless for pence-first money entry (always appends at the end). *@
-                    @if (!IsMoney)
+            @* The toolbar renders only the buttons the consumer left in VisibleActions; any in
+               DisabledActions render greyed-out. When VisibleActions is None the whole bar is dropped so
+               no empty role="toolbar" lingers in the accessibility tree. *@
+            @if (VisibleActions != KeyboardAction.None)
+            {
+                <div class="mudkeyboard-dock__bar" role="toolbar" aria-label="Keyboard actions">
+                    <div class="mudkeyboard-dock__tools">
+                        @if (IsActionVisible(KeyboardAction.Clear))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Size="Size.Medium"
+                                           Disabled="@IsActionDisabled(KeyboardAction.Clear)"
+                                           OnClick="@ClearAsync"
+                                           title="Clear"
+                                           aria-label="Clear field" />
+                        }
+                        @if (IsActionVisible(KeyboardAction.Copy))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                           Size="Size.Medium"
+                                           Disabled="@IsActionDisabled(KeyboardAction.Copy)"
+                                           OnClick="@CopyAsync"
+                                           title="Copy"
+                                           aria-label="Copy" />
+                        }
+                        @if (IsActionVisible(KeyboardAction.Paste))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentPaste"
+                                           Size="Size.Medium"
+                                           Disabled="@IsActionDisabled(KeyboardAction.Paste)"
+                                           OnClick="@PasteAsync"
+                                           title="Paste"
+                                           aria-label="Paste" />
+                        }
+                        @* Cursor arrows are meaningless for pence-first money entry (always appends at the end). *@
+                        @if (!IsMoney && IsActionVisible(KeyboardAction.CursorLeft))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                                           Size="Size.Medium"
+                                           Disabled="@IsActionDisabled(KeyboardAction.CursorLeft)"
+                                           OnClick="@(() => MoveCaretAsync(-1))"
+                                           title="Move cursor left"
+                                           aria-label="Move cursor left" />
+                        }
+                        @if (!IsMoney && IsActionVisible(KeyboardAction.CursorRight))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                                           Size="Size.Medium"
+                                           Disabled="@IsActionDisabled(KeyboardAction.CursorRight)"
+                                           OnClick="@(() => MoveCaretAsync(1))"
+                                           title="Move cursor right"
+                                           aria-label="Move cursor right" />
+                        }
+                    </div>
+                    @if (IsActionVisible(KeyboardAction.Hide))
                     {
-                        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                        <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown"
                                        Size="Size.Medium"
-                                       OnClick="@(() => MoveCaretAsync(-1))"
-                                       title="Move cursor left"
-                                       aria-label="Move cursor left" />
-                        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
-                                       Size="Size.Medium"
-                                       OnClick="@(() => MoveCaretAsync(1))"
-                                       title="Move cursor right"
-                                       aria-label="Move cursor right" />
+                                       Disabled="@IsActionDisabled(KeyboardAction.Hide)"
+                                       OnClick="@HideAsync"
+                                       title="Hide keyboard"
+                                       aria-label="Hide keyboard" />
                     }
                 </div>
-                <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown"
-                               Size="Size.Medium"
-                               OnClick="@HideAsync"
-                               title="Hide keyboard"
-                               aria-label="Hide keyboard" />
-            </div>
+            }
             <MudKeyboard Layout="Interop.CurrentLayout"
                          SymbolLayout="Interop.CurrentSymbolLayout"
                          Palette="Palette"
@@ -102,7 +129,27 @@
     /// <summary>Extra inline styles appended to the docked panel.</summary>
     [Parameter] public string? Style { get; set; }
 
+    /// <summary>
+    /// Which toolbar action buttons the docked keyboard renders (Clear, Copy, Paste, the cursor arrows and
+    /// Hide). A <see cref="FlagsAttribute"/> set: combine members with <c>|</c> and remove them with
+    /// <c>&amp; ~</c>. Default <see cref="KeyboardAction.All"/>; set to <see cref="KeyboardAction.None"/> to
+    /// drop the whole toolbar. The cursor arrows never show on the money keypad regardless of this value,
+    /// because pence-first entry always appends at the end.
+    /// </summary>
+    [Parameter] public KeyboardAction VisibleActions { get; set; } = KeyboardAction.All;
+
+    /// <summary>
+    /// Which toolbar action buttons render greyed-out and non-interactive. A <see cref="FlagsAttribute"/>
+    /// set. Default <see cref="KeyboardAction.None"/>. Hiding wins over disabling: a button absent from
+    /// <see cref="VisibleActions"/> is not rendered at all, whether or not it appears here.
+    /// </summary>
+    [Parameter] public KeyboardAction DisabledActions { get; set; } = KeyboardAction.None;
+
     private string PanelStyle => $"border-radius:16px 16px 0 0;{Style}";
+
+    private bool IsActionVisible(KeyboardAction action) => (VisibleActions & action) != 0;
+
+    private bool IsActionDisabled(KeyboardAction action) => (DisabledActions & action) != 0;
 
     // Sit one above the highest layer on the page when opened (e.g. a dialog), but never below the floor.
     private int DockZIndex => Math.Max(Interop.PageMaxZIndex + 1, MinZIndex);

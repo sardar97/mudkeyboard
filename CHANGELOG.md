@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] — 2026-06-29
 
 ### Added
+- **Show, hide or disable any docked-keyboard toolbar button — globally or one at a time**
+  ([#5](https://github.com/sardar97/mudkeyboard/issues/5)). `MudKeyboardHost` gains two parameters,
+  `VisibleActions` (default `All`) and `DisabledActions` (default `None`), both typed as a new
+  `[Flags]` enum **`KeyboardAction`** (`Clear`, `Copy`, `Paste`, `CursorLeft`, `CursorRight`,
+  `CursorControl`, `Hide`, plus `None`/`All`). Drop a single button —
+  `VisibleActions="@(KeyboardAction.All & ~KeyboardAction.Paste)"` — remove the whole toolbar with
+  `KeyboardAction.None`, or keep a button visible but greyed-out via
+  `DisabledActions="KeyboardAction.Clear"`. Hiding wins over disabling, and the cursor arrows still
+  never appear on the money keypad. When every action is hidden the `role="toolbar"` element is
+  dropped entirely so no empty toolbar lingers in the accessibility tree. Documented on the
+  *Docked keyboard* and *API reference* pages.
 - **`MudKeyboardNumericField` — type-aware numeric keypads for the docked keyboard.** A new generic
   (`@typeparam T`) wrapper over `MudNumericField<T>` that chooses the docked keypad from the bound CLR
   type, with no data attribute to remember: `decimal` → the **money** keypad (pence-first, like
