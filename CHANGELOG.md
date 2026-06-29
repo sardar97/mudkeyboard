@@ -33,6 +33,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   your own sound. Off by default. Documented on the *MudKeyboard* and *Docked keyboard* pages (with live
   toggles), demonstrated in both demos, and covered by tests.
 
+### Documentation
+_Documentation-site (`src/MudKeyboard.Docs`) changes only — no change to the published library/package._
+- **"What's new" badges across the docs.** Small **New** / **Updated** pills now flag per-release changes
+  on the navigation links, section headings and parameter tables (so *Key click sound* is badged **New**
+  and the *Docked keyboard* nav entry carries both **New** and **Updated**). A single `WhatsNew.Version`
+  constant drives every badge's tooltip ("New in v1.2.0"), so advertising the next release is a one-line
+  bump plus moving the markers.
+- **Each docked-keyboard option now has its own runnable example.** The *Live value preview*,
+  *Cancel & backdrop*, *Caps lock by default* and *Key click sound* options were split out of one shared
+  control panel into self-contained example cards — each with its own toggle(s), a focusable demo field
+  and *Show code* — so you can try an option and read the result in place instead of scrolling back up to
+  a shared field at the top of the page. The *Toolbar buttons* example gained a focusable field too.
+- **The API reference page is now full width with a live "On this page" highlight.** The `/api` page
+  widens to the full container so its reference grid has more room (the *On this page* card stays on the
+  right), and the current section's entry is highlighted in the primary colour as you scroll or click —
+  a scroll-spy backed by an `IntersectionObserver` in the docs site's `docs.js`.
+- **System / Light / Dark theme, with the choice remembered.** The docs site now defaults to matching the
+  operating-system colour scheme (and follows it live via `MudThemeProvider`), exposes a
+  System / Light / Dark switch in the app bar, and persists the visitor's choice in `localStorage` across
+  visits — replacing the previous always-light default.
+
 ## [1.1.0] — 2026-06-29
 
 ### Added
