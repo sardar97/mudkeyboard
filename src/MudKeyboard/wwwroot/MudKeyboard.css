@@ -13,6 +13,8 @@
     left: 50%;
     bottom: 0;
     width: min(720px, 100vw);
+    max-width: 100vw; /* never wider than the viewport — avoids horizontal scroll on phones */
+    box-sizing: border-box;
     transform: translateX(-50%) translateY(110%);
     transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
     z-index: 1400; /* fallback only — the host sets an inline z-index of (highest-on-page + 1) at open time */
@@ -24,13 +26,33 @@
     pointer-events: auto;
 }
 
-/* Per-layout sizing: the full keyboard gets a wider panel; the numeric/money keypads are narrower. */
+/* Per-layout sizing: the full keyboard gets a wider panel; the numeric/money keypads are narrower.
+   Both clamp to 100vw so the panel always fits within the screen (no horizontal scrolling on mobile). */
 .mudkeyboard-dock.mudkeyboard-dock--text {
-    width: min(960px, 120vw);
+    width: min(960px, 100vw);
 }
 
 .mudkeyboard-dock.mudkeyboard-dock--keypad {
-    width: min(460px, 120vw);
+    width: min(460px, 100vw);
+}
+
+/* The sliding panel itself: keep it within the viewport on short/landscape screens (scroll the keys
+   rather than overflow off-screen) and pad the bottom past any device safe-area inset (e.g. the iOS
+   home indicator) so the last key row is never under it. Honours `viewport-fit=cover` on the host page. */
+.mudkeyboard-dock > .mud-paper {
+    max-height: 90vh;
+    overflow-y: auto;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
+}
+
+/* A clear, theme-coloured focus ring for keyboard/switch-control users tabbing across the keys and the
+   toolbar buttons. Colour comes from the MudBlazor palette, so it follows dark/light and brand themes. */
+.mudkeyboard-dock .mud-button-root:focus-visible,
+.mudkeyboard-dock .mud-icon-button:focus-visible {
+    outline: 3px solid var(--mud-palette-primary);
+    outline-offset: 2px;
 }
 
 /* Taller keys for the full keyboard (keys only, not the toolbar). Overrides KeyButton's inline min-height. */
@@ -54,6 +76,25 @@
     display: flex;
     align-items: center;
     gap: 0.125rem;
+}
+
+/* On small phones, slightly shorter keys so a full QWERTY row fits comfortably while every key stays a
+   generous touch target (still ~52px tall, above the 44px WCAG 2.5.5 minimum). */
+@media (max-width: 480px) {
+    .mudkeyboard-dock--text .mudkeyboard-grid .mud-button-root,
+    .mudkeyboard-dock--keypad .mudkeyboard-grid .mud-button-root {
+        min-height: 3.25rem !important;
+        font-size: 1rem;
+    }
+}
+
+/* In forced/high-contrast environments, give every key a visible edge so adjacent keys remain
+   distinguishable. `currentColor` tracks the key's own label colour, so it works in both modes. */
+@media (prefers-contrast: more), (forced-colors: active) {
+    .mudkeyboard-dock .mudkeyboard-grid .mud-button-root {
+        outline: 1px solid currentColor;
+        outline-offset: -1px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

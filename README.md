@@ -24,6 +24,10 @@ terminals and any interface where a hardware keyboard is unavailable or impracti
   your theme cascade to the keyboard automatically, with no extra code.
 - **AOT and trim friendly.** No reflection, no dynamic code. The library is marked
   `IsAotCompatible`, so trim and AOT analyzers run on every build.
+- **Accessible by default.** Every keyboard is a labelled `role="group"`, each key is a real
+  `<button>` with a spoken `aria-label`, shift/caps/symbol toggles expose `aria-pressed`, and the
+  docked keyboard is `inert` while hidden — with reduced-motion, safe-area and comfortable touch
+  targets on every device (see [Accessibility](#accessibility)).
 - **Multi-targeted.** Supports .NET 8, 9 and 10. The inline keyboards run under Interactive Server or
   WebAssembly; the global docked keyboard **additionally works on static SSR pages** (see
   [Static SSR support](#static-ssr-support)).
@@ -263,6 +267,7 @@ A runnable example lives in the Server demo at `/components/ssr-login-demo`
 | `Disabled` | `bool` | `false` | Disables every key. |
 | `DropShadow` | `bool` | `true` | Flat keys when `false`. |
 | `Palette` | `KeyboardPalette?` | `null` | Per-keyboard colour overrides. |
+| `AriaLabel` | `string?` | `"On-screen keyboard"` | Accessible name for the root `role="group"`. |
 | `Class` / `Style` | `string?` | `null` | Passthrough CSS. |
 | `OnEnter` | `EventCallback` | — | Fires on the Enter key. |
 | `OnEscape` | `EventCallback` | — | Fires on an `{esc}` key. |
@@ -270,12 +275,13 @@ A runnable example lives in the Server demo at `/components/ssr-login-demo`
 
 ### `<MudNumpad>`
 
-`Value`/`ValueChanged`, `AllowDecimal`, `MaxLength`, `Disabled`, `OnEnter`, `Palette`, `Class`, `Style`.
+`Value`/`ValueChanged`, `AllowDecimal`, `MaxLength`, `Disabled`, `OnEnter`, `Palette`, `AriaLabel`
+(default `"Numeric keypad"`), `Class`, `Style`.
 
 ### `<MudPricepad>`
 
 `Value`/`ValueChanged`, `CurrencySymbol` (default `£`), `DecimalPlaces` (default `2`), `MaxLength`,
-`Disabled`, `OnEnter`, `Palette`, `Class`, `Style`.
+`Disabled`, `OnEnter`, `Palette`, `AriaLabel` (default `"Price entry keypad"`), `Class`, `Style`.
 
 ### `<MudKeyboardHost>`
 
@@ -323,6 +329,39 @@ key follows, with no extra code. To recolour a single keyboard without touching 
 | `AccentTextColor` | Accent-key label |
 
 Values are any CSS colour — a hex string, `rgb()`/`hsl()`, or a `var(--…)` reference.
+
+---
+
+## Accessibility
+
+MudKeyboard is built to be usable with the keyboard, switch controls and screen readers, on phones,
+tablets and desktops alike — nothing extra to wire up.
+
+- **Real, labelled controls.** Each keyboard surface is a `role="group"`; every key is a genuine
+  `<button>` with a spoken `aria-label`, so glyph keys aren't read as raw symbols (`⌫` → "Backspace",
+  the blank space bar → "Space", `123`/`ABC` → "Numbers and symbols"/"Letters", `00` → "Double zero").
+- **Toggle state.** Shift / caps lock and the symbol toggle expose `aria-pressed`, so assistive tech
+  announces whether shift is armed or the symbol face is showing.
+- **Name your keyboards.** Set the `AriaLabel` parameter on `MudKeyboard`, `MudNumpad` and `MudPricepad`
+  to give each control a distinct accessible name (defaults: `"On-screen keyboard"`, `"Numeric keypad"`,
+  `"Price entry keypad"`). `KeyboardKey.AccessibleLabel` exposes a key's spoken name directly.
+- **Docked keyboard.** While hidden, `MudKeyboardHost` is `inert` and `aria-hidden` — out of the tab
+  order and the accessibility tree until a field is focused. Its action bar is a labelled
+  `role="toolbar"`, every tool has an `aria-label`, and focus is never stolen from the field you're
+  editing. A clear, theme-coloured focus ring marks the focused key.
+- **Every device.** The docked panel never overflows the viewport (clamps to `100vw`), pads past device
+  safe-area insets (add `viewport-fit=cover` to your viewport meta tag), scrolls its keys on short or
+  landscape screens, keeps comfortable touch targets (≈ 52–64px), and honours `prefers-reduced-motion`
+  and high/forced-contrast modes.
+- **Contrast.** All colours come from your MudBlazor theme, so the keyboard inherits a palette you've
+  already tuned for contrast and follows dark/light automatically.
+
+```razor
+@* Give a screen reader a distinct name for this keyboard. *@
+<MudKeyboard @bind-Value="_pin" Variant="KeyboardVariant.Numpad" AriaLabel="PIN entry" />
+```
+
+See the [Accessibility guide](https://mudkeyboard.pages.dev/features/accessibility) for the full rundown.
 
 ---
 

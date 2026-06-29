@@ -1,6 +1,7 @@
 @namespace MudKeyboard.Components
 
-<MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0">
+<MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0"
+          role="group" aria-label="@EffectiveAriaLabel">
     <KeyGrid Keys="_keys" Disabled="Disabled" OnKeyPress="@HandleKeyPressAsync" />
 </MudPaper>
 
@@ -34,6 +35,14 @@
 
     /// <summary>Extra inline styles for the root element.</summary>
     [Parameter] public string? Style { get; set; }
+
+    /// <summary>
+    /// Accessible name for the pricepad, applied to the root <c>role="group"</c> as its
+    /// <c>aria-label</c>. Default <c>"Price entry keypad"</c>.
+    /// </summary>
+    [Parameter] public string? AriaLabel { get; set; }
+
+    private string EffectiveAriaLabel => string.IsNullOrWhiteSpace(AriaLabel) ? "Price entry keypad" : AriaLabel;
 
     /// <summary>
     /// Optional colour overrides for this pricepad. Unset slots inherit the ambient MudBlazor

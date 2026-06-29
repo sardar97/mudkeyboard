@@ -10,6 +10,10 @@
    fields that carry data-mudkeyboard — i.e. the examples on the "Docked keyboard" page. *@
 <MudKeyboardHost />
 
+@* Keyboard users can skip the app bar and navigation and jump straight to the page content.
+   Hidden off-screen until focused (see .docs-skip-link in docs.css). *@
+<a class="docs-skip-link" href="#main-content">Skip to main content</a>
+
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu"
@@ -50,7 +54,7 @@
 
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.Large" Class="my-6">
-            <div class="docs-page">
+            <div id="main-content" class="docs-page" tabindex="-1">
                 @Body
             </div>
         </MudContainer>

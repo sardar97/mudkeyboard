@@ -1,6 +1,7 @@
 @namespace MudKeyboard.Components
 
-<MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0">
+<MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0"
+          role="group" aria-label="@EffectiveAriaLabel">
     <KeyGrid Keys="_keys" Disabled="Disabled" OnKeyPress="@HandleKeyPressAsync" />
 </MudPaper>
 
@@ -30,6 +31,14 @@
 
     /// <summary>Extra inline styles for the root element.</summary>
     [Parameter] public string? Style { get; set; }
+
+    /// <summary>
+    /// Accessible name for the numpad, applied to the root <c>role="group"</c> as its
+    /// <c>aria-label</c>. Default <c>"Numeric keypad"</c>.
+    /// </summary>
+    [Parameter] public string? AriaLabel { get; set; }
+
+    private string EffectiveAriaLabel => string.IsNullOrWhiteSpace(AriaLabel) ? "Numeric keypad" : AriaLabel;
 
     /// <summary>
     /// Optional colour overrides for this numpad. Unset slots inherit the ambient MudBlazor

@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Accessibility, end to end.** Every keyboard surface is now a labelled `role="group"`, and each key is a
+  real `<button>` carrying a spoken `aria-label` (so `⌫` reads *"Backspace"*, the blank space bar reads
+  *"Space"*, `123`/`ABC` reads *"Numbers and symbols"*/*"Letters"*, etc.). The shift/caps and symbol-toggle
+  keys expose `aria-pressed` so assistive tech announces their on/off state. A new
+  `KeyboardKey.AccessibleLabel` property exposes the spoken name, and a new **`AriaLabel`** parameter on
+  `MudKeyboard`, `MudNumpad` and `MudPricepad` sets the group's accessible name (defaults
+  *"On-screen keyboard"* / *"Numeric keypad"* / *"Price entry keypad"*). A new **Accessibility** page in the
+  docs and an accessibility note in both demos document it all.
 - **Static SSR support for the global docked keyboard.** The docked keyboard now works on Blazor
   **static Server-Side Rendering** pages (.NET 8+). Because it edits the focused field through
   JavaScript on `document.activeElement` rather than via Blazor binding, it needs no per-page
@@ -22,6 +30,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the `MudKeyboard.Components` namespace.
 
 ### Changed
+- **The docked keyboard is now hidden from assistive tech and the tab order while closed.** When the panel
+  is off-screen, `MudKeyboardHost` sets `inert` and `aria-hidden="true"` on the dock, so its keys and tools
+  are no longer reachable by Tab or announced by screen readers until a field is focused; both clear
+  automatically on open. Its action bar is now a labelled `role="toolbar"`, and the inner keyboard carries
+  its own `aria-label` ("Keyboard keys").
+- **The docked keyboard now behaves better on every device.** The panel clamps to `100vw` (no more
+  horizontal scrolling on phones), pads past device safe-area insets (the iOS home indicator / notches —
+  honours `viewport-fit=cover`), scrolls its keys instead of overflowing on short/landscape screens, shows
+  a clear theme-coloured focus ring for keyboard users, keeps comfortable touch targets on small phones,
+  and strengthens key edges under high/forced-contrast modes. The demo and docs host pages now set
+  `viewport-fit=cover`.
 - **Focus-capture shim now writes through the native input setter and dispatches `change`.** Every
   keystroke from the docked keyboard sets the field's value via the native
   `HTMLInputElement`/`HTMLTextAreaElement` `value` setter and dispatches both `input` and `change`

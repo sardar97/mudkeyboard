@@ -34,6 +34,29 @@ public sealed record KeyboardKey(string ActionToken, string DisplayLabel, double
     public bool Bold { get; init; }
 
     /// <summary>
+    /// A spoken-friendly name for assistive technology, used as the rendered key button's
+    /// <c>aria-label</c>. Command keys whose face is a bare glyph (the backspace <c>⌫</c>, the blank
+    /// space bar, the shift/caps arrows, the <c>123</c>/<c>ABC</c> toggle) resolve to a readable word;
+    /// literal keys fall back to their visible <see cref="DisplayLabel"/>. Pure and side-effect free so
+    /// it stays unit-testable and AOT/trim safe.
+    /// </summary>
+    public string AccessibleLabel => ActionToken switch
+    {
+        KeyTokens.Backspace => "Backspace",
+        KeyTokens.Enter => "Enter",
+        KeyTokens.Space => "Space",
+        // The shift key shows the caps-lock glyph (⇪) once locked; reflect that in its spoken name.
+        KeyTokens.Shift => DisplayLabel == "⇪" ? "Caps lock" : "Shift",
+        KeyTokens.Caps => "Caps lock",
+        // The face shows the surface it switches *to*: "ABC" while symbols are visible, "123" otherwise.
+        KeyTokens.SymbolToggle => DisplayLabel == "ABC" ? "Letters" : "Numbers and symbols",
+        KeyTokens.Escape => "Escape",
+        "00" => "Double zero",
+        "." => "Decimal point",
+        _ => DisplayLabel,
+    };
+
+    /// <summary>
     /// Creates a <see cref="KeyboardKey"/> from a layout token, resolving a sensible display
     /// label and width for the well-known command tokens and treating anything else as a
     /// literal character (label equal to the token, standard width).

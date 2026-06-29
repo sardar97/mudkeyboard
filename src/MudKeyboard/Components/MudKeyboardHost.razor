@@ -14,11 +14,17 @@
    transition animates whenever the --open class is toggled; the keyboard inside it renders once a
    field is focused. mousedown:preventDefault keeps the focused field focused while keys are tapped,
    so the caret stays put and the panel does not close on key presses. *@
+@* While closed the panel sits off-screen but is still in the DOM, so its keys/toolbar would otherwise
+   stay in the tab order and accessibility tree. `inert` removes them from focus and pointer interaction,
+   and `aria-hidden` hides them from screen readers, until a field is focused and the dock opens. Both
+   clear automatically when open. *@
 <div class="mudkeyboard-dock @(Interop.IsOpen ? "mudkeyboard-dock--open" : null) @DockSizeClass"
      style="z-index:@DockZIndex"
      @onmousedown:preventDefault="true"
      role="group"
-     aria-label="On-screen keyboard">
+     aria-label="On-screen keyboard"
+     aria-hidden="@(Interop.IsOpen ? null : "true")"
+     inert="@(!Interop.IsOpen)">
     @if (Interop.CurrentLayout is not null)
     {
         <MudPaper Elevation="@Elevation"
@@ -29,7 +35,7 @@
                island (in App.razor, outside <Routes>) so the docked keyboard works on static-SSR pages —
                where no MudBlazor providers are ancestors. A native title keeps the host self-contained and
                dependency-free; every button still carries an aria-label for assistive tech. *@
-            <div class="mudkeyboard-dock__bar">
+            <div class="mudkeyboard-dock__bar" role="toolbar" aria-label="Keyboard actions">
                 <div class="mudkeyboard-dock__tools">
                     <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                    Size="Size.Medium"
@@ -71,6 +77,7 @@
                          SymbolLayout="Interop.CurrentSymbolLayout"
                          Palette="Palette"
                          DropShadow="false"
+                         AriaLabel="Keyboard keys"
                          OnInput="@HandleInputAsync" />
         </MudPaper>
     }

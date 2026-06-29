@@ -38,7 +38,16 @@ internal sealed class KeyButton : ComponentBase
 
     // Command keys (space, backspace, shift…) get the primary accent; literals stay neutral.
     private Color KeyColor => Key.IsEnter || Key.Highlighted ? Color.Primary : Color.Default;
-    
+
+    // Toggle keys expose their on/off state to assistive tech via aria-pressed; non-toggles omit it.
+    // Shift/caps are "pressed" while armed or locked; the symbol toggle while the symbol face shows.
+    private bool? AriaPressed => Key.ActionToken switch
+    {
+        KeyTokens.Shift or KeyTokens.Caps => Key.Highlighted,
+        KeyTokens.SymbolToggle => Key.DisplayLabel == "ABC",
+        _ => null,
+    };
+
 
     // Grow proportionally to the key's width multiplier within its flex row.
     private string KeyStyle =>
@@ -66,8 +75,18 @@ internal sealed class KeyButton : ComponentBase
             nameof(MudButton.OnClick),
             EventCallback.Factory.Create<MouseEventArgs>(this, HandleClickAsync));
         builder.AddComponentParameter(7, nameof(MudButton.ChildContent), (RenderFragment)BuildLabel);
+        // A readable name for assistive tech — glyph faces (⌫, ⏎, the blank space bar) would otherwise
+        // be announced as raw symbols or nothing at all. Splatted onto MudButton's root <button>.
+        builder.AddAttribute(8, "aria-label", Key.AccessibleLabel);
+        // Convey toggle state for shift/caps/symbol keys. Must be the literal "true"/"false" string
+        // (a bare boolean attribute would read as merely present, losing the "false" state).
+        if (AriaPressed is { } pressed)
+        {
+            builder.AddAttribute(9, "aria-pressed", pressed ? "true" : "false");
+        }
+
         // Native double-click (no JS interop) → caps lock; splatted onto MudButton's root button.
-        builder.AddAttribute(8, "ondblclick", EventCallback.Factory.Create<MouseEventArgs>(this, HandleDoubleClickAsync));
+        builder.AddAttribute(10, "ondblclick", EventCallback.Factory.Create<MouseEventArgs>(this, HandleDoubleClickAsync));
         builder.CloseComponent();
     }
 

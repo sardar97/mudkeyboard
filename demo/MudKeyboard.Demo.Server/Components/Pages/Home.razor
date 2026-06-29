@@ -6,10 +6,17 @@
 <PageTitle>MudKeyboard Demo</PageTitle>
 
 <MudText Typo="Typo.h4" GutterBottom="true">MudKeyboard</MudText>
-<MudText Typo="Typo.body1" Class="mb-6" Color="Color.Secondary">
+<MudText Typo="Typo.body1" Class="mb-4" Color="Color.Secondary">
     Pure-Blazor on-screen keyboard. Zero JavaScript in the library, themed entirely by MudBlazor —
     toggle dark mode in the top bar and every key follows.
 </MudText>
+
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-6" Icon="@Icons.Material.Filled.Accessibility">
+    Every keyboard is a labelled <c>role="group"</c>, each key is a real <c>&lt;button&gt;</c> with a
+    spoken <c>aria-label</c> (so ⌫ reads "Backspace" and the blank space bar reads "Space"), and shift /
+    caps / symbol toggles expose <c>aria-pressed</c>. The docked keyboard is <c>inert</c> while hidden,
+    respects reduced-motion and safe-area insets, and keeps comfortable touch targets on every screen.
+</MudAlert>
 
 <MudStack Spacing="6">
 
@@ -51,9 +58,13 @@
     </MudPaper>
 
     <MudPaper Class="pa-4" Outlined="true">
-        <MudText Typo="Typo.h6" GutterBottom="true">Custom layout</MudText>
+        <MudText Typo="Typo.h6" GutterBottom="true">Custom layout · AriaLabel override</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
+            A custom layout with an explicit <c>AriaLabel</c> so a screen reader announces this control as
+            "Demo word keyboard" instead of the default "On-screen keyboard".
+        </MudText>
         <MudTextField @bind-Value="_custom" Label="Custom" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
-        <MudKeyboard @bind-Value="_custom" Variant="KeyboardVariant.Custom" Layout="CustomLayout" />
+        <MudKeyboard @bind-Value="_custom" Variant="KeyboardVariant.Custom" Layout="CustomLayout" AriaLabel="Demo word keyboard" />
     </MudPaper>
 
     <MudPaper Class="pa-4" Outlined="true">

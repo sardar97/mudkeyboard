@@ -17,6 +17,8 @@ Install from NuGet as `MudKeyboard` (MudBlazor is a peer dependency). Replace ht
 - Theming & palette (inherit the MudBlazor theme or override with `KeyboardPalette`): [Docs](https://mudkeyboard.pages.dev/features/theming)
 - Emit mode (`OnInput` routes each press elsewhere instead of editing `Value`): [Docs](https://mudkeyboard.pages.dev/features/emit-mode)
 - AOT & trimming (`IsAotCompatible`, reflection-free, primitive-only interop): [Docs](https://mudkeyboard.pages.dev/features/aot)
+- Static SSR (the docked keyboard works on Blazor static Server-Side Rendering pages): [Docs](https://mudkeyboard.pages.dev/features/ssr)
+- Accessibility (real buttons, `role="group"`, per-key `aria-label`, `aria-pressed` toggle state, `inert` docked keyboard, reduced-motion, safe-area and touch-target support across devices): [Docs](https://mudkeyboard.pages.dev/features/accessibility)
 
 ## Tools
 - Playground (tweak parameters live and copy the generated markup): [Docs](https://mudkeyboard.pages.dev/playground)
