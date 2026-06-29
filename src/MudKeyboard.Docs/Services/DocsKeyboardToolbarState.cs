@@ -12,13 +12,22 @@ public sealed class DocsKeyboardToolbarState
 {
     private KeyboardAction _visibleActions = KeyboardAction.All;
     private KeyboardAction _disabledActions = KeyboardAction.None;
+    private bool _allowNegative;
     private bool _showValuePreview;
     private bool _showBackdrop;
     private bool _disableBackdropClick;
     private bool _sound;
+    private string _cancelLabel = "Cancel";
 
     /// <summary>Raised whenever the toolbar settings change, so the layout host re-renders.</summary>
     public event Action? Changed;
+
+    /// <summary>Whether the docked numeric keypads show the ± sign-toggle key. Bound to <c>MudKeyboardHost.AllowNegative</c>.</summary>
+    public bool AllowNegative
+    {
+        get => _allowNegative;
+        set => Set(ref _allowNegative, value);
+    }
 
     /// <summary>Whether the docked keyboard shows the live value-preview bar. Bound to <c>MudKeyboardHost.ShowValuePreview</c>.</summary>
     public bool ShowValuePreview
@@ -39,6 +48,13 @@ public sealed class DocsKeyboardToolbarState
     {
         get => _disableBackdropClick;
         set => Set(ref _disableBackdropClick, value);
+    }
+
+    /// <summary>Text for the Cancel button shown in the value-preview bar. Bound to <c>MudKeyboardHost.CancelLabel</c>.</summary>
+    public string CancelLabel
+    {
+        get => _cancelLabel;
+        set => Set(ref _cancelLabel, value);
     }
 
     /// <summary>Whether the docked keyboard plays a click sound on key press. Bound to <c>MudKeyboardHost.Sound</c>.</summary>
@@ -80,10 +96,12 @@ public sealed class DocsKeyboardToolbarState
     public void Reset()
     {
         _disabledActions = KeyboardAction.None;
+        _allowNegative = false;
         _showValuePreview = false;
         _showBackdrop = false;
         _disableBackdropClick = false;
         _sound = false;
+        _cancelLabel = "Cancel";
         VisibleActions = KeyboardAction.All; // raises Changed
     }
 
@@ -101,6 +119,17 @@ public sealed class DocsKeyboardToolbarState
     private void Set(ref bool field, bool value)
     {
         if (field == value)
+        {
+            return;
+        }
+
+        field = value;
+        Changed?.Invoke();
+    }
+
+    private void Set(ref string field, string value)
+    {
+        if (string.Equals(field, value, StringComparison.Ordinal))
         {
             return;
         }
