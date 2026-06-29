@@ -23,6 +23,7 @@ Install from NuGet as `MudKeyboard` (MudBlazor is a peer dependency). Replace ht
 ## Tools
 - Playground (tweak parameters live and copy the generated markup): [Docs](https://mudkeyboard.pages.dev/playground)
 - API reference (every public type: components, models, services, layouts): [Docs](https://mudkeyboard.pages.dev/api)
+- Releases & changelog (version history plus the current package and documentation-site versions): [Docs](https://mudkeyboard.pages.dev/releases)
 
 ## Package & source
 - NuGet package: https://www.nuget.org/packages/MudKeyboard

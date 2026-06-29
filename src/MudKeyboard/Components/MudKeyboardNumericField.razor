@@ -16,7 +16,7 @@
    reflection over members is used, so it stays AOT/trim friendly. *@
 <MudNumericField T="T"
                  Value="Value"
-                 ValueChanged="@ValueChanged"
+                 ValueChanged="OnValueChanged"
                  For="@For"
                  Label="@Label"
                  Placeholder="@Placeholder"
@@ -30,12 +30,9 @@
                  ReadOnly="ReadOnly"
                  ShrinkLabel="ShrinkLabel"
                  Format="@Format"
-                 Min="Min"
-                 Max="Max"
-                 Step="Step"
                  Class="@Class"
                  Style="@Style"
-                 @attributes="BuildUserAttributes()" />
+                 @attributes="BuildForwardedAttributes()" />
 
 @code {
     /// <summary>The field value, two-way bindable via <c>@bind-Value</c>.</summary>
@@ -43,6 +40,15 @@
 
     /// <summary>Raised when <see cref="Value"/> changes.</summary>
     [Parameter] public EventCallback<T> ValueChanged { get; set; }
+
+    // Forward the inner field's value change through this wrapper's own two-way binding. Keeping the
+    // local Value in step (as well as re-invoking ValueChanged) is the robust wrapper pattern — a bare
+    // ValueChanged="@ValueChanged" forward does not reliably propagate MudNumericField's changes.
+    private async Task OnValueChanged(T value)
+    {
+        Value = value;
+        await ValueChanged.InvokeAsync(value);
+    }
 
     /// <summary>Validation expression for the bound value (for example <c>@(() =&gt; Model.Price)</c>).</summary>
     [Parameter] public Expression<Func<T>>? For { get; set; }
@@ -83,14 +89,39 @@
     /// <summary>The .NET numeric format string applied to the value (for example <c>"N2"</c>).</summary>
     [Parameter] public string? Format { get; set; }
 
-    /// <summary>Optional minimum value.</summary>
+    /// <summary>Optional minimum value. Only applied when explicitly set.</summary>
     [Parameter] public T? Min { get; set; }
 
-    /// <summary>Optional maximum value.</summary>
+    /// <summary>Optional maximum value. Only applied when explicitly set.</summary>
     [Parameter] public T? Max { get; set; }
 
-    /// <summary>Optional step applied by the spin buttons / arrow keys.</summary>
+    /// <summary>Optional step applied by the spin buttons / arrow keys. Only applied when explicitly set.</summary>
     [Parameter] public T? Step { get; set; }
+
+    // Whether the caller actually supplied Min / Max / Step. For a value-type T (decimal, int, …) the
+    // nullable parameters above are NOT Nullable<T>; they default to default(T) (e.g. 0). Forwarding that
+    // default unconditionally would make MudNumericField treat it as a real bound and clamp every entered
+    // value to it (the classic "the field snaps back to 0" bug). So we forward each only when set.
+    private bool _minSet;
+    private bool _maxSet;
+    private bool _stepSet;
+
+    /// <inheritdoc />
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        _minSet = _maxSet = _stepSet = false;
+        foreach (var parameter in parameters)
+        {
+            switch (parameter.Name)
+            {
+                case nameof(Min): _minSet = true; break;
+                case nameof(Max): _maxSet = true; break;
+                case nameof(Step): _stepSet = true; break;
+            }
+        }
+
+        return base.SetParametersAsync(parameters);
+    }
 
     /// <summary>Extra CSS classes for the field.</summary>
     [Parameter] public string? Class { get; set; }
@@ -130,11 +161,12 @@
             ? NumericLayoutResolver.Resolve(typeof(T))
             : DockedKeyboardLayout;
 
-    // Merge caller-supplied attributes with the docked-keyboard markers, then splat the result onto
-    // MudNumericField. MudBlazor forwards unmatched attributes to the real <input>, which is the element
-    // the focus-capture shim watches — so data-mudkeyboard-layout lands where it needs to. The layout
-    // marker is always emitted so the correct keypad shows in AllInputs mode with no extra configuration.
-    private Dictionary<string, object> BuildUserAttributes()
+    // Merge caller-supplied attributes with the docked-keyboard markers and any explicitly-set
+    // Min/Max/Step, then splat the result onto MudNumericField. MudBlazor binds the keys that match its
+    // parameters (Min/Max/Step) and forwards the rest (data-mudkeyboard-*, name, …) to the real <input> —
+    // the element the focus-capture shim watches. The layout marker is always emitted so the correct
+    // keypad shows in AllInputs mode with no extra configuration.
+    private Dictionary<string, object> BuildForwardedAttributes()
     {
         var attributes = UserAttributes is null
             ? new Dictionary<string, object>()
@@ -146,6 +178,22 @@
         }
 
         attributes["data-mudkeyboard-layout"] = ResolvedLayout;
+
+        // Forward numeric bounds only when the caller set them (see _minSet/_maxSet/_stepSet above).
+        if (_minSet && Min is not null)
+        {
+            attributes[nameof(Min)] = Min;
+        }
+
+        if (_maxSet && Max is not null)
+        {
+            attributes[nameof(Max)] = Max;
+        }
+
+        if (_stepSet && Step is not null)
+        {
+            attributes[nameof(Step)] = Step;
+        }
 
         return attributes;
     }

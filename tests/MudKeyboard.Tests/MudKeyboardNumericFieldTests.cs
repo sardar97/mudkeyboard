@@ -160,7 +160,7 @@ public class MudKeyboardNumericFieldTests : MudComponentTestContext
     }
 
     [Fact]
-    public void MinMaxStep_AreForwardedToTheInput()
+    public void MinMaxStep_AreForwardedToTheInput_WhenSet()
     {
         var cut = Render<MudKeyboardNumericField<int>>(p => p
             .Add(c => c.Min, 0)
@@ -171,6 +171,56 @@ public class MudKeyboardNumericFieldTests : MudComponentTestContext
         Assert.Equal("0", input.GetAttribute("min"));
         Assert.Equal("100", input.GetAttribute("max"));
         Assert.Equal("5", input.GetAttribute("step"));
+    }
+
+    [Fact]
+    public void MinAndMax_AreNotForwarded_WhenUnset_SoValuesAreNotClampedToZero()
+    {
+        // Regression: for a value-type T the nullable Min/Max parameters default to default(T) (0), not
+        // null. Forwarding them unconditionally made MudNumericField clamp every entered value to 0 — the
+        // field "snapped back to 0" and never raised ValueChanged. When unset they must not be emitted.
+        var input = Render<MudKeyboardNumericField<int>>().Find("input");
+
+        Assert.False(input.HasAttribute("min"));
+        Assert.False(input.HasAttribute("max"));
+    }
+
+    [Theory]
+    // Regression for the same bug, observed end to end: editing must round-trip the real value through
+    // the wrapper's two-way binding, not be clamped to 0. Covers immediate (oninput) and the default
+    // commit-on-change path, for both an integer and a floating-point type.
+    [InlineData(true)]
+    [InlineData(false)]
+    public void EditingTheInput_RoundTripsTheValue_NotClampedToZero(bool immediate)
+    {
+        int captured = -1;
+        var cut = Render<MudKeyboardNumericField<int>>(p => p
+            .Add(c => c.Immediate, immediate)
+            .Add(c => c.ValueChanged, (int v) => captured = v));
+
+        if (immediate)
+        {
+            cut.Find("input").Input("42");
+        }
+        else
+        {
+            cut.Find("input").Change("42");
+        }
+
+        Assert.Equal(42, captured);
+    }
+
+    [Fact]
+    public void EditingADecimalField_RoundTripsTheValue()
+    {
+        decimal captured = -1m;
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p
+            .Add(c => c.Immediate, true)
+            .Add(c => c.ValueChanged, (decimal v) => captured = v));
+
+        cut.Find("input").Input("5.23");
+
+        Assert.Equal(5.23m, captured);
     }
 
     [Fact]

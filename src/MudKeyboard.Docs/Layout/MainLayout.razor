@@ -58,6 +58,33 @@
                 @Body
             </div>
         </MudContainer>
+
+        @* Site-wide footer: shows the documented package version and this site's own version. *@
+        <footer class="docs-footer">
+            <MudContainer MaxWidth="MaxWidth.Large">
+                <div class="docs-footer__inner">
+                    <div class="docs-footer__brand">
+                        <MudImage Src="_content/MudKeyboard/mudkeyboard_logo.svg" Alt="MudKeyboard" Height="24" />
+                        <MudText Typo="Typo.caption" Class="docs-footer__copy">Open-source · MIT licensed</MudText>
+                    </div>
+                    <div class="docs-footer__versions">
+                        <MudLink Href="releases" Underline="Underline.None" Class="docs-footer__chip" title="MudKeyboard package version — view releases">
+                            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
+                            <span>MudKeyboard @("v"+BuildInfo.PackageVersion)</span>
+                        </MudLink>
+                        <MudLink Href="releases" Underline="Underline.None" Class="docs-footer__chip" title="Documentation site version">
+                            <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Small" />
+                            <span>Docs @("v"+BuildInfo.DocsVersion)</span>
+                        </MudLink>
+                    </div>
+                    <div class="docs-footer__links">
+                        <MudLink Href="releases" Color="Color.Inherit" Typo="Typo.body2">Releases</MudLink>
+                        <MudLink Href="https://github.com/sardar97/mudkeyboard" Target="_blank" Color="Color.Inherit" Typo="Typo.body2">GitHub</MudLink>
+                        <MudLink Href="https://www.nuget.org/packages/MudKeyboard" Target="_blank" Color="Color.Inherit" Typo="Typo.body2">NuGet</MudLink>
+                    </div>
+                </div>
+            </MudContainer>
+        </footer>
     </MudMainContent>
 </MudLayout>
 

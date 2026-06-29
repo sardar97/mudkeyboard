@@ -37,6 +37,7 @@
         <MudChip T="string" Icon="@Icons.Material.Filled.Speed" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">AOT &amp; trim</MudChip>
         <MudChip T="string" Icon="@Icons.Material.Filled.Accessibility" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">Accessible</MudChip>
         <MudChip T="string" Icon="@Icons.Material.Filled.Tag" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">.NET 8 · 9 · 10</MudChip>
+        <MudChip T="string" Href="releases" Icon="@Icons.Material.Filled.Inventory2" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">@("v"+BuildInfo.PackageVersion)</MudChip>
     </div>
 </section>
 
@@ -126,5 +127,6 @@ dotnet add package MudBlazor
         new(Icons.Material.Filled.Palette, "Theming & palette", "Inherit the MudBlazor theme or recolour a single keyboard with KeyboardPalette.", "features/theming"),
         new(Icons.Material.Filled.Accessibility, "Accessibility", "Labelled keys, toggle state, an inert docked keyboard, reduced-motion and safe-area support.", "features/accessibility"),
         new(Icons.Material.Filled.Science, "Playground", "Tweak every parameter live and copy the generated markup.", "playground"),
+        new(Icons.Material.Filled.History, "Releases & changelog", "What changed in every version, plus the current package and site versions.", "releases"),
     ];
 }

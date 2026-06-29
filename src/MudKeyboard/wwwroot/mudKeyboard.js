@@ -81,7 +81,9 @@ function onFocusIn(e) {
     if (!shouldAttach(el)) return;
 
     activeEl = el;
-    dotnet.invokeMethodAsync('OnFocusIn', inferLayout(el), highestZIndex());
+    // Pass the field's current value so the docked keyboard can seed pence-first money entry from it
+    // (and so it never has to read the value back across a second interop round trip mid-keystroke).
+    dotnet.invokeMethodAsync('OnFocusIn', inferLayout(el), highestZIndex(), el.value ?? '');
 
     // Lift the field above the docked keyboard so the user can see what they type.
     setTimeout(() => {
@@ -191,11 +193,6 @@ export async function paste() {
     if (text) insertText(text);
 }
 
-// Returns the focused field's current value (used by pence-first money formatting).
-export function getValue() {
-    return activeEl ? (activeEl.value ?? '') : '';
-}
-
 // Replaces the focused field's whole value (used by pence-first money formatting) and dispatches input.
 export function setValue(text) {
     const el = activeEl;
@@ -222,7 +219,12 @@ export function blurActive() {
     const el = activeEl;
     activeEl = null;
     if (el) {
-        el.dispatchEvent(new Event('change', { bubbles: true }));
+        // A spinbutton (MudNumericField) discards a programmatic value when it sees a trailing 'change'
+        // (see dispatchInput); its value is already committed via 'input', so just blur it. Every other
+        // field gets 'change' so non-immediate bindings commit on close.
+        if (!isSpinButton(el)) {
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
         try { el.blur(); } catch { /* ignore */ }
     }
 }
@@ -255,11 +257,24 @@ function setNativeValue(el, value) {
     }
 }
 
-// Tell the page the value changed. We fire BOTH 'input' and 'change' after every keystroke so that
-// MudBlazor immediate bindings (which listen on 'input'), non-immediate bindings and plain/SSR HTML
-// forms (which commit on 'change'), and any non-Blazor listeners all stay in sync. This is what lets
-// the docked keyboard drive static-SSR Blazor forms, ordinary <form> POSTs and bare inputs alike.
+// MudBlazor's numeric field renders role="spinbutton" on its <input>. It owns its formatted text and
+// re-derives it from its parsed value, so when it receives a 'change' on top of the 'input' it discards
+// a value that was set programmatically (the on-screen keyboard) and snaps back to the bound value.
+// Detecting that one case lets us spare it the 'change' while leaving every other field untouched.
+function isSpinButton(el) {
+    return el.getAttribute('role') === 'spinbutton';
+}
+
+// Tell the page the value changed. For most fields we fire BOTH 'input' and 'change' after every
+// keystroke so that MudBlazor immediate bindings (which listen on 'input'), non-immediate bindings and
+// plain/SSR HTML forms (which commit on 'change'), and any non-Blazor listeners all stay in sync — this
+// is what lets the docked keyboard drive static-SSR Blazor forms, ordinary <form> POSTs and bare inputs
+// alike. The lone exception is the numeric spinbutton above: it accepts the value on 'input' alone and
+// would otherwise revert. Its value still reaches an SSR POST (it is written to the DOM via the native
+// setter) and immediate bindings update live on 'input'.
 function dispatchInput(el) {
     el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
+    if (!isSpinButton(el)) {
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 }

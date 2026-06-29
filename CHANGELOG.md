@@ -5,7 +5,7 @@ All notable changes to **MudKeyboard** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] — 2026-06-29
 
 ### Added
 - **`MudKeyboardNumericField` — type-aware numeric keypads for the docked keyboard.** A new generic
@@ -56,7 +56,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   keystroke from the docked keyboard sets the field's value via the native
   `HTMLInputElement`/`HTMLTextAreaElement` `value` setter and dispatches both `input` and `change`
   events. This makes the typed value flow correctly into static-SSR Blazor forms, plain HTML form
-  POSTs and non-Blazor inputs, in addition to MudBlazor immediate and non-immediate bindings.
+  POSTs and non-Blazor inputs, in addition to MudBlazor immediate and non-immediate bindings. The lone
+  exception is MudBlazor's numeric field (`role="spinbutton"`): it owns its formatted text and re-derives
+  it from its parsed value, so it accepts the value on `input` alone — firing a trailing `change` on it
+  would make it discard a programmatically-set value and snap back. The shim detects the spinbutton role
+  and dispatches `input` only for it (its value still reaches an SSR POST via the native setter), which
+  is what lets the docked **money** keypad drive a `MudNumericField`/`MudKeyboardNumericField` correctly.
 - **The docked keyboard's toolbar tooltips now use the native `title` attribute** instead of
   `MudTooltip`. `MudTooltip` requires a `MudPopoverProvider` in scope; dropping it makes
   `MudKeyboardHost` fully self-contained, so it can be placed in its own interactive island (in
@@ -111,7 +116,7 @@ First public preview.
 - Multi-targeting for `net8.0`, `net9.0` and `net10.0`, with `IsAotCompatible` enabled (trim/AOT
   analyzers run on every build) and XML documentation shipped in the package.
 
-[Unreleased]: https://github.com/sardar97/mudkeyboard/compare/v1.0.1...HEAD
+[1.1.0]: https://github.com/sardar97/mudkeyboard/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/sardar97/mudkeyboard/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/sardar97/mudkeyboard/compare/v0.1.0-alpha...v1.0.0
 [0.1.0-alpha]: https://github.com/sardar97/mudkeyboard/releases/tag/v0.1.0-alpha

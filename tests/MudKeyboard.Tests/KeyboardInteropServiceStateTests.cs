@@ -115,6 +115,19 @@ public class KeyboardInteropServiceStateTests
     }
 
     [Fact]
+    public void OnFocusIn_WithCurrentValue_SeedsMoneyEntry_OpensAndResolvesLayout()
+    {
+        var service = NewService();
+
+        // The shim passes the field's current value as a third argument so pence-first money entry can
+        // continue from an existing amount. It must open and resolve the layout like the 2-arg form.
+        service.OnFocusIn("money", 0, "12.34");
+
+        Assert.True(service.IsOpen);
+        Assert.Same(LayoutLibrary.Price, service.CurrentLayout);
+    }
+
+    [Fact]
     public void OnFocusOut_WhenOpen_ClosesAndNotifies()
     {
         var service = NewService();

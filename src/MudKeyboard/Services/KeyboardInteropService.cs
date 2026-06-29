@@ -26,6 +26,12 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     private IJSObjectReference? _module;
     private DotNetObjectReference<KeyboardInteropService>? _selfRef;
 
+    // The run of digits entered into the focused money field, accumulated on the C# side so each keypress
+    // is a single write back to the field. Reading the formatted value back from the DOM every keypress
+    // instead would add a second interop round trip that races with MudBlazor's MudNumericField
+    // re-render on Blazor Server and makes it discard the value. Seeded from the field on focus.
+    private string _moneyDigits = string.Empty;
+
     /// <summary>Creates the service. <paramref name="js"/> and <paramref name="options"/> are injected.</summary>
     /// <param name="js">The JS runtime used to load and call the focus-capture module.</param>
     /// <param name="options">Global keyboard configuration.</param>
@@ -72,10 +78,17 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// <summary>Called from JS when an attachable field gains focus.</summary>
     /// <param name="layoutKind">A layout hint such as <c>"qwerty"</c>, <c>"numpad"</c> or <c>"decimal"</c>.</param>
     /// <param name="pageMaxZIndex">The highest z-index currently on the page, so the host can dock above it.</param>
+    /// <param name="currentValue">
+    /// The focused field's current value, used to seed pence-first money entry so the user can continue
+    /// editing an existing amount. Defaults to empty (e.g. when invoked from tests).
+    /// </param>
     [JSInvokable]
-    public void OnFocusIn(string layoutKind, int pageMaxZIndex)
+    public void OnFocusIn(string layoutKind, int pageMaxZIndex, string currentValue = "")
     {
         (CurrentLayout, CurrentSymbolLayout) = ResolveLayout(layoutKind);
+        // Seed the money accumulator from the field's existing digits (leading zeros dropped) so tapping
+        // continues from the shown amount; harmless for non-money layouts, which never read it.
+        _moneyDigits = PricepadFormatter.ExtractDigits(currentValue).TrimStart('0');
         PageMaxZIndex = pageMaxZIndex;
         IsOpen = true;
         StateChanged?.Invoke();
@@ -129,27 +142,26 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// exactly like the in-screen <see cref="MudKeyboard.Components.MudPricepad"/> (typing 5, 2, 3 → <c>5.23</c>).
     /// </summary>
     /// <param name="digits">The digit(s) just pressed (for example <c>"5"</c> or <c>"00"</c>).</param>
-    public async Task AppendMoneyDigitsAsync(string digits)
+    public Task AppendMoneyDigitsAsync(string digits)
     {
-        var combined = PricepadFormatter.ExtractDigits(await GetValueAsync())
-            + PricepadFormatter.ExtractDigits(digits);
-        await SetValueAsync(PricepadFormatter.Format(combined, string.Empty, MoneyDecimalPlaces));
+        _moneyDigits += PricepadFormatter.ExtractDigits(digits);
+        return WriteMoneyAsync();
     }
 
     /// <summary>Removes the last entered digit from the focused money field, re-formatting pence-first.</summary>
-    public async Task BackspaceMoneyAsync()
+    public Task BackspaceMoneyAsync()
     {
-        var digits = PricepadFormatter.ExtractDigits(await GetValueAsync());
-        if (digits.Length > 0)
+        if (_moneyDigits.Length > 0)
         {
-            digits = digits[..^1];
+            _moneyDigits = _moneyDigits[..^1];
         }
 
-        await SetValueAsync(PricepadFormatter.Format(digits, string.Empty, MoneyDecimalPlaces));
+        return WriteMoneyAsync();
     }
 
-    private ValueTask<string> GetValueAsync() =>
-        _module is null ? ValueTask.FromResult(string.Empty) : _module.InvokeAsync<string>("getValue");
+    // Format the accumulated digits pence-first and write them to the focused field in a single interop.
+    private async Task WriteMoneyAsync() =>
+        await SetValueAsync(PricepadFormatter.Format(_moneyDigits, string.Empty, MoneyDecimalPlaces));
 
     private ValueTask SetValueAsync(string value) =>
         _module?.InvokeVoidAsync("setValue", value) ?? ValueTask.CompletedTask;

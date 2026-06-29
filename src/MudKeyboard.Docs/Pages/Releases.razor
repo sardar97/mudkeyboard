@@ -1,0 +1,98 @@
+@page "/releases"
+@page "/changelog"
+@namespace MudKeyboard.Docs.Pages
+
+<PageTitle>Releases &amp; changelog · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Project"
+            Title="Releases &amp; changelog"
+            Lead="Every notable change to MudKeyboard, newest first. Mirrors CHANGELOG.md and follows Keep a Changelog and Semantic Versioning." />
+
+@* Current versions — the "shown somewhere" the whole page hangs off. *@
+<MudPaper Outlined="true" Class="docs-versions pa-4 mb-2">
+    <div class="docs-versions__item">
+        <span class="docs-versions__label">MudKeyboard package</span>
+        <div class="docs-versions__value">
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Medium" Icon="@Icons.Material.Filled.Inventory2">@("v"+BuildInfo.PackageVersion)</MudChip>
+            <MudLink Href="https://www.nuget.org/packages/MudKeyboard" Target="_blank" Typo="Typo.body2">View on NuGet</MudLink>
+        </div>
+    </div>
+    <MudDivider Vertical="true" FlexItem="true" Class="docs-versions__divider mx-2" />
+    <div class="docs-versions__item">
+        <span class="docs-versions__label">Documentation site</span>
+        <div class="docs-versions__value">
+            <MudChip T="string" Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Medium" Icon="@Icons.Material.Filled.MenuBook">@("v"+BuildInfo.DocsVersion)</MudChip>
+        </div>
+    </div>
+    <MudSpacer />
+    <div class="docs-versions__links">
+        <MudButton Href="@ReleaseNotes.GitHubReleasesUrl" Target="_blank" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Custom.Brands.GitHub">GitHub Releases</MudButton>
+        <MudButton Href="@ReleaseNotes.ChangelogUrl" Target="_blank" Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Description">Full CHANGELOG.md</MudButton>
+    </div>
+</MudPaper>
+
+@foreach (var release in ReleaseNotes.All)
+{
+    <MudPaper id="@release.Anchor" Outlined="true" Class="docs-release pa-5 mt-5">
+        <div class="docs-release__head">
+            <div class="docs-release__title">
+                <MudText Typo="Typo.h5" Style="font-weight:700;">
+                    @(release.IsReleased ? $"v{release.Version}" : "Unreleased")
+                </MudText>
+                @if (release.Date is not null)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@release.Date</MudText>
+                }
+            </div>
+            <MudChip T="string"
+                     Color="@StatusColor(release.Status)"
+                     Variant="@(release.Status == ReleaseStatus.Stable ? Variant.Outlined : Variant.Filled)"
+                     Size="Size.Small">
+                @StatusLabel(release.Status)
+            </MudChip>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(release.Summary))
+        {
+            <p class="docs-prose docs-release__summary">@release.Summary</p>
+        }
+
+        @foreach (var group in release.Groups)
+        {
+            <MudText Typo="Typo.subtitle2" Class="docs-release__group">@group.Heading</MudText>
+            <ul class="docs-release__list">
+                @foreach (var item in group.Items)
+                {
+                    <li>
+                        <span class="docs-release__item-title">@item.Title</span>
+                        <span class="docs-release__item-detail"> — @item.Detail</span>
+                    </li>
+                }
+            </ul>
+        }
+    </MudPaper>
+}
+
+<div class="docs-nav-footer">
+    <MudButton Href="api" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">API reference</MudButton>
+    <MudButton Href="getting-started" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Getting started</MudButton>
+</div>
+
+@code {
+    // Presentation-only mappings from a release's status to its badge colour and label.
+    private static Color StatusColor(ReleaseStatus status) => status switch
+    {
+        ReleaseStatus.Unreleased => Color.Info,
+        ReleaseStatus.Latest => Color.Success,
+        ReleaseStatus.PreRelease => Color.Warning,
+        _ => Color.Default,
+    };
+
+    private static string StatusLabel(ReleaseStatus status) => status switch
+    {
+        ReleaseStatus.Unreleased => "Unreleased",
+        ReleaseStatus.Latest => "Latest release",
+        ReleaseStatus.PreRelease => "Pre-release",
+        _ => "Stable",
+    };
+}

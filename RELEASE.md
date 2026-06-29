@@ -105,9 +105,14 @@ published version.
    `## [1.1.0] — YYYY-MM-DD` section, and add the compare-link line at the bottom of the file.
    The GitHub Release notes are pulled verbatim from this version's section.
 
+   Mirror the same change in `src/MudKeyboard.Docs/Shared/ReleaseNotes.cs` — turn the `Unreleased`
+   entry into a dated `ReleaseNote` (status `Latest`, demote the previous latest to `Stable`). This is
+   what the docs site's **Releases & changelog** page (`/releases`) renders.
+
 3. **Bump `<Version>` in `src/MudKeyboard/MudKeyboard.csproj`** to match. The tag overrides this in
    CI, but keeping them equal means a local `dotnet pack` produces the same version and avoids
-   confusion.
+   confusion. (The docs footer and Releases page read this version from the built assembly, so they
+   update automatically once it's bumped.)
 
 4. **Commit to `master` and let CI pass:**
 
