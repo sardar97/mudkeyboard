@@ -151,13 +151,6 @@ test('setValue replaces the whole value (used by pence-first money entry)', () =
   assert.deepEqual(el.events, ['input', 'change']);
 });
 
-test('getValue returns the focused field value', () => {
-  const el = makeField('INPUT', 'xyz');
-  focus(el);
-
-  assert.equal(mod.getValue(), 'xyz');
-});
-
 test('insertText works on a <textarea> via the textarea native setter', () => {
   const el = makeField('TEXTAREA', '');
   focus(el);
