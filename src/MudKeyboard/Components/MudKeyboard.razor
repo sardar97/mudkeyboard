@@ -2,7 +2,7 @@
 
 <MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0"
           role="group" aria-label="@EffectiveAriaLabel">
-    <KeyGrid Keys="@_displayKeys" Disabled="Disabled" DropShadow="@DropShadow" OnKeyPress="@HandleKeyPressAsync" OnKeyDoublePress="@HandleDoublePress" />
+    <KeyGrid Keys="@_displayKeys" Disabled="Disabled" DropShadow="@DropShadow" Sound="@Sound" SoundSrc="@SoundSrc" OnKeyPress="@HandleKeyPressAsync" OnKeyDoublePress="@HandleDoublePress" />
 </MudPaper>
 
 @code {
@@ -40,6 +40,19 @@
 
     /// <summary>Whether the keys cast a drop shadow. Set <see langword="false"/> for flat keys. Default <see langword="true"/>.</summary>
     [Parameter] public bool DropShadow { get; set; } = true;
+
+    /// <summary>
+    /// When <see langword="true"/>, a short click sound plays on every key press. Played via a
+    /// Blazor-rendered <c>&lt;audio&gt;</c> element — no JavaScript — so it works in every render mode.
+    /// Default <see langword="false"/>.
+    /// </summary>
+    [Parameter] public bool Sound { get; set; }
+
+    /// <summary>
+    /// Optional source for the click sound (any URL or <c>data:</c> URI). When unset the built-in
+    /// synthesised click is used. Ignored unless <see cref="Sound"/> is set.
+    /// </summary>
+    [Parameter] public string? SoundSrc { get; set; }
 
     /// <summary>Extra CSS classes for the root element.</summary>
     [Parameter] public string? Class { get; set; }

@@ -182,6 +182,88 @@ public class KeyboardInteropServiceStateTests
         await service.DisposeAsync();
     }
 
+    [Fact]
+    public void OnFocusIn_SeedsOriginalAndCurrentValue_FromTheFieldsValue()
+    {
+        var service = NewService();
+
+        service.OnFocusIn("qwerty", 0, "sardar");
+
+        // The preview bar shows CurrentValue; CancelAsync reverts to OriginalValue. Both start at the
+        // value the field held when it gained focus.
+        Assert.Equal("sardar", service.OriginalValue);
+        Assert.Equal("sardar", service.CurrentValue);
+    }
+
+    [Fact]
+    public void OnValueChanged_UpdatesCurrentValue_AndNotifies()
+    {
+        var service = NewService();
+        service.OnFocusIn("qwerty", 0, "sardar");
+        var notifications = 0;
+        service.StateChanged += () => notifications++;
+
+        service.OnValueChanged("sardarx");
+
+        Assert.Equal("sardarx", service.CurrentValue);
+        // OriginalValue is untouched — only Cancel reverts to it.
+        Assert.Equal("sardar", service.OriginalValue);
+        Assert.Equal(1, notifications);
+    }
+
+    [Fact]
+    public void OnValueChanged_WithUnchangedValue_DoesNotNotify()
+    {
+        var service = NewService();
+        service.OnFocusIn("qwerty", 0, "sardar");
+        var notifications = 0;
+        service.StateChanged += () => notifications++;
+
+        service.OnValueChanged("sardar");
+
+        Assert.Equal(0, notifications);
+    }
+
+    [Fact]
+    public async Task CancelAsync_WhenOpen_ClosesAndNotifies()
+    {
+        var service = NewService();
+        service.OnFocusIn("qwerty", 0, "sardar");
+        service.OnValueChanged("sardar edited");
+        var notifications = 0;
+        service.StateChanged += () => notifications++;
+
+        // No JS module is loaded, so the setValue/blurActive forwarders are safe no-ops; the state still
+        // settles to closed and fires a single notification.
+        await service.CancelAsync();
+
+        Assert.False(service.IsOpen);
+        Assert.Equal(1, notifications);
+    }
+
+    [Fact]
+    public async Task InteropCalls_BeforeInitialize_IncludeCancel_AndDoNotThrow()
+    {
+        var service = NewService();
+
+        await service.CancelAsync();
+
+        Assert.False(service.IsOpen);
+    }
+
+    [Fact]
+    public void ReportValueChanges_TogglingBeforeInitialize_IsSafe_AndRoundTrips()
+    {
+        var service = NewService();
+
+        // No module is loaded yet, so flipping the flag must not attempt JS interop.
+        service.ReportValueChanges = true;
+        Assert.True(service.ReportValueChanges);
+
+        service.ReportValueChanges = false;
+        Assert.False(service.ReportValueChanges);
+    }
+
     // A JS runtime that returns defaults. The module is never loaded in these tests, so its members
     // are not actually invoked — this just satisfies the constructor dependency.
     private sealed class NoopJsRuntime : IJSRuntime

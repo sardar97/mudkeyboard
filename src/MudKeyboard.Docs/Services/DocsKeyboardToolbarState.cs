@@ -12,9 +12,41 @@ public sealed class DocsKeyboardToolbarState
 {
     private KeyboardAction _visibleActions = KeyboardAction.All;
     private KeyboardAction _disabledActions = KeyboardAction.None;
+    private bool _showValuePreview;
+    private bool _showBackdrop;
+    private bool _disableBackdropClick;
+    private bool _sound;
 
     /// <summary>Raised whenever the toolbar settings change, so the layout host re-renders.</summary>
     public event Action? Changed;
+
+    /// <summary>Whether the docked keyboard shows the live value-preview bar. Bound to <c>MudKeyboardHost.ShowValuePreview</c>.</summary>
+    public bool ShowValuePreview
+    {
+        get => _showValuePreview;
+        set => Set(ref _showValuePreview, value);
+    }
+
+    /// <summary>Whether a dimming backdrop is shown behind the docked keyboard. Bound to <c>MudKeyboardHost.ShowBackdrop</c>.</summary>
+    public bool ShowBackdrop
+    {
+        get => _showBackdrop;
+        set => Set(ref _showBackdrop, value);
+    }
+
+    /// <summary>Whether backdrop clicks are ignored (showing a Cancel button instead). Bound to <c>MudKeyboardHost.DisableBackdropClick</c>.</summary>
+    public bool DisableBackdropClick
+    {
+        get => _disableBackdropClick;
+        set => Set(ref _disableBackdropClick, value);
+    }
+
+    /// <summary>Whether the docked keyboard plays a click sound on key press. Bound to <c>MudKeyboardHost.Sound</c>.</summary>
+    public bool Sound
+    {
+        get => _sound;
+        set => Set(ref _sound, value);
+    }
 
     /// <summary>Which toolbar buttons the docked keyboard renders. Bound to <c>MudKeyboardHost.VisibleActions</c>.</summary>
     public KeyboardAction VisibleActions
@@ -44,14 +76,29 @@ public sealed class DocsKeyboardToolbarState
     public void SetDisabled(KeyboardAction action, bool disabled) =>
         DisabledActions = disabled ? _disabledActions | action : _disabledActions & ~action;
 
-    /// <summary>Restores the defaults (all buttons visible, none disabled).</summary>
+    /// <summary>Restores the defaults (all buttons visible, none disabled, new features off).</summary>
     public void Reset()
     {
         _disabledActions = KeyboardAction.None;
-        VisibleActions = KeyboardAction.All;
+        _showValuePreview = false;
+        _showBackdrop = false;
+        _disableBackdropClick = false;
+        _sound = false;
+        VisibleActions = KeyboardAction.All; // raises Changed
     }
 
     private void Set(ref KeyboardAction field, KeyboardAction value)
+    {
+        if (field == value)
+        {
+            return;
+        }
+
+        field = value;
+        Changed?.Invoke();
+    }
+
+    private void Set(ref bool field, bool value)
     {
         if (field == value)
         {

@@ -36,6 +36,10 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     // from the field's value on focus, so re-formatting after each keypress keeps the sign.
     private bool _moneyNegative;
 
+    // Backing field for ReportValueChanges; mirrored into the JS shim so it knows whether to push value
+    // changes back for the live preview bar.
+    private bool _reportValueChanges;
+
     /// <summary>Creates the service. <paramref name="js"/> and <paramref name="options"/> are injected.</summary>
     /// <param name="js">The JS runtime used to load and call the focus-capture module.</param>
     /// <param name="options">Global keyboard configuration.</param>
@@ -57,6 +61,43 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// <see cref="MudKeyboard.Components.MudKeyboardHost"/> from its <c>AllowNegative</c> parameter.
     /// </summary>
     public bool AllowNegativeDefault { get; set; }
+
+    /// <summary>
+    /// Whether the focused field's value should be reported back from JS on every change, so the docked
+    /// keyboard can show a live value-preview bar. Set by <see cref="MudKeyboard.Components.MudKeyboardHost"/>
+    /// from its <c>ShowValuePreview</c> parameter; passed to the JS shim at <see cref="InitializeAsync"/>,
+    /// and pushed to it again whenever it changes after the module has loaded (so toggling the preview at
+    /// runtime starts/stops the live reporting).
+    /// </summary>
+    public bool ReportValueChanges
+    {
+        get => _reportValueChanges;
+        set
+        {
+            if (_reportValueChanges == value)
+            {
+                return;
+            }
+
+            _reportValueChanges = value;
+            if (_module is not null)
+            {
+                _ = SyncReportValueAsync(value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The focused field's value at the moment it gained focus. <see cref="CancelAsync"/> restores it so
+    /// the user can abandon their edits. Updated on every focus-in.
+    /// </summary>
+    public string OriginalValue { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// The focused field's current value, kept in sync from JS while <see cref="ReportValueChanges"/> is
+    /// set. Drives the docked keyboard's value-preview bar. Empty before the first focus.
+    /// </summary>
+    public string CurrentValue { get; private set; } = string.Empty;
 
     /// <summary>The base layout to show for the focused field, or <see langword="null"/> before first focus.</summary>
     public KeyboardLayout? CurrentLayout { get; private set; }
@@ -83,7 +124,24 @@ public sealed class KeyboardInteropService : IAsyncDisposable
 
         _module = await _js.InvokeAsync<IJSObjectReference>("import", ModulePath);
         _selfRef = DotNetObjectReference.Create(this);
-        await _module.InvokeVoidAsync("initialize", _selfRef, _options.AttachMode.ToString());
+        await _module.InvokeVoidAsync("initialize", _selfRef, _options.AttachMode.ToString(), _reportValueChanges);
+    }
+
+    // Push the current value-reporting flag to the JS shim. Used when ReportValueChanges is toggled after
+    // the module has already loaded (e.g. the consumer flips ShowValuePreview at runtime).
+    private async Task SyncReportValueAsync(bool value)
+    {
+        try
+        {
+            if (_module is not null)
+            {
+                await _module.InvokeVoidAsync("setReportValue", value);
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit already gone — nothing to sync.
+        }
     }
 
     /// <summary>Called from JS when an attachable field gains focus.</summary>
@@ -112,8 +170,29 @@ public sealed class KeyboardInteropService : IAsyncDisposable
         // tapping continues from the shown amount; harmless for non-money layouts, which never read them.
         _moneyDigits = PricepadFormatter.ExtractDigits(currentValue).TrimStart('0');
         _moneyNegative = PricepadFormatter.IsNegative(currentValue);
+        // Remember the value to revert to on Cancel, and seed the live preview so it shows immediately.
+        OriginalValue = currentValue;
+        CurrentValue = currentValue;
         PageMaxZIndex = pageMaxZIndex;
         IsOpen = true;
+        StateChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Called from JS whenever the focused field's value changes (after a keystroke, paste, or the user
+    /// typing on a hardware keyboard) while value reporting is enabled. Keeps <see cref="CurrentValue"/>
+    /// in sync so the docked keyboard's value-preview bar shows the live value.
+    /// </summary>
+    /// <param name="value">The focused field's new value.</param>
+    [JSInvokable]
+    public void OnValueChanged(string value)
+    {
+        if (string.Equals(value, CurrentValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        CurrentValue = value;
         StateChanged?.Invoke();
     }
 
@@ -207,6 +286,27 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     {
         if (_module is not null)
         {
+            await _module.InvokeVoidAsync("blurActive");
+        }
+
+        if (IsOpen)
+        {
+            IsOpen = false;
+            StateChanged?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// Cancels the current edit: restores the focused field to <see cref="OriginalValue"/> (the value it
+    /// held when focus began), then commits and blurs it so the keyboard closes. Used by the docked
+    /// keyboard's Cancel button and its backdrop click. Writing the original value back and re-committing
+    /// keeps non-immediate bindings, <c>EditForm</c> validation and plain forms consistent.
+    /// </summary>
+    public async Task CancelAsync()
+    {
+        if (_module is not null)
+        {
+            await _module.InvokeVoidAsync("setValue", OriginalValue);
             await _module.InvokeVoidAsync("blurActive");
         }
 

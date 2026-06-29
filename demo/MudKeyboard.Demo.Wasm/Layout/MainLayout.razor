@@ -5,8 +5,13 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-@* Global on-screen keyboard: shows automatically when any input is focused. *@
-<MudKeyboardHost />
+@* Global on-screen keyboard: shows automatically when any input is focused. ShowValuePreview shows the
+   focused field's live value at the top; ShowBackdrop dims the page; DisableBackdropClick keeps it open
+   until Cancel/⏎/⌄ (and shows the Cancel button); Sound plays a click on every key — all opt-in. *@
+<MudKeyboardHost ShowValuePreview="true"
+                 ShowBackdrop="true"
+                 DisableBackdropClick="true"
+                 Sound="true" />
 
 <MudLayout>
     <MudAppBar Elevation="1">

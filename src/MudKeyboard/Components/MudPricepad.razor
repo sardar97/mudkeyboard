@@ -2,7 +2,7 @@
 
 <MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0"
           role="group" aria-label="@EffectiveAriaLabel">
-    <KeyGrid Keys="_keys" Disabled="Disabled" OnKeyPress="@HandleKeyPressAsync" />
+    <KeyGrid Keys="_keys" Disabled="Disabled" Sound="@Sound" SoundSrc="@SoundSrc" OnKeyPress="@HandleKeyPressAsync" />
 </MudPaper>
 
 @code {
@@ -31,6 +31,18 @@
 
     /// <summary>Disables every key.</summary>
     [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>
+    /// When <see langword="true"/>, a short click sound plays on every key press. Played via a
+    /// Blazor-rendered <c>&lt;audio&gt;</c> element — no JavaScript. Default <see langword="false"/>.
+    /// </summary>
+    [Parameter] public bool Sound { get; set; }
+
+    /// <summary>
+    /// Optional source for the click sound (any URL or <c>data:</c> URI). When unset the built-in
+    /// synthesised click is used. Ignored unless <see cref="Sound"/> is set.
+    /// </summary>
+    [Parameter] public string? SoundSrc { get; set; }
 
     /// <summary>Raised when the Enter key is pressed.</summary>
     [Parameter] public EventCallback OnEnter { get; set; }

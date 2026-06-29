@@ -200,4 +200,127 @@ public class MudKeyboardHostTests : MudComponentTestContext, IAsyncLifetime
 
         cut.WaitForAssertion(() => Assert.DoesNotContain("mudkeyboard-dock--open", cut.Markup));
     }
+
+    [Fact]
+    public void ShowValuePreview_ShowsTheFocusedFieldsCurrentValueAtTheTop()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.ShowValuePreview, true));
+
+        // Focusing a field that already contains "sardar" seeds the preview bar with it.
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+
+        cut.WaitForAssertion(() =>
+            Assert.Equal("sardar", cut.Find(".mudkeyboard-dock__preview-text").TextContent.Trim()));
+    }
+
+    [Fact]
+    public void ShowValuePreview_PreviewBarTracksLiveValueChanges()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.ShowValuePreview, true));
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sar"));
+
+        // A value change reported from JS flows into the preview bar.
+        cut.InvokeAsync(() => interop.OnValueChanged("sardar"));
+
+        cut.WaitForAssertion(() =>
+            Assert.Equal("sardar", cut.Find(".mudkeyboard-dock__preview-text").TextContent.Trim()));
+    }
+
+    [Fact]
+    public void WithoutShowValuePreview_NoPreviewBarIsRendered()
+    {
+        var (cut, interop) = RenderHost();
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("mudkeyboard-dock--open", cut.Markup);
+            Assert.Empty(cut.FindAll(".mudkeyboard-dock__preview"));
+        });
+    }
+
+    [Fact]
+    public void ShowBackdrop_RendersTheBackdrop_OnlyWhileOpen()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.ShowBackdrop, true));
+
+        // Closed: no backdrop.
+        Assert.Empty(cut.FindAll(".mudkeyboard-backdrop"));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000));
+
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".mudkeyboard-backdrop")));
+    }
+
+    [Fact]
+    public void BackdropClick_CancelsAndClosesThePanel()
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.ShowBackdrop, true));
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+        cut.WaitForAssertion(() => Assert.Contains("mudkeyboard-dock--open", cut.Markup));
+
+        cut.Find(".mudkeyboard-backdrop").Click();
+
+        cut.WaitForAssertion(() => Assert.DoesNotContain("mudkeyboard-dock--open", cut.Markup));
+    }
+
+    [Fact]
+    public void DisableBackdropClick_KeepsThePanelOpenOnBackdropClick_AndShowsACancelButton()
+    {
+        var (cut, interop) = RenderHost(p => p
+            .Add(c => c.ShowValuePreview, true)
+            .Add(c => c.ShowBackdrop, true)
+            .Add(c => c.DisableBackdropClick, true));
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+        cut.WaitForAssertion(() => Assert.Contains("mudkeyboard-dock--open", cut.Markup));
+
+        // The Cancel button is shown (only in this configuration) and the backdrop click no longer closes.
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".mudkeyboard-dock__preview .mud-button-root")));
+        cut.Find(".mudkeyboard-backdrop").Click();
+
+        cut.WaitForAssertion(() => Assert.Contains("mudkeyboard-dock--open", cut.Markup));
+    }
+
+    [Fact]
+    public void CancelButton_RevertsAndClosesThePanel()
+    {
+        var (cut, interop) = RenderHost(p => p
+            .Add(c => c.ShowValuePreview, true)
+            .Add(c => c.ShowBackdrop, true)
+            .Add(c => c.DisableBackdropClick, true));
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+        cut.WaitForAssertion(() => Assert.Contains("mudkeyboard-dock--open", cut.Markup));
+
+        cut.Find(".mudkeyboard-dock__preview .mud-button-root").Click();
+
+        cut.WaitForAssertion(() => Assert.DoesNotContain("mudkeyboard-dock--open", cut.Markup));
+    }
+
+    [Fact]
+    public void CancelButton_NotShown_WhenBackdropClickIsEnabled()
+    {
+        var (cut, interop) = RenderHost(p => p
+            .Add(c => c.ShowValuePreview, true)
+            .Add(c => c.ShowBackdrop, true));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+
+        // A backdrop click already cancels here, so no Cancel button is rendered in the preview bar.
+        cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(".mudkeyboard-dock__preview .mud-button-root")));
+    }
+
+    [Fact]
+    public void CustomCancelLabel_IsRendered()
+    {
+        var (cut, interop) = RenderHost(p => p
+            .Add(c => c.ShowValuePreview, true)
+            .Add(c => c.DisableBackdropClick, true)
+            .Add(c => c.CancelLabel, "Abandon"));
+
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000, "sardar"));
+
+        cut.WaitForAssertion(() =>
+            Assert.Equal("Abandon", cut.Find(".mudkeyboard-dock__preview .mud-button-root").TextContent.Trim()));
+    }
 }

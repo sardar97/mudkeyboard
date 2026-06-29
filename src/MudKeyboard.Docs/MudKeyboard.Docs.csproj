@@ -11,7 +11,7 @@
         <!-- The website's own version. Surfaced in the footer and on the Releases page via BuildInfo,
              which reads it from this assembly's AssemblyInformationalVersion. Bump on notable docs
              updates. (The documented package version lives in src/MudKeyboard/MudKeyboard.csproj.) -->
-        <Version>1.0.0</Version>
+        <Version>1.1.0</Version>
 
     </PropertyGroup>
 

@@ -24,7 +24,14 @@
    it a circuit that persists across navigations and stays interactive even when the page on screen is
    statically server-rendered — so the on-screen keyboard pops up for focused inputs on every page,
    regardless of that page's render mode. Place it once, here. *@
-<MudKeyboardHost @rendermode="InteractiveServer"/>
+@* ShowValuePreview shows the focused field's live value at the top of the keyboard; ShowBackdrop dims
+   the page behind it; DisableBackdropClick keeps it open until you press Cancel/⏎/⌄ (and shows the
+   Cancel button); Sound plays a click on every key — all opt-in, demonstrated here together. *@
+<MudKeyboardHost @rendermode="InteractiveServer"
+                 ShowValuePreview="true"
+                 ShowBackdrop="true"
+                 DisableBackdropClick="true"
+                 Sound="true" />
 
 <ReconnectModal/>
 <script src="@Assets["_framework/blazor.web.js"]"></script>

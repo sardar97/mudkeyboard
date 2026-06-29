@@ -10,6 +10,20 @@
    the host is placed once. *@
 <link rel="stylesheet" href="_content/MudKeyboard/MudKeyboard.css" />
 
+@* Optional dimming backdrop behind the dock (opt-in via ShowBackdrop). Rendered just below the dock
+   in z-order and only while the panel is open. A click cancels the edit (reverts to the value the
+   field had at focus-in) unless DisableBackdropClick is set, in which case it does nothing and a
+   Cancel button is shown in the preview bar instead. mousedown:preventDefault keeps the focused field
+   focused so the cancel/revert logic — not a stray blur — controls the close. *@
+@if (ShowBackdrop && Interop.IsOpen)
+{
+    <div class="mudkeyboard-backdrop"
+         style="z-index:@DockZIndex"
+         @onmousedown:preventDefault="true"
+         @onclick="HandleBackdropClickAsync"
+         aria-hidden="true"></div>
+}
+
 @* Place ONCE in your layout. The container is always present (off-screen) so the slide-up
    transition animates whenever the --open class is toggled; the keyboard inside it renders once a
    field is focused. mousedown:preventDefault keeps the focused field focused while keys are tapped,
@@ -30,6 +44,25 @@
         <MudPaper Elevation="@Elevation"
                   Class="pa-2"
                   Style="@PanelStyle">
+            @* Value-preview / edit bar (opt-in via ShowValuePreview). Shows the focused field's live
+               value at the top of the keyboard so the user can see what they are editing; the keys edit
+               it live and Cancel reverts. aria-live announces value changes to assistive tech. The
+               Cancel button appears only when the backdrop click is disabled (DisableBackdropClick),
+               since otherwise the backdrop click already provides a way to cancel. *@
+            @if (ShowValuePreview)
+            {
+                <div class="mudkeyboard-dock__preview" role="status" aria-live="polite" aria-label="Current value">
+                    <span class="mudkeyboard-dock__preview-text">@Interop.CurrentValue</span>
+                    @if (ShowCancelButton)
+                    {
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Default"
+                                   Class="mudkeyboard-dock__cancel"
+                                   OnClick="@CancelAsync"
+                                   aria-label="Cancel and revert">@CancelLabel</MudButton>
+                    }
+                </div>
+            }
             @* Toolbar labels use the native title attribute rather than MudTooltip. MudTooltip needs a
                MudPopoverProvider in scope, but this host is designed to be placed in its own interactive
                island (in App.razor, outside <Routes>) so the docked keyboard works on static-SSR pages —
@@ -104,6 +137,8 @@
                          SymbolLayout="Interop.CurrentSymbolLayout"
                          Palette="Palette"
                          DropShadow="false"
+                         Sound="@Sound"
+                         SoundSrc="@SoundSrc"
                          AriaLabel="Keyboard keys"
                          OnInput="@HandleInputAsync" />
         </MudPaper>
@@ -153,7 +188,49 @@
     /// </summary>
     [Parameter] public bool AllowNegative { get; set; }
 
+    /// <summary>
+    /// When <see langword="true"/>, the docked keyboard shows a value-preview bar at the top displaying the
+    /// focused field's live value, so the user can see exactly what they are editing. The keys edit it live;
+    /// a Cancel button or a backdrop click reverts to the value the field had when it was focused. Default
+    /// <see langword="false"/>.
+    /// </summary>
+    [Parameter] public bool ShowValuePreview { get; set; }
+
+    /// <summary>
+    /// When <see langword="true"/>, a dimming backdrop is shown behind the docked keyboard while it is open.
+    /// Clicking it cancels the edit (reverts to the focused field's value at focus-in) and closes the
+    /// keyboard — unless <see cref="DisableBackdropClick"/> is set. Default <see langword="false"/>.
+    /// </summary>
+    [Parameter] public bool ShowBackdrop { get; set; }
+
+    /// <summary>
+    /// When <see langword="true"/>, clicking the backdrop no longer dismisses the keyboard; instead a
+    /// <strong>Cancel</strong> button is shown in the value-preview bar (so <see cref="ShowValuePreview"/>
+    /// must also be set for the button to appear). Use this when you want the docked keyboard to stay open
+    /// until the user explicitly confirms (Enter / Hide) or cancels. Default <see langword="false"/>.
+    /// </summary>
+    [Parameter] public bool DisableBackdropClick { get; set; }
+
+    /// <summary>Text for the Cancel button shown in the value-preview bar. Default <c>"Cancel"</c>.</summary>
+    [Parameter] public string CancelLabel { get; set; } = "Cancel";
+
+    /// <summary>
+    /// When <see langword="true"/>, the docked keyboard plays a short click sound on every key press,
+    /// rendered via a Blazor <c>&lt;audio&gt;</c> element (no JavaScript). Default <see langword="false"/>.
+    /// </summary>
+    [Parameter] public bool Sound { get; set; }
+
+    /// <summary>
+    /// Optional source for the click sound (any URL or <c>data:</c> URI). When unset the built-in
+    /// synthesised click is used. Ignored unless <see cref="Sound"/> is set.
+    /// </summary>
+    [Parameter] public string? SoundSrc { get; set; }
+
     private string PanelStyle => $"border-radius:16px 16px 0 0;{Style}";
+
+    // The Cancel button only makes sense when the preview bar exists and the backdrop click is disabled —
+    // otherwise a backdrop click already cancels, or there is no preview bar to host the button.
+    private bool ShowCancelButton => ShowValuePreview && DisableBackdropClick;
 
     private bool IsActionVisible(KeyboardAction action) => (VisibleActions & action) != 0;
 
@@ -173,9 +250,14 @@
 
     protected override void OnInitialized() => Interop.StateChanged += OnStateChanged;
 
-    // Propagate the global AllowNegative default to the interop service so it applies to focused fields
-    // that don't carry a data-mudkeyboard-allow-negative attribute of their own.
-    protected override void OnParametersSet() => Interop.AllowNegativeDefault = AllowNegative;
+    // Propagate host-level defaults to the interop service: the AllowNegative default for focused fields
+    // without a data-mudkeyboard-allow-negative attribute, and whether the JS shim should report value
+    // changes back so the preview bar can mirror the field live.
+    protected override void OnParametersSet()
+    {
+        Interop.AllowNegativeDefault = AllowNegative;
+        Interop.ReportValueChanges = ShowValuePreview;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -260,6 +342,13 @@
     }
 
     private Task HideAsync() => Interop.CloseAsync();
+
+    // Cancel the edit: revert the focused field to its value at focus-in and close. Used by both the
+    // Cancel button and an (enabled) backdrop click.
+    private Task CancelAsync() => Interop.CancelAsync();
+
+    // A backdrop click cancels unless the consumer disabled it (in which case the Cancel button is shown).
+    private Task HandleBackdropClickAsync() => DisableBackdropClick ? Task.CompletedTask : CancelAsync();
 
     private Task ClearAsync() => Interop.ClearAsync().AsTask();
 

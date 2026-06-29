@@ -14,7 +14,11 @@
    parameters are driven by DocsKeyboardToolbarState so the live "Toolbar buttons" example on that page
    can show/hide/disable buttons on this one global host. *@
 <MudKeyboardHost VisibleActions="@ToolbarState.VisibleActions"
-                 DisabledActions="@ToolbarState.DisabledActions" />
+                 DisabledActions="@ToolbarState.DisabledActions"
+                 ShowValuePreview="@ToolbarState.ShowValuePreview"
+                 ShowBackdrop="@ToolbarState.ShowBackdrop"
+                 DisableBackdropClick="@ToolbarState.DisableBackdropClick"
+                 Sound="@ToolbarState.Sound" />
 
 @* Keyboard users can skip the app bar and navigation and jump straight to the page content.
    Hidden off-screen until focused (see .docs-skip-link in docs.css). *@

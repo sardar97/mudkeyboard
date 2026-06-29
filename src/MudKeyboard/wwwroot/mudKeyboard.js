@@ -6,8 +6,10 @@
 // at the caret. It exposes a tiny API consumed by KeyboardInteropService over JS interop.
 //
 // Contract:
-//   initialize(dotnetRef, attachMode) — start listening; calls back .NET OnFocusIn / OnFocusOut
-//   insertText(text), backspace(), enter(), blurActive() — edit the active field
+//   initialize(dotnetRef, attachMode, reportValue) — start listening; calls back .NET OnFocusIn /
+//       OnFocusOut, and (when reportValue is set) OnValueChanged on every edit so the host can show a
+//       live value-preview bar
+//   insertText(text), backspace(), enter(), setValue(text), blurActive() — edit the active field
 //   dispose() — stop listening
 //
 // No bundler, no dependencies — a plain ES module served from _content/MudKeyboard/mudKeyboard.js.
@@ -16,12 +18,16 @@ let dotnet = null;
 let attachMode = 'AllInputs'; // 'AllInputs' (opt-out) | 'OptIn'
 let activeEl = null;
 let closing = 0;
+// When true, the focused field's value is pushed back to .NET (OnValueChanged) on every change so the
+// docked keyboard can show a live value-preview bar. Off unless MudKeyboardHost.ShowValuePreview is set.
+let reportValue = false;
 
 // Input types we treat as free-text editable. Pickers (date/color/checkbox/file/range…) are
 // excluded — an on-screen text keyboard cannot meaningfully drive them.
 const TEXT_TYPES = new Set(['text', 'search', 'email', 'url', 'tel', 'password', 'number', '']);
 
 const DOCK_SELECTOR = '.mudkeyboard-dock';
+const BACKDROP_SELECTOR = '.mudkeyboard-backdrop';
 
 function isEditable(el) {
     if (!el || el.nodeType !== 1) return false;
@@ -56,6 +62,17 @@ function inferLayout(el) {
 
 function insideDock(el) {
     return !!(el && el.closest && el.closest(DOCK_SELECTOR));
+}
+
+function insideBackdrop(el) {
+    return !!(el && el.closest && el.closest(BACKDROP_SELECTOR));
+}
+
+// Push the focused field's current value to .NET so the value-preview bar can mirror it. One-way and
+// display-only — it never writes back to the field, so it cannot race the field's own re-render.
+function reportValueChanged(el) {
+    if (!reportValue || !dotnet || !el) return;
+    dotnet.invokeMethodAsync('OnValueChanged', el.value ?? '');
 }
 
 // Highest z-index currently used anywhere on the page, ignoring our own dock (which carries the
@@ -131,16 +148,33 @@ function onPointerDownCapture(e) {
     const el = activeEl;
     if (!el) return;
     const target = e && e.target;
-    if (target === el || insideDock(target)) return;
+    // The backdrop is part of the keyboard UI: pressing it cancels (handled in Blazor), so skip the
+    // commit here too — otherwise we would commit the edited value an instant before reverting it.
+    if (target === el || insideDock(target) || insideBackdrop(target)) return;
     commitField(el);
 }
 
-export function initialize(dotnetRef, mode) {
+// Mirror hardware-keyboard typing into the value-preview bar: when the user types into the focused
+// field directly (not via the on-screen keys), report the new value too.
+function onInputCapture(e) {
+    if (reportValue && activeEl && e && e.target === activeEl) {
+        reportValueChanged(activeEl);
+    }
+}
+
+export function initialize(dotnetRef, mode, report) {
     dotnet = dotnetRef;
     if (mode) attachMode = mode;
+    reportValue = !!report;
     document.addEventListener('focusin', onFocusIn, true);
     document.addEventListener('focusout', onFocusOut, true);
     document.addEventListener('pointerdown', onPointerDownCapture, true);
+    document.addEventListener('input', onInputCapture, true);
+}
+
+// Turn live value reporting on/off after initialize (the host toggling ShowValuePreview at runtime).
+export function setReportValue(value) {
+    reportValue = !!value;
 }
 
 export function insertText(text) {
@@ -274,6 +308,7 @@ export function dispose() {
     document.removeEventListener('focusin', onFocusIn, true);
     document.removeEventListener('focusout', onFocusOut, true);
     document.removeEventListener('pointerdown', onPointerDownCapture, true);
+    document.removeEventListener('input', onInputCapture, true);
     dotnet = null;
     activeEl = null;
 }

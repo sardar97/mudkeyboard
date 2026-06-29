@@ -218,6 +218,59 @@
 </MudPaper>
 <CodeBlock Language="razor" Code="@ToolbarCode" />
 
+<MudText id="edit-cancel" Typo="Typo.h5" Class="docs-section-title">Value preview, backdrop &amp; cancel</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">ShowValuePreview="true"</code> adds a bar at the top of the docked
+        keyboard showing the focused field's <strong>live value</strong> — so the user always sees what they
+        are editing, even when the field sits behind the panel. Focus a field that already contains text
+        (say <em>"sardar"</em>) and it appears immediately; the keys edit it live.
+    </p>
+    <p>
+        <code class="docs-inline-code">ShowBackdrop="true"</code> dims the page behind the keyboard; a tap on
+        the backdrop <strong>cancels</strong> the edit, reverting the field to the value it held when it was
+        focused. Set <code class="docs-inline-code">DisableBackdropClick="true"</code> to require an explicit
+        choice: the backdrop no longer dismisses and a <strong>Cancel</strong> button appears in the preview
+        bar instead (⏎ commits, ⌄ hides). Rename it with <code class="docs-inline-code">CancelLabel</code>.
+        Everything here is opt-in, so existing apps are unaffected.
+    </p>
+</div>
+<MudPaper Class="pa-4 mb-3" Outlined="true">
+    <div class="d-flex justify-space-between align-center mb-2 flex-wrap" style="gap:.5rem">
+        <MudText Typo="Typo.subtitle2">Live options — then focus a field at the top of this page</MudText>
+        <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Restore"
+                   OnClick="@(() => Toolbar.Reset())">Reset</MudButton>
+    </div>
+    <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="4">
+        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowValuePreview"
+                   ValueChanged="@(v => Toolbar.ShowValuePreview = v)" Label="Value preview" />
+        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowBackdrop"
+                   ValueChanged="@(v => Toolbar.ShowBackdrop = v)" Label="Backdrop" />
+        <MudSwitch T="bool" Color="Color.Secondary" Value="@Toolbar.DisableBackdropClick"
+                   ValueChanged="@(v => Toolbar.DisableBackdropClick = v)" Label="Disable backdrop click (show Cancel)" />
+        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.Sound"
+                   ValueChanged="@(v => Toolbar.Sound = v)" Label="Key click sound" />
+    </MudStack>
+</MudPaper>
+<CodeBlock Language="razor" Code="@PreviewCode" />
+
+<MudText id="sound" Typo="Typo.h5" Class="docs-section-title">Key click sound</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">Sound="true"</code> plays a short click on every key press. It is a
+        Blazor-rendered <code class="docs-inline-code">&lt;audio&gt;</code> element — <strong>no JavaScript</strong> —
+        so the same parameter works on the docked keyboard and the inline
+        <MudLink Href="components/keyboard">MudKeyboard</MudLink>,
+        <MudLink Href="components/numpad">MudNumpad</MudLink> and
+        <MudLink Href="components/pricepad">MudPricepad</MudLink>. Point
+        <code class="docs-inline-code">SoundSrc</code> at your own audio file (any URL or
+        <code class="docs-inline-code">data:</code> URI) to replace the built-in click. Toggle it with the
+        switch above, then tap a key. (Browsers only allow sound after the first user interaction, so the
+        very first tap on a fresh page may be silent.)
+    </p>
+</div>
+<CodeBlock Language="razor" Code="@SoundCode" />
+
 <MudText id="parameters" Typo="Typo.h5" Class="docs-section-title">MudKeyboardHost parameters</MudText>
 <ParamTable Members="HostParameters" />
 
@@ -309,6 +362,24 @@
 
 @* …or enable ± for every numeric docked field at once: *@
 <MudKeyboardHost AllowNegative="true" />
+""";
+
+    private const string PreviewCode = """
+@* Show the live value at the top of the docked keyboard, dim the page, and require an explicit
+   Cancel / confirm (the backdrop no longer dismisses). All opt-in. *@
+<MudKeyboardHost ShowValuePreview="true"
+                 ShowBackdrop="true"
+                 DisableBackdropClick="true"
+                 CancelLabel="Cancel" />
+""";
+
+    private const string SoundCode = """
+@* A click on every key press — pure Blazor <audio>, no JavaScript. The same Sound / SoundSrc
+   parameters exist on the inline MudKeyboard / MudNumpad / MudPricepad too. *@
+<MudKeyboardHost Sound="true" />
+
+@* Inline, with your own sound file: *@
+<MudNumpad @bind-Value="_qty" Sound="true" SoundSrc="/sounds/tap.mp3" />
 """;
 
     private const string ValidationCode = """
@@ -409,5 +480,11 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("VisibleActions", "KeyboardAction", "All", "Which toolbar buttons render (Clear, Copy, Paste, the cursor arrows, Hide). A [Flags] set: remove buttons with & ~, or use None to drop the whole toolbar."),
         new("DisabledActions", "KeyboardAction", "None", "Which toolbar buttons render greyed-out and non-interactive. A [Flags] set; hiding via VisibleActions wins over disabling."),
         new("AllowNegative", "bool", "false", "Global default for whether numeric keypads show the ± sign-toggle key. A field's data-mudkeyboard-allow-negative (or MudKeyboardNumericField.AllowNegative) overrides it."),
+        new("ShowValuePreview", "bool", "false", "Shows a bar at the top of the docked keyboard with the focused field's live value. Edits apply live; Cancel reverts to the value the field had at focus-in."),
+        new("ShowBackdrop", "bool", "false", "Dims the page behind the docked keyboard while it is open. A backdrop click cancels (reverts) and closes — unless DisableBackdropClick is set."),
+        new("DisableBackdropClick", "bool", "false", "Backdrop clicks no longer dismiss the keyboard; instead a Cancel button is shown in the value-preview bar (so ShowValuePreview must also be set for the button to appear)."),
+        new("CancelLabel", "string", "\"Cancel\"", "Text for the Cancel button in the value-preview bar."),
+        new("Sound", "bool", "false", "Plays a short click sound on every key press, via a Blazor <audio> element (no JavaScript)."),
+        new("SoundSrc", "string?", "null", "Custom click-sound source (URL or data: URI). Defaults to the built-in synthesised click. Ignored unless Sound is set."),
     ];
 }

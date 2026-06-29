@@ -142,6 +142,8 @@ All three are render-mode agnostic but **need an interactive render mode** on th
 | `MaxLength` | `int?` | `null` | Caps the value length. |
 | `Disabled` | `bool` | `false` | Disables every key. |
 | `DropShadow` | `bool` | `true` | `false` = flat keys. |
+| `Sound` | `bool` | `false` | Click sound on key press (pure-Blazor `<audio>`, no JS). |
+| `SoundSrc` | `string?` | `null` | Custom click-sound source; defaults to the built-in click. |
 | `Palette` | `KeyboardPalette?` | `null` | Per-keyboard colour overrides. |
 | `AriaLabel` | `string?` | `"On-screen keyboard"` | Accessible name of the `role="group"`. |
 | `Class` / `Style` | `string?` | `null` | Passthrough CSS. |
@@ -157,8 +159,9 @@ All three are render-mode agnostic but **need an interactive render mode** on th
 ```
 
 Parameters: `Value`/`ValueChanged`, `AllowDecimal` (bool), `AllowNegative` (bool, default `false` — adds a
-`±` sign-toggle key for negative numbers), `MaxLength`, `Disabled`, `OnEnter`, `Palette`,
-`AriaLabel` (default `"Numeric keypad"`), `Class`, `Style`.
+`±` sign-toggle key for negative numbers), `MaxLength`, `Disabled`, `Sound` (bool) + `SoundSrc`
+(`string?`, key-click sound, no JS), `OnEnter`, `Palette`, `AriaLabel` (default `"Numeric keypad"`),
+`Class`, `Style`.
 
 ### MudPricepad (pence-first currency)
 
@@ -171,7 +174,8 @@ Typing `5`, `2`, `3` yields `£5.23` — the last `DecimalPlaces` digits are alw
 
 Parameters: `Value`/`ValueChanged`, `CurrencySymbol` (default `"£"`), `DecimalPlaces` (default `2`),
 `AllowNegative` (bool, default `false` — adds a `±` key that flips the sign, e.g. `-£1.23`),
-`MaxLength`, `Disabled`, `OnEnter`, `Palette`, `AriaLabel` (default `"Price entry keypad"`), `Class`, `Style`.
+`MaxLength`, `Disabled`, `Sound` (bool) + `SoundSrc` (`string?`, key-click sound, no JS), `OnEnter`,
+`Palette`, `AriaLabel` (default `"Price entry keypad"`), `Class`, `Style`.
 
 ---
 
@@ -328,6 +332,25 @@ toolbar with `VisibleActions="KeyboardAction.None"`, or grey one out with
 `MudKeyboardHost` also has `AllowNegative` (`bool`, default `false`) — a global default for showing the
 `±` sign-toggle key on the numeric keypads. Override it per field with
 `data-mudkeyboard-allow-negative="true"`/`"false"`, which `MudKeyboardNumericField.AllowNegative` emits.
+
+### Value preview, backdrop, cancel & sound (all opt-in, new in 1.2.0)
+
+- `ShowValuePreview` (`bool`, default `false`) — show a bar at the top of the docked keyboard with the
+  focused field's **live value**, so the user always sees what they're editing (useful when the field is
+  hidden behind the panel). Editing is live; a focused field that already contains text shows it at once.
+- `ShowBackdrop` (`bool`, default `false`) — dim the page behind the keyboard. A backdrop click
+  **cancels** the edit, reverting the field to the value it had at focus-in, and closes.
+- `DisableBackdropClick` (`bool`, default `false`) — stop the backdrop dismissing; instead show a
+  **Cancel** button in the preview bar (so the keyboard stays open until ⏎ / the ⌄ Hide button confirms,
+  or Cancel reverts). `CancelLabel` (`string`, default `"Cancel"`) renames it.
+- `Sound` (`bool`, default `false`) + `SoundSrc` (`string?`) — play a click on every key press via a
+  Blazor `<audio>` element (no JavaScript). `SoundSrc` overrides the built-in synthesised click with any
+  URL or `data:` URI. The same two parameters exist on the inline `MudKeyboard` / `MudNumpad` /
+  `MudPricepad`.
+
+```razor
+<MudKeyboardHost ShowValuePreview="true" ShowBackdrop="true" DisableBackdropClick="true" Sound="true" />
+```
 
 ### Controlling which fields attach
 
