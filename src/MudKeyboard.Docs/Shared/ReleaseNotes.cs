@@ -68,6 +68,8 @@ public static class ReleaseNotes
             [
                 new ChangeGroup("Added",
                 [
+                    new ChangeItem("Negative numbers on the numeric keypads — an optional ± key (#3)",
+                        "The number, decimal and money keypads are positive-only by default; opt in to a ± sign-toggle key. Inline MudNumpad/MudPricepad gain an AllowNegative parameter (the pricepad formats negatives as -£1.23, and zero is never shown negative). For the docked keyboard, MudKeyboardNumericField gains AllowNegative per field (via a data-mudkeyboard-allow-negative attribute) with a global MudKeyboardHost.AllowNegative default. Backed by a new {sign} token, signed layout variants and money-formatter sign support — AOT/trim-safe, with runnable examples on the Numpad, Pricepad and Docked keyboard pages."),
                     new ChangeItem("Show, hide or disable any docked-keyboard toolbar button (#5)",
                         "MudKeyboardHost gains VisibleActions (default All) and DisabledActions (default None), both typed as a new [Flags] enum KeyboardAction (Clear, Copy, Paste, CursorLeft, CursorRight, CursorControl, Hide, None, All). Hide a single button with VisibleActions=\"@(KeyboardAction.All & ~KeyboardAction.Paste)\", drop the whole toolbar with KeyboardAction.None, or grey one out with DisabledActions=\"KeyboardAction.Clear\" — globally or one at a time. Hiding wins over disabling, and hiding every action removes the role=\"toolbar\" element entirely."),
                     new ChangeItem("MudKeyboardNumericField",

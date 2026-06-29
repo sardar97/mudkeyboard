@@ -17,6 +17,9 @@ public enum KeyboardInputKind
 
     /// <summary>The Escape key was pressed (dismiss).</summary>
     Escape,
+
+    /// <summary>Toggle the sign of the numeric value (positive ↔ negative).</summary>
+    Sign,
 }
 
 /// <summary>
@@ -41,4 +44,7 @@ public readonly record struct KeyboardInput(KeyboardInputKind Kind, string Text 
 
     /// <summary>An Escape input.</summary>
     public static KeyboardInput Escape { get; } = new(KeyboardInputKind.Escape);
+
+    /// <summary>A sign-toggle input (the <c>±</c> key).</summary>
+    public static KeyboardInput Sign { get; } = new(KeyboardInputKind.Sign);
 }

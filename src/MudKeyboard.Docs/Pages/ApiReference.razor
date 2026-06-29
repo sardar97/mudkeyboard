@@ -145,6 +145,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
     [
         new("Value / ValueChanged", "string", "\"\"", "Two-way bindable value."),
         new("AllowDecimal", "bool", "false", "Shows a '.' key; allows one decimal point."),
+        new("AllowNegative", "bool", "false", "Shows a ± key that toggles a leading minus sign."),
         new("MaxLength", "int?", "null", "Optional cap on value length."),
         new("Disabled", "bool", "false", "Disables every key."),
         new("Palette", "KeyboardPalette?", "null", "Per-numpad colour overrides."),
@@ -158,6 +159,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Value / ValueChanged", "string", "\"\"", "Two-way bindable formatted currency string."),
         new("CurrencySymbol", "string", "\"£\"", "Symbol prefix."),
         new("DecimalPlaces", "int", "2", "Fractional digits."),
+        new("AllowNegative", "bool", "false", "Shows a ± key that flips the amount's sign (-£1.23)."),
         new("MaxLength", "int?", "null", "Cap on entered digits."),
         new("Disabled", "bool", "false", "Disables every key."),
         new("Palette", "KeyboardPalette?", "null", "Per-pricepad colour overrides."),
@@ -174,6 +176,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Style", "string?", "null", "Extra inline styles for the panel."),
         new("VisibleActions", "KeyboardAction", "All", "[Flags] set of toolbar buttons to render. Remove buttons with & ~, or use None to drop the toolbar."),
         new("DisabledActions", "KeyboardAction", "None", "[Flags] set of toolbar buttons to render greyed-out. Hiding via VisibleActions wins over disabling."),
+        new("AllowNegative", "bool", "false", "Global default for showing the ± sign-toggle key on numeric keypads; a field's data-mudkeyboard-allow-negative overrides it."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> LayoutMembers =
@@ -228,11 +231,11 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
 
     private static readonly IReadOnlyList<ApiMember> InputMembers =
     [
-        new("KeyboardInputKind", "enum", "—", "Text, Backspace, Enter, Escape."),
+        new("KeyboardInputKind", "enum", "—", "Text, Backspace, Enter, Escape, Sign."),
         new("KeyboardInput.Kind", "KeyboardInputKind", "—", "What the press represents."),
         new("KeyboardInput.Text", "string", "\"\"", "Literal text when Kind is Text."),
         new("KeyboardInput.Char(text)", "static KeyboardInput", "—", "Creates a literal-text input."),
-        new("KeyboardInput.Backspace / Enter / Escape", "static KeyboardInput", "—", "The command inputs."),
+        new("KeyboardInput.Backspace / Enter / Escape / Sign", "static KeyboardInput", "—", "The command inputs (Sign = ± toggle)."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> TokenMembers =
@@ -243,6 +246,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Shift", "const \"{shift}\"", "One-shot shift / caps lock."),
         new("Caps", "const \"{caps}\"", "Caps lock."),
         new("SymbolToggle", "const \"{sym}\"", "Flip letters ⇄ numbers/symbols."),
+        new("Sign", "const \"{sign}\"", "Toggle a numeric value's sign (±)."),
         new("Escape", "const \"{esc}\"", "Dismiss (raises OnEscape)."),
         new("IsCommand(token)", "static bool", "True when the token is a braced command."),
         new("IsEnter(token)", "static bool", "True when the token is {enter}."),

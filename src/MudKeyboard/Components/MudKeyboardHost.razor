@@ -145,6 +145,14 @@
     /// </summary>
     [Parameter] public KeyboardAction DisabledActions { get; set; } = KeyboardAction.None;
 
+    /// <summary>
+    /// Default for whether numeric keypads (number, decimal and money) show a <c>±</c> sign-toggle key so
+    /// negative values can be entered. Default <see langword="false"/>. A field can override this per field
+    /// with a <c>data-mudkeyboard-allow-negative</c> attribute (which <c>MudKeyboardNumericField.AllowNegative</c>
+    /// emits).
+    /// </summary>
+    [Parameter] public bool AllowNegative { get; set; }
+
     private string PanelStyle => $"border-radius:16px 16px 0 0;{Style}";
 
     private bool IsActionVisible(KeyboardAction action) => (VisibleActions & action) != 0;
@@ -154,19 +162,20 @@
     // Sit one above the highest layer on the page when opened (e.g. a dialog), but never below the floor.
     private int DockZIndex => Math.Max(Interop.PageMaxZIndex + 1, MinZIndex);
 
-    // The numeric/money keypads are the built-in numpad layouts; everything else (QWERTY, custom) is text.
-    private bool IsKeypad =>
-        ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.Numpad)
-        || ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.NumpadWithDecimal)
-        || ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.Price);
+    // The numeric/money keypads are the built-in numpad layouts (signed or not); everything else is text.
+    private bool IsKeypad => LayoutLibrary.IsKeypad(Interop.CurrentLayout);
 
     // The money keypad enters digits pence-first (no decimal-point key) like MudPricepad.
-    private bool IsMoney => ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.Price);
+    private bool IsMoney => LayoutLibrary.IsMoney(Interop.CurrentLayout);
 
     // Drives the dock width: a roomier panel for the full keyboard, a narrower one for keypads.
     private string DockSizeClass => IsKeypad ? "mudkeyboard-dock--keypad" : "mudkeyboard-dock--text";
 
     protected override void OnInitialized() => Interop.StateChanged += OnStateChanged;
+
+    // Propagate the global AllowNegative default to the interop service so it applies to focused fields
+    // that don't carry a data-mudkeyboard-allow-negative attribute of their own.
+    protected override void OnParametersSet() => Interop.AllowNegativeDefault = AllowNegative;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -225,6 +234,17 @@
                 else
                 {
                     await Interop.BackspaceAsync();
+                }
+
+                break;
+            case KeyboardInputKind.Sign:
+                if (IsMoney)
+                {
+                    await Interop.ToggleMoneySignAsync();
+                }
+                else
+                {
+                    await Interop.ToggleSignAsync();
                 }
 
                 break;

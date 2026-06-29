@@ -106,10 +106,15 @@
     private bool _maxSet;
     private bool _stepSet;
 
+    // Whether the caller explicitly set AllowNegative. Only then is data-mudkeyboard-allow-negative emitted,
+    // so that leaving it unset lets the host's global MudKeyboardHost.AllowNegative default apply, while
+    // setting it to either true or false overrides that default for this field.
+    private bool _allowNegativeSet;
+
     /// <inheritdoc />
     public override Task SetParametersAsync(ParameterView parameters)
     {
-        _minSet = _maxSet = _stepSet = false;
+        _minSet = _maxSet = _stepSet = _allowNegativeSet = false;
         foreach (var parameter in parameters)
         {
             switch (parameter.Name)
@@ -117,6 +122,7 @@
                 case nameof(Min): _minSet = true; break;
                 case nameof(Max): _maxSet = true; break;
                 case nameof(Step): _stepSet = true; break;
+                case nameof(AllowNegative): _allowNegativeSet = true; break;
             }
         }
 
@@ -145,6 +151,13 @@
     /// decimal keypad, integer types → plain numpad.
     /// </summary>
     [Parameter] public string DockedKeyboardLayout { get; set; } = string.Empty;
+
+    /// <summary>
+    /// When <see langword="true"/>, the docked numeric keypad for this field shows a <c>±</c> sign-toggle
+    /// key (emitting <c>data-mudkeyboard-allow-negative="true"</c>) so negative values can be entered.
+    /// Default <see langword="false"/>. Overrides the global <see cref="MudKeyboardHost.AllowNegative"/>.
+    /// </summary>
+    [Parameter] public bool AllowNegative { get; set; }
 
     /// <summary>
     /// Any additional attributes (for example <c>name</c>, <c>autocomplete</c>) or extra
@@ -178,6 +191,12 @@
         }
 
         attributes["data-mudkeyboard-layout"] = ResolvedLayout;
+
+        // Emit the negative opt-in only when explicitly set, so the host's global default applies otherwise.
+        if (_allowNegativeSet)
+        {
+            attributes["data-mudkeyboard-allow-negative"] = AllowNegative ? "true" : "false";
+        }
 
         // Forward numeric bounds only when the caller set them (see _minSet/_maxSet/_stepSet above).
         if (_minSet && Min is not null)

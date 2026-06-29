@@ -35,6 +35,12 @@ public static class KeyTokens
     public const string Escape = "{esc}";
 
     /// <summary>
+    /// Toggles the sign of a numeric value (positive ↔ negative). Token: <c>{sign}</c>. Shown as
+    /// <c>±</c> on the signed numeric keypads; opt-in, so it is absent from the default keypads.
+    /// </summary>
+    public const string Sign = "{sign}";
+
+    /// <summary>
     /// Returns <see langword="true"/> when <paramref name="token"/> is a command token
     /// (wrapped in braces) rather than a literal character.
     /// </summary>

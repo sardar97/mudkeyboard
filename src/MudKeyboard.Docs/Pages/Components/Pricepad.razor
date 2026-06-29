@@ -45,6 +45,23 @@
     </div>
 </ExampleCard>
 
+<MudText id="negative" Typo="Typo.h5" Class="docs-section-title">Allow negative amounts</MudText>
+<div class="docs-prose">
+    <p>
+        Set <code class="docs-inline-code">AllowNegative="true"</code> to show a
+        <code class="docs-inline-code">±</code> key that flips the amount's sign, formatted as
+        <code class="docs-inline-code">-£1.23</code>. Off by default. A zero amount is never shown as
+        negative.
+    </p>
+</div>
+<ExampleCard Title="AllowNegative"
+             Code="@NegativeCode">
+    <MudTextField @bind-Value="_neg" Label="Adjustment" Variant="Variant.Outlined" Immediate="true" />
+    <div style="max-width:320px;">
+        <MudPricepad @bind-Value="_neg" AllowNegative="true" />
+    </div>
+</ExampleCard>
+
 <MudText id="parameters" Typo="Typo.h5" Class="docs-section-title">Parameters</MudText>
 <ParamTable Members="Parameters" />
 
@@ -68,6 +85,7 @@
     private string _price = string.Empty;
     private string _usd = string.Empty;
     private string _yen = string.Empty;
+    private string _neg = string.Empty;
 
     private const string BasicCode = """
 <MudTextField @bind-Value="_price" Label="Price" Variant="Variant.Outlined" Immediate="true" />
@@ -82,11 +100,19 @@
 <MudPricepad @bind-Value="_yen" CurrencySymbol="¥" DecimalPlaces="0" />
 """;
 
+    private const string NegativeCode = """
+@* ± flips the sign → -£1.23 (a zero amount stays positive) *@
+<MudPricepad @bind-Value="_value" AllowNegative="true" />
+
+@code { private string _value = string.Empty; }
+""";
+
     private static readonly IReadOnlyList<ApiMember> Parameters =
     [
         new("Value / ValueChanged", "string", "\"\"", "Two-way bindable formatted currency string (@bind-Value)."),
         new("CurrencySymbol", "string", "\"£\"", "Symbol prefixed to the formatted value."),
         new("DecimalPlaces", "int", "2", "Number of fractional digits the value is formatted with."),
+        new("AllowNegative", "bool", "false", "Shows a ± key that flips the amount's sign (-£1.23)."),
         new("MaxLength", "int?", "null", "Optional cap on the number of entered digits."),
         new("Disabled", "bool", "false", "Disables every key."),
         new("Palette", "KeyboardPalette?", "null", "Per-pricepad colour overrides; unset slots follow the theme."),

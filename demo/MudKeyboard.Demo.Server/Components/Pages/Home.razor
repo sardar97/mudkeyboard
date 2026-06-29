@@ -73,18 +73,18 @@
     </MudPaper>
 
     <MudPaper Class="pa-4" Outlined="true">
-        <MudText Typo="Typo.h6" GutterBottom="true">Numpad · AllowDecimal</MudText>
+        <MudText Typo="Typo.h6" GutterBottom="true">Numpad · AllowDecimal + AllowNegative (±)</MudText>
         <MudTextField @bind-Value="_number" Label="Number" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
         <div style="max-width: 320px">
-            <MudNumpad @bind-Value="_number" AllowDecimal="true" />
+            <MudNumpad @bind-Value="_number" AllowDecimal="true" AllowNegative="true" />
         </div>
     </MudPaper>
 
     <MudPaper Class="pa-4" Outlined="true">
-        <MudText Typo="Typo.h6" GutterBottom="true">Pricepad · £, 2 decimals (pence-first)</MudText>
+        <MudText Typo="Typo.h6" GutterBottom="true">Pricepad · £, 2 decimals (pence-first) + AllowNegative (±)</MudText>
         <MudTextField @bind-Value="_price" Label="Price" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
         <div style="max-width: 320px">
-            <MudPricepad @bind-Value="_price" />
+            <MudPricepad @bind-Value="_price" AllowNegative="true" />
         </div>
     </MudPaper>
 

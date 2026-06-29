@@ -110,6 +110,30 @@
     </p>
 </div>
 
+<MudText id="negative" Typo="Typo.h5" Class="docs-section-title">Negative numbers (the ± key)</MudText>
+<div class="docs-prose">
+    <p>
+        The numeric keypads (number, decimal and money) are positive-only by default. Set
+        <code class="docs-inline-code">AllowNegative="true"</code> to add a <code class="docs-inline-code">±</code>
+        sign-toggle key so a value can be made negative. On <code class="docs-inline-code">MudKeyboardNumericField</code>
+        it is per field (it emits <code class="docs-inline-code">data-mudkeyboard-allow-negative</code>); on a
+        raw field set that attribute yourself; or set <code class="docs-inline-code">AllowNegative</code> on the
+        <code class="docs-inline-code">MudKeyboardHost</code> as a global default for every numeric keypad. The
+        same option exists on the inline <MudLink Href="components/numpad">MudNumpad</MudLink> and
+        <MudLink Href="components/pricepad">MudPricepad</MudLink>.
+    </p>
+</div>
+<ExampleCard Title="± on the docked keypads"
+             Description="Focus a field and tap ± to flip the sign. Works for plain numbers, decimals and pence-first money."
+             Code="@NegativeCode">
+    <MudKeyboardNumericField @bind-Value="_negInt" T="int" AllowNegative="true" DockedKeyboard="true"
+                             Label="Temperature (int → numpad with ±)" Variant="Variant.Outlined" />
+    <MudKeyboardNumericField @bind-Value="_negPrice" T="decimal" Format="N2" AllowNegative="true" DockedKeyboard="true"
+                             Label="Adjustment (decimal → money with ±)" Variant="Variant.Outlined"
+                             Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound" />
+    <MudText Typo="Typo.body2" Class="mt-2">Bound: <b>@_negInt</b> · <b>@_negPrice.ToString("N2")</b></MudText>
+</ExampleCard>
+
 <MudText id="behaviour" Typo="Typo.h5" Class="docs-section-title">Built-in behaviour</MudText>
 <div class="docs-prose">
     <ul>
@@ -272,6 +296,21 @@
         return string.Join(" | ", parts);
     }
 
+    private int _negInt;
+    private decimal _negPrice;
+
+    private const string NegativeCode = """
+@* AllowNegative adds the ± sign-toggle key. Per field on the wrapper, or globally on MudKeyboardHost. *@
+<MudKeyboardNumericField @bind-Value="_negInt" T="int" AllowNegative="true" DockedKeyboard="true" />
+
+<MudKeyboardNumericField @bind-Value="_negPrice" T="decimal" Format="N2" AllowNegative="true"
+                         Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound"
+                         DockedKeyboard="true" />
+
+@* …or enable ± for every numeric docked field at once: *@
+<MudKeyboardHost AllowNegative="true" />
+""";
+
     private const string ValidationCode = """
 @* Non-immediate (the default) + Min/Max. The docked keyboard commits and validates on close, so an
    out-of-range value is clamped when you tap away — exactly like a hardware-keyboard blur. *@
@@ -347,6 +386,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("data-mudkeyboard-ignore", "—", "—", "Never raise the keyboard for this field (AllInputs mode)."),
         new("data-mudkeyboard", "—", "—", "Opt this field in when using KeyboardAttachMode.OptIn."),
         new("data-mudkeyboard-layout=\"…\"", "—", "—", "Force a layout: qwerty, numpad, decimal, or money / price. For numeric fields, MudKeyboardNumericField sets this from the bound type."),
+        new("data-mudkeyboard-allow-negative=\"…\"", "—", "—", "\"true\"/\"false\" to show or hide the ± sign-toggle key on the numeric keypads, overriding the host's AllowNegative default. MudKeyboardNumericField sets this from AllowNegative."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> NumericFieldParameters =
@@ -357,6 +397,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Min / Max / Step", "T?", "null", "Forwarded to MudNumericField."),
         new("DockedKeyboard", "bool", "false", "Adds data-mudkeyboard=\"true\" (needed in OptIn mode)."),
         new("DockedKeyboardLayout", "string", "\"\"", "Overrides the auto layout (money, decimal, numpad, qwerty). Empty = resolve from T."),
+        new("AllowNegative", "bool", "false", "Shows a ± sign-toggle key on the docked keypad so negative values can be entered. Overrides the host's global default for this field."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> HostParameters =
@@ -367,5 +408,6 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Style", "string?", "null", "Extra inline styles appended to the docked panel."),
         new("VisibleActions", "KeyboardAction", "All", "Which toolbar buttons render (Clear, Copy, Paste, the cursor arrows, Hide). A [Flags] set: remove buttons with & ~, or use None to drop the whole toolbar."),
         new("DisabledActions", "KeyboardAction", "None", "Which toolbar buttons render greyed-out and non-interactive. A [Flags] set; hiding via VisibleActions wins over disabling."),
+        new("AllowNegative", "bool", "false", "Global default for whether numeric keypads show the ± sign-toggle key. A field's data-mudkeyboard-allow-negative (or MudKeyboardNumericField.AllowNegative) overrides it."),
     ];
 }

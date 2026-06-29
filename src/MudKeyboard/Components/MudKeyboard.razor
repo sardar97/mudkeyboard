@@ -160,6 +160,17 @@
                 }
 
                 break;
+            case KeyTokens.Sign:
+                if (EmitMode)
+                {
+                    await OnInput.InvokeAsync(KeyboardInput.Sign);
+                }
+                else
+                {
+                    await SetValueAsync(KeyboardEngine.ToggleSign(Value));
+                }
+
+                break;
             default:
                 // Never type an unhandled command token (e.g. a stray {caps} in a custom layout).
                 if (KeyTokens.IsCommand(key.ActionToken))

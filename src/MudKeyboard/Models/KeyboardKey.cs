@@ -51,6 +51,7 @@ public sealed record KeyboardKey(string ActionToken, string DisplayLabel, double
         // The face shows the surface it switches *to*: "ABC" while symbols are visible, "123" otherwise.
         KeyTokens.SymbolToggle => DisplayLabel == "ABC" ? "Letters" : "Numbers and symbols",
         KeyTokens.Escape => "Escape",
+        KeyTokens.Sign => "Toggle sign",
         "00" => "Double zero",
         "." => "Decimal point",
         _ => DisplayLabel,
@@ -75,6 +76,7 @@ public sealed record KeyboardKey(string ActionToken, string DisplayLabel, double
             // Label is mode-dependent ("123" / "ABC"); the engine overrides it per shift/symbol state.
             KeyTokens.SymbolToggle => new KeyboardKey(token, "123", 1.5d),
             KeyTokens.Escape => new KeyboardKey(token, "Esc", 1.5d),
+            KeyTokens.Sign => new KeyboardKey(token, "±", 1.5d),
             _ => new KeyboardKey(token, token, 1.0d),
         };
     }

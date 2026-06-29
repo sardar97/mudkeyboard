@@ -6,8 +6,7 @@
 </MudPaper>
 
 @code {
-    private readonly IReadOnlyList<IReadOnlyList<KeyboardKey>> _keys =
-        KeyboardKey.FromRows(LayoutLibrary.Price.Rows);
+    private IReadOnlyList<IReadOnlyList<KeyboardKey>> _keys = [];
 
     /// <summary>The formatted currency value (for example <c>£1.23</c>), two-way bindable.</summary>
     [Parameter] public string Value { get; set; } = string.Empty;
@@ -17,6 +16,12 @@
 
     /// <summary>Currency symbol prefix. Default <c>£</c>.</summary>
     [Parameter] public string CurrencySymbol { get; set; } = "£";
+
+    /// <summary>
+    /// When <see langword="true"/>, shows a <c>±</c> sign-toggle key so the amount can be made negative
+    /// (formatted as <c>-£1.23</c>). Default <see langword="false"/>.
+    /// </summary>
+    [Parameter] public bool AllowNegative { get; set; }
 
     /// <summary>Number of fractional digits the value is formatted with. Default <c>2</c>.</summary>
     [Parameter] public int DecimalPlaces { get; set; } = 2;
@@ -50,12 +55,20 @@
     /// </summary>
     [Parameter] public KeyboardPalette? Palette { get; set; }
 
+    protected override void OnParametersSet() =>
+        _keys = KeyboardKey.FromRows((AllowNegative ? LayoutLibrary.PriceSigned : LayoutLibrary.Price).Rows);
+
     private async Task HandleKeyPressAsync(KeyboardKey key)
     {
+        // The sign is carried in the formatted Value (a leading "-"); preserve it across digit edits.
+        var negative = PricepadFormatter.IsNegative(Value);
         switch (key.ActionToken)
         {
             case KeyTokens.Enter:
                 await OnEnter.InvokeAsync();
+                break;
+            case KeyTokens.Sign:
+                await SetFormattedAsync(PricepadFormatter.ExtractDigits(Value), !negative);
                 break;
             case KeyTokens.Backspace:
             {
@@ -65,7 +78,7 @@
                     digits = digits[..^1];
                 }
 
-                await SetFormattedAsync(digits);
+                await SetFormattedAsync(digits, negative);
                 break;
             }
             default:
@@ -77,15 +90,15 @@
                     break;
                 }
 
-                await SetFormattedAsync(digits);
+                await SetFormattedAsync(digits, negative);
                 break;
             }
         }
     }
 
-    private async Task SetFormattedAsync(string digits)
+    private async Task SetFormattedAsync(string digits, bool negative)
     {
-        var formatted = PricepadFormatter.Format(digits, CurrencySymbol, DecimalPlaces);
+        var formatted = PricepadFormatter.Format(digits, CurrencySymbol, DecimalPlaces, negative);
         if (string.Equals(formatted, Value, StringComparison.Ordinal))
         {
             return;

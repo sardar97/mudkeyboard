@@ -156,7 +156,8 @@ All three are render-mode agnostic but **need an interactive render mode** on th
 @code { private string _number = string.Empty; }
 ```
 
-Parameters: `Value`/`ValueChanged`, `AllowDecimal` (bool), `MaxLength`, `Disabled`, `OnEnter`, `Palette`,
+Parameters: `Value`/`ValueChanged`, `AllowDecimal` (bool), `AllowNegative` (bool, default `false` — adds a
+`±` sign-toggle key for negative numbers), `MaxLength`, `Disabled`, `OnEnter`, `Palette`,
 `AriaLabel` (default `"Numeric keypad"`), `Class`, `Style`.
 
 ### MudPricepad (pence-first currency)
@@ -169,6 +170,7 @@ Typing `5`, `2`, `3` yields `£5.23` — the last `DecimalPlaces` digits are alw
 ```
 
 Parameters: `Value`/`ValueChanged`, `CurrencySymbol` (default `"£"`), `DecimalPlaces` (default `2`),
+`AllowNegative` (bool, default `false` — adds a `±` key that flips the sign, e.g. `-£1.23`),
 `MaxLength`, `Disabled`, `OnEnter`, `Palette`, `AriaLabel` (default `"Price entry keypad"`), `Class`, `Style`.
 
 ---
@@ -322,6 +324,10 @@ lets you hide or disable any toolbar button — globally or one at a time. Hide 
 `VisibleActions="@(KeyboardAction.All & ~(KeyboardAction.Copy | KeyboardAction.Paste))"`, drop the whole
 toolbar with `VisibleActions="KeyboardAction.None"`, or grey one out with
 `DisabledActions="KeyboardAction.Clear"`. The cursor arrows never appear on the money keypad regardless.
+
+`MudKeyboardHost` also has `AllowNegative` (`bool`, default `false`) — a global default for showing the
+`±` sign-toggle key on the numeric keypads. Override it per field with
+`data-mudkeyboard-allow-negative="true"`/`"false"`, which `MudKeyboardNumericField.AllowNegative` emits.
 
 ### Controlling which fields attach
 

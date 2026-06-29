@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] — 2026-06-29
 
 ### Added
+- **Optional negative-number entry on the numeric keypads — a `±` sign-toggle key**
+  ([#3](https://github.com/sardar97/mudkeyboard/issues/3)). The number, decimal and money keypads are
+  positive-only by default; opt in to a `±` key that flips the sign. Inline:
+  `MudNumpad`/`MudPricepad` gain an **`AllowNegative`** parameter (the pricepad formats negatives as
+  `-£1.23`, and a zero amount is never shown as negative). Docked: `MudKeyboardNumericField` gains
+  **`AllowNegative`** (per field, via a new `data-mudkeyboard-allow-negative` attribute), with a global
+  default on **`MudKeyboardHost.AllowNegative`** for every numeric docked field; a field's attribute
+  overrides the host default either way. Backed by a new `{sign}` key token (`KeyTokens.Sign`), three
+  signed layout variants (`NumpadSigned`, `NumpadWithDecimalSigned`, `PriceSigned`), a
+  `KeyboardInputKind.Sign` emit kind, and sign support in the pence-first money formatter — all
+  AOT/trim-safe. Documented with runnable examples on the *Numpad*, *Pricepad* and *Docked keyboard*
+  pages, demonstrated in both demos, and verified end to end in a real browser.
 - **Show, hide or disable any docked-keyboard toolbar button — globally or one at a time**
   ([#5](https://github.com/sardar97/mudkeyboard/issues/5)). `MudKeyboardHost` gains two parameters,
   `VisibleActions` (default `All`) and `DisabledActions` (default `None`), both typed as a new

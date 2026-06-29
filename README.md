@@ -309,18 +309,20 @@ A runnable example lives in the Server demo at `/components/ssr-login-demo`
 
 ### `<MudNumpad>`
 
-`Value`/`ValueChanged`, `AllowDecimal`, `MaxLength`, `Disabled`, `OnEnter`, `Palette`, `AriaLabel`
-(default `"Numeric keypad"`), `Class`, `Style`.
+`Value`/`ValueChanged`, `AllowDecimal`, `AllowNegative` (adds a `±` sign-toggle key; default `false`),
+`MaxLength`, `Disabled`, `OnEnter`, `Palette`, `AriaLabel` (default `"Numeric keypad"`), `Class`, `Style`.
 
 ### `<MudPricepad>`
 
-`Value`/`ValueChanged`, `CurrencySymbol` (default `£`), `DecimalPlaces` (default `2`), `MaxLength`,
-`Disabled`, `OnEnter`, `Palette`, `AriaLabel` (default `"Price entry keypad"`), `Class`, `Style`.
+`Value`/`ValueChanged`, `CurrencySymbol` (default `£`), `DecimalPlaces` (default `2`), `AllowNegative`
+(adds a `±` key → `-£1.23`; default `false`), `MaxLength`, `Disabled`, `OnEnter`, `Palette`, `AriaLabel`
+(default `"Price entry keypad"`), `Class`, `Style`.
 
 ### `<MudKeyboardHost>`
 
 `Palette`, `Elevation` (default `8`), `MinZIndex` (default `1400`), `Style`, `VisibleActions`
-(`KeyboardAction`, default `All`), `DisabledActions` (`KeyboardAction`, default `None`).
+(`KeyboardAction`, default `All`), `DisabledActions` (`KeyboardAction`, default `None`), `AllowNegative`
+(global default for the `±` sign-toggle key on numeric keypads; default `false`).
 
 `VisibleActions` and `DisabledActions` control the dock's toolbar buttons (Clear, Copy, Paste, the
 cursor arrows, Hide). `KeyboardAction` is a `[Flags]` enum, so you can hide or disable any button —
@@ -362,6 +364,7 @@ integers → plain numpad). Forwards the common numeric parameters (`Value`/`Val
 | --- | --- | --- | --- |
 | `DockedKeyboard` | `bool` | `false` | Adds `data-mudkeyboard="true"` (required in `OptIn` mode). |
 | `DockedKeyboardLayout` | `string` | `""` | Overrides the auto layout (`money`, `decimal`, `numpad`, `qwerty`). Empty = resolve from `T`. |
+| `AllowNegative` | `bool` | `false` | Shows a `±` sign-toggle key on the docked keypad so negative values can be entered (overrides the host's global default for this field). |
 
 ---
 

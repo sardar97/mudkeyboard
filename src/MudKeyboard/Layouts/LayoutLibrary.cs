@@ -1,3 +1,4 @@
+using System.Linq;
 using MudKeyboard.Models;
 
 namespace MudKeyboard.Layouts;
@@ -85,6 +86,37 @@ public static class LayoutLibrary
             [KeyTokens.Enter],
         },
     };
+
+    /// <summary>
+    /// <see cref="Numpad"/> with a <see cref="KeyTokens.Sign"/> (<c>±</c>) key alongside Enter, for
+    /// entering negative numbers. Opt-in (e.g. <c>MudNumpad.AllowNegative</c>).
+    /// </summary>
+    public static KeyboardLayout NumpadSigned { get; } = WithSignKey(Numpad);
+
+    /// <summary><see cref="NumpadWithDecimal"/> with a <see cref="KeyTokens.Sign"/> (<c>±</c>) key alongside Enter.</summary>
+    public static KeyboardLayout NumpadWithDecimalSigned { get; } = WithSignKey(NumpadWithDecimal);
+
+    /// <summary><see cref="Price"/> with a <see cref="KeyTokens.Sign"/> (<c>±</c>) key alongside Enter.</summary>
+    public static KeyboardLayout PriceSigned { get; } = WithSignKey(Price);
+
+    // Returns a copy of a keypad layout with a ± key placed left of the (full-width) Enter key. Keeping
+    // the digit rows untouched avoids crowding the narrow keypad; the sign key sits on the Enter row.
+    private static KeyboardLayout WithSignKey(KeyboardLayout baseLayout)
+    {
+        var rows = baseLayout.Rows.Select(r => r.ToArray()).ToArray();
+        rows[^1] = [KeyTokens.Sign, .. rows[^1]];
+        return new KeyboardLayout { Rows = rows };
+    }
+
+    /// <summary>True when <paramref name="layout"/> is the money/price keypad (signed or not).</summary>
+    internal static bool IsMoney(KeyboardLayout? layout) =>
+        ReferenceEquals(layout, Price) || ReferenceEquals(layout, PriceSigned);
+
+    /// <summary>True when <paramref name="layout"/> is any built-in numeric keypad (signed or not).</summary>
+    internal static bool IsKeypad(KeyboardLayout? layout) =>
+        IsMoney(layout)
+        || ReferenceEquals(layout, Numpad) || ReferenceEquals(layout, NumpadSigned)
+        || ReferenceEquals(layout, NumpadWithDecimal) || ReferenceEquals(layout, NumpadWithDecimalSigned);
 
     /// <summary>
     /// Returns the default built-in layout for <paramref name="variant"/>.

@@ -285,6 +285,43 @@ test('pointerdown on the field itself does NOT commit (still editing / selecting
   assert.deepEqual(el.events, []);
 });
 
+// ---- Negative numbers (GitHub #3) ---------------------------------------------------------------
+
+test('toggleSign flips a leading minus on the focused field', () => {
+  const el = makeField('INPUT', '5');
+  focus(el);
+
+  mod.toggleSign();
+  assert.equal(el.value, '-5');
+
+  mod.toggleSign();
+  assert.equal(el.value, '5');
+});
+
+test('toggleSign on an empty field yields a lone minus (sign-first entry)', () => {
+  const el = makeField('INPUT', '');
+  focus(el);
+
+  mod.toggleSign();
+
+  assert.equal(el.value, '-');
+});
+
+test('onFocusIn forwards the data-mudkeyboard-allow-negative attribute to .NET', () => {
+  const el = makeField('INPUT', '');
+  el.getAttribute = (name) =>
+    name === 'data-mudkeyboard-allow-negative' ? 'true' : name === 'type' ? 'text' : null;
+
+  const calls = [];
+  mod.initialize({ invokeMethodAsync: (m, ...rest) => { if (m === 'OnFocusIn') calls.push(rest); return Promise.resolve(); } }, 'AllInputs');
+  focusInHandler({ target: el });
+  runTimers();
+
+  // OnFocusIn(layoutKind, pageMaxZIndex, currentValue, allowNegative)
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][3], 'true');
+});
+
 test('edits without a focused field are a safe no-op', () => {
   // dispose() clears activeEl; subsequent edits must not throw.
   mod.dispose();

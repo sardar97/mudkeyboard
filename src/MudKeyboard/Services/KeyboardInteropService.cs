@@ -32,6 +32,10 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     // re-render on Blazor Server and makes it discard the value. Seeded from the field on focus.
     private string _moneyDigits = string.Empty;
 
+    // Whether the focused money field currently holds a negative amount. Toggled by the ± key and seeded
+    // from the field's value on focus, so re-formatting after each keypress keeps the sign.
+    private bool _moneyNegative;
+
     /// <summary>Creates the service. <paramref name="js"/> and <paramref name="options"/> are injected.</summary>
     /// <param name="js">The JS runtime used to load and call the focus-capture module.</param>
     /// <param name="options">Global keyboard configuration.</param>
@@ -46,6 +50,13 @@ public sealed class KeyboardInteropService : IAsyncDisposable
 
     /// <summary>Whether the docked keyboard should currently be shown.</summary>
     public bool IsOpen { get; private set; }
+
+    /// <summary>
+    /// Default for whether numeric keypads show the <c>±</c> sign-toggle key, used when a focused field
+    /// does not carry a <c>data-mudkeyboard-allow-negative</c> attribute of its own. Set by
+    /// <see cref="MudKeyboard.Components.MudKeyboardHost"/> from its <c>AllowNegative</c> parameter.
+    /// </summary>
+    public bool AllowNegativeDefault { get; set; }
 
     /// <summary>The base layout to show for the focused field, or <see langword="null"/> before first focus.</summary>
     public KeyboardLayout? CurrentLayout { get; private set; }
@@ -82,13 +93,25 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// The focused field's current value, used to seed pence-first money entry so the user can continue
     /// editing an existing amount. Defaults to empty (e.g. when invoked from tests).
     /// </param>
+    /// <param name="allowNegative">
+    /// The field's <c>data-mudkeyboard-allow-negative</c> attribute (<c>"true"</c>/<c>"false"</c>), or
+    /// empty when absent — in which case <see cref="AllowNegativeDefault"/> applies. Controls whether the
+    /// numeric keypad shows the <c>±</c> sign-toggle key.
+    /// </param>
     [JSInvokable]
-    public void OnFocusIn(string layoutKind, int pageMaxZIndex, string currentValue = "")
+    public void OnFocusIn(string layoutKind, int pageMaxZIndex, string currentValue = "", string allowNegative = "")
     {
-        (CurrentLayout, CurrentSymbolLayout) = ResolveLayout(layoutKind);
-        // Seed the money accumulator from the field's existing digits (leading zeros dropped) so tapping
-        // continues from the shown amount; harmless for non-money layouts, which never read it.
+        var negative = allowNegative switch
+        {
+            "true" => true,
+            "false" => false,
+            _ => AllowNegativeDefault,
+        };
+        (CurrentLayout, CurrentSymbolLayout) = ResolveLayout(layoutKind, negative);
+        // Seed the money accumulator from the field's existing digits (leading zeros dropped) and sign so
+        // tapping continues from the shown amount; harmless for non-money layouts, which never read them.
         _moneyDigits = PricepadFormatter.ExtractDigits(currentValue).TrimStart('0');
+        _moneyNegative = PricepadFormatter.IsNegative(currentValue);
         PageMaxZIndex = pageMaxZIndex;
         IsOpen = true;
         StateChanged?.Invoke();
@@ -159,9 +182,22 @@ public sealed class KeyboardInteropService : IAsyncDisposable
         return WriteMoneyAsync();
     }
 
+    /// <summary>Toggles the sign of the focused money field (positive ↔ negative) and re-formats it.</summary>
+    public Task ToggleMoneySignAsync()
+    {
+        _moneyNegative = !_moneyNegative;
+        return WriteMoneyAsync();
+    }
+
+    /// <summary>
+    /// Toggles a leading minus sign on the focused field's value (for the plain/decimal numeric keypads).
+    /// </summary>
+    public ValueTask ToggleSignAsync() =>
+        _module?.InvokeVoidAsync("toggleSign") ?? ValueTask.CompletedTask;
+
     // Format the accumulated digits pence-first and write them to the focused field in a single interop.
     private async Task WriteMoneyAsync() =>
-        await SetValueAsync(PricepadFormatter.Format(_moneyDigits, string.Empty, MoneyDecimalPlaces));
+        await SetValueAsync(PricepadFormatter.Format(_moneyDigits, string.Empty, MoneyDecimalPlaces, _moneyNegative));
 
     private ValueTask SetValueAsync(string value) =>
         _module?.InvokeVoidAsync("setValue", value) ?? ValueTask.CompletedTask;
@@ -186,13 +222,14 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// Unknown hints fall back to the full QWERTY keyboard.
     /// </summary>
     /// <param name="kind">The layout hint from <c>inferLayout</c> in the JS shim.</param>
-    internal static (KeyboardLayout Layout, KeyboardLayout? Symbol) ResolveLayout(string? kind) => kind switch
+    /// <param name="allowNegative">When set, returns the signed numeric keypad variant (with a <c>±</c> key).</param>
+    internal static (KeyboardLayout Layout, KeyboardLayout? Symbol) ResolveLayout(string? kind, bool allowNegative = false) => kind switch
     {
-        "numpad" or "numeric" or "tel" => (LayoutLibrary.Numpad, null),
+        "numpad" or "numeric" or "tel" => (allowNegative ? LayoutLibrary.NumpadSigned : LayoutLibrary.Numpad, null),
         // Money/price: pence-first, no decimal-point key (the decimal is placed automatically).
-        "money" or "price" => (LayoutLibrary.Price, null),
+        "money" or "price" => (allowNegative ? LayoutLibrary.PriceSigned : LayoutLibrary.Price, null),
         // Decimal: free decimal entry with a "." key.
-        "decimal" => (LayoutLibrary.NumpadWithDecimal, null),
+        "decimal" => (allowNegative ? LayoutLibrary.NumpadWithDecimalSigned : LayoutLibrary.NumpadWithDecimal, null),
         _ => (LayoutLibrary.Qwerty, LayoutLibrary.Symbols),
     };
 

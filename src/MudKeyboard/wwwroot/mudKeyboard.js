@@ -82,8 +82,10 @@ function onFocusIn(e) {
 
     activeEl = el;
     // Pass the field's current value so the docked keyboard can seed pence-first money entry from it
-    // (and so it never has to read the value back across a second interop round trip mid-keystroke).
-    dotnet.invokeMethodAsync('OnFocusIn', inferLayout(el), highestZIndex(), el.value ?? '');
+    // (and so it never has to read the value back across a second interop round trip mid-keystroke), plus
+    // the per-field data-mudkeyboard-allow-negative opt-in (empty when absent → the host default applies).
+    dotnet.invokeMethodAsync('OnFocusIn', inferLayout(el), highestZIndex(), el.value ?? '',
+        el.getAttribute('data-mudkeyboard-allow-negative') ?? '');
 
     // Lift the field above the docked keyboard so the user can see what they type.
     setTimeout(() => {
@@ -158,6 +160,19 @@ export function insertText(text) {
     setNativeValue(el, next);
     const caret = Math.min(start + text.length, el.value.length);
     setCaret(el, caret);
+    dispatchInput(el);
+}
+
+// Toggles a leading minus sign on the focused field's value (the ± key on the signed numeric keypads):
+// "5" ↔ "-5", "" → "-". Used for the plain and decimal numeric keypads; the money keypad re-formats its
+// own value with the sign on the .NET side instead.
+export function toggleSign() {
+    const el = activeEl;
+    if (!el) return;
+    const value = el.value ?? '';
+    const next = value.startsWith('-') ? value.slice(1) : '-' + value;
+    setNativeValue(el, next);
+    setCaret(el, el.value.length);
     dispatchInput(el);
 }
 
