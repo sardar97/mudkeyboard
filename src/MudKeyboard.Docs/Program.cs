@@ -23,4 +23,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
 // Tiny JS helper used only by the docs site (syntax highlighting + copy-to-clipboard).
 builder.Services.AddScoped<DocsInterop>();
 
+// Lets the "Docked keyboard" page drive the layout-level MudKeyboardHost's toolbar parameters live.
+builder.Services.AddScoped<DocsKeyboardToolbarState>();
+
 await builder.Build().RunAsync();

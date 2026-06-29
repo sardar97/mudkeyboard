@@ -13,7 +13,10 @@
                            aria-label="Copy code" />
         </MudTooltip>
     </div>
-    <pre class="docs-code__pre"><code @ref="_codeRef" class="@HljsClass">@Code</code></pre>
+    @* @key on the code element so Blazor fully recreates it whenever Code changes: highlight.js rewrites
+       this element's innerHTML in place, detaching the text node Blazor renders, so without a fresh element
+       a live playground's regenerated snippet would never re-display. *@
+    <pre class="docs-code__pre"><code @key="Code" @ref="_codeRef" class="@HljsClass">@Code</code></pre>
 </div>
 
 @code {

@@ -211,6 +211,28 @@ public class MudKeyboardNumericFieldTests : MudComponentTestContext
     }
 
     [Fact]
+    // GitHub #4 contract. With a non-immediate field (the default) the docked keyboard writes the value
+    // through the native setter — which queues no native 'change' — so when the keyboard closes the
+    // focus-capture shim synthesises a single 'change'. That change must do two things at once: COMMIT the
+    // typed value into the binding AND run Min/Max validation — so an out-of-range "100" entered into a
+    // Max=10 field lands as 10 (clamped) in the bound value and in the rendered input, never left as a
+    // stuck, unbound "100". This pins the MudNumericField behaviour the shim's commit-on-close depends on.
+    // (Immediate fields commit live on 'input', so they need no change-on-close.)
+    public void ChangeOnClose_OutOfRangeValue_ClampsToMaxAndCommits()
+    {
+        decimal captured = -1m;
+        var cut = Render<MudKeyboardNumericField<decimal>>(p => p
+            .Add(c => c.Min, -10m)
+            .Add(c => c.Max, 10m)
+            .Add(c => c.ValueChanged, (decimal v) => captured = v));
+
+        cut.Find("input").Change("100");
+
+        Assert.Equal(10m, captured);
+        Assert.Equal("10", cut.Find("input").GetAttribute("value"));
+    }
+
+    [Fact]
     public void EditingADecimalField_RoundTripsTheValue()
     {
         decimal captured = -1m;

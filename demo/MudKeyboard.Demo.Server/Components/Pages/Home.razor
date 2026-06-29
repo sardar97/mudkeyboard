@@ -56,6 +56,12 @@
             <MudKeyboardNumericField @bind-Value="_dockQuantity" T="int"
                                      Label="Quantity (T=int → numeric keypad, no .)"
                                      Variant="Variant.Outlined" Immediate="true" />
+            @* Non-immediate + Min/Max: type 100 and tap away — closing the keyboard commits and clamps
+               the value to 10 (validation runs on close, like a hardware-keyboard blur). GitHub #4. *@
+            <MudKeyboardNumericField @bind-Value="_dockRating" T="int" Min="-10" Max="10"
+                                     Label="Rating (non-immediate, Min -10 / Max 10 → clamps on close)"
+                                     Variant="Variant.Outlined" />
+            <MudText Typo="Typo.caption">Bound rating: <b>@_dockRating</b></MudText>
         </MudStack>
     </MudPaper>
 
@@ -116,6 +122,7 @@
     private decimal _dockPrice;
     private double _dockMeasure;
     private int _dockQuantity;
+    private int _dockRating;
     private int _enterCount;
     private string _lastEnter = "(none yet)";
 

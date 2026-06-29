@@ -81,6 +81,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   button keeps its `aria-label`.
 
 ### Fixed
+- **The docked keyboard now commits and validates the focused field when it closes**
+  ([#4](https://github.com/sardar97/mudkeyboard/issues/4)). The keyboard edits the field through the
+  native value setter, which queues no native `change` — so a field with the default *non-immediate*
+  binding (for example `<MudNumericField @bind-Value="x" Min="-10" Max="10"/>`) used to keep the typed
+  text on screen without committing or validating it: typing `100` then tapping away left `100` showing
+  while the bound value never updated. The focus-capture shim now mirrors a hardware keyboard's
+  `change`→`blur` order — it commits the field the instant you press outside it, **before** the browser
+  blurs it, as well as when the **Hide**/**Enter** buttons close the panel. That lets `MudNumericField`'s
+  own blur handler run, so the value flows into the binding, the field's validation runs, and the
+  displayed text is re-formatted to the validated value: `100` becomes the clamped `10` both in the
+  binding and on screen — even when the clamped result equals the value already bound, the case that
+  previously left the out-of-range text stuck. The per-keystroke behaviour is unchanged, so the money
+  keypad still types cleanly and tapping keys never commits early. Verified end to end in a real browser
+  and demonstrated by a new non-immediate `Min`/`Max` field in both demos.
 - **`MudKeyboardHost` no longer risks throwing during prerendering.** Its JavaScript initialization is
   guarded so that, if the JS runtime is not yet available (for example a stray prerender pass) or the
   circuit has already disconnected, the host silently does nothing instead of throwing.

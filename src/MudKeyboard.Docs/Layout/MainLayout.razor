@@ -1,5 +1,8 @@
 @namespace MudKeyboard.Docs.Layout
 @inherits LayoutComponentBase
+@implements IDisposable
+@using MudKeyboard.Docs.Services
+@inject DocsKeyboardToolbarState ToolbarState
 
 <MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -7,8 +10,11 @@
 <MudSnackbarProvider />
 
 @* The global docked keyboard. Registered in OptIn mode (see Program.cs), so it only appears for
-   fields that carry data-mudkeyboard — i.e. the examples on the "Docked keyboard" page. *@
-<MudKeyboardHost />
+   fields that carry data-mudkeyboard — i.e. the examples on the "Docked keyboard" page. Its toolbar
+   parameters are driven by DocsKeyboardToolbarState so the live "Toolbar buttons" example on that page
+   can show/hide/disable buttons on this one global host. *@
+<MudKeyboardHost VisibleActions="@ToolbarState.VisibleActions"
+                 DisabledActions="@ToolbarState.DisabledActions" />
 
 @* Keyboard users can skip the app bar and navigation and jump straight to the page content.
    Hidden off-screen until focused (see .docs-skip-link in docs.css). *@
@@ -91,6 +97,12 @@
 @code {
     private bool _drawerOpen = true;
     private bool _isDarkMode;
+
+    protected override void OnInitialized() => ToolbarState.Changed += OnToolbarStateChanged;
+
+    private void OnToolbarStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ToolbarState.Changed -= OnToolbarStateChanged;
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 

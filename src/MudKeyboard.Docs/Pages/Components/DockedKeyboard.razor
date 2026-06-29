@@ -1,4 +1,6 @@
 @page "/components/docked-keyboard"
+@implements IDisposable
+@inject DocsKeyboardToolbarState Toolbar
 
 <PageTitle>Docked keyboard · Components</PageTitle>
 
@@ -120,6 +122,78 @@
     </ul>
 </div>
 
+<MudText id="validation" Typo="Typo.h5" Class="docs-section-title">Validation &amp; commit on close</MudText>
+<div class="docs-prose">
+    <p>
+        The docked keyboard edits the field through the browser's native value setter, then mirrors a
+        hardware keyboard's <code class="docs-inline-code">change</code> → <code class="docs-inline-code">blur</code>
+        order: it commits the field the instant you press outside it — <strong>before</strong> the field
+        blurs — and when <strong>⏎</strong> or the <strong>⌄</strong> button closes the panel. So the value
+        flows into your binding and the field's own validation runs on close, exactly as if you'd typed on a
+        physical keyboard and clicked away. The field below is bound to an <code class="docs-inline-code">int</code>
+        with <code class="docs-inline-code">Min="-10"</code>/<code class="docs-inline-code">Max="10"</code> and
+        is <em>not</em> <code class="docs-inline-code">Immediate</code> — type something out of range (say
+        <code class="docs-inline-code">100</code>) and tap away: it commits and clamps to
+        <code class="docs-inline-code">10</code>.
+    </p>
+</div>
+<ExampleCard Title="Commit + clamp when the keyboard closes"
+             Description="Non-immediate field with Min/Max. Type an out-of-range value, then tap elsewhere — the value commits and is clamped, just like a hardware-keyboard blur."
+             Code="@ValidationCode">
+    <MudKeyboardNumericField @bind-Value="_rating" T="int" Min="-10" Max="10"
+                             Label="Rating (Min -10 / Max 10, non-immediate)"
+                             Variant="Variant.Outlined" DockedKeyboard="true" />
+    <MudText Typo="Typo.body2" Class="mt-2">Bound value: <b>@_rating</b></MudText>
+</ExampleCard>
+
+<MudText id="toolbar" Typo="Typo.h5" Class="docs-section-title">Toolbar buttons (show, hide &amp; disable)</MudText>
+<div class="docs-prose">
+    <p>
+        The panel's action buttons — <strong>Clear</strong>, <strong>Copy</strong>, <strong>Paste</strong>,
+        the <strong>cursor arrows</strong> and <strong>Hide</strong> — are controlled by two
+        <code class="docs-inline-code">MudKeyboardHost</code> parameters:
+        <code class="docs-inline-code">VisibleActions</code> (which render) and
+        <code class="docs-inline-code">DisabledActions</code> (which render greyed-out). Both take the
+        <code class="docs-inline-code">[Flags]</code> enum <code class="docs-inline-code">KeyboardAction</code>,
+        so you can hide or disable any button — globally or one at a time. Toggle the switches below, then
+        focus a field above to see this page's own docked keyboard update live; the code shows the exact
+        parameters for your selection.
+    </p>
+</div>
+<MudPaper Class="pa-4 mb-3" Outlined="true">
+    <div class="d-flex justify-space-between align-center mb-2 flex-wrap" style="gap:.5rem">
+        <MudText Typo="Typo.subtitle2">Toolbar buttons</MudText>
+        <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Restore"
+                   OnClick="@(() => Toolbar.Reset())">Reset</MudButton>
+    </div>
+    <MudSimpleTable Dense="true" Hover="false" Bordered="false" Elevation="0" Style="background:transparent">
+        <thead>
+            <tr><th>Button</th><th style="width:8rem">Visible</th><th style="width:8rem">Disabled</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var (action, label) in ToolbarButtons)
+            {
+                <tr>
+                    <td>@label</td>
+                    <td>
+                        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.IsVisible(action)"
+                                   ValueChanged="@(v => Toolbar.SetVisible(action, v))"
+                                   aria-label="@($"Show {label} button")" />
+                    </td>
+                    <td>
+                        <MudSwitch T="bool" Color="Color.Secondary" Value="@Toolbar.IsDisabled(action)"
+                                   ValueChanged="@(v => Toolbar.SetDisabled(action, v))"
+                                   Disabled="@(!Toolbar.IsVisible(action))"
+                                   aria-label="@($"Disable {label} button")" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+    <MudText Typo="Typo.caption" Class="mt-1">Hiding wins over disabling — a hidden button isn't rendered at all. The cursor arrows never appear on the money keypad regardless.</MudText>
+</MudPaper>
+<CodeBlock Language="razor" Code="@ToolbarCode" />
+
 <MudText id="parameters" Typo="Typo.h5" Class="docs-section-title">MudKeyboardHost parameters</MudText>
 <ParamTable Members="HostParameters" />
 
@@ -146,6 +220,65 @@
     private decimal _price;
     private double _measure;
     private int _quantity;
+    private int _rating;
+
+    // Restore the toolbar to defaults (all buttons visible) when leaving the page, so the live demo's
+    // changes don't leak onto the rest of the site (the host is global, in MainLayout).
+    public void Dispose() => Toolbar.Reset();
+
+    // The toggleable toolbar buttons, in render order. CursorControl is the left+right arrow pair.
+    private static readonly (KeyboardAction Action, string Label)[] ToolbarButtons =
+    [
+        (KeyboardAction.Clear, "Clear"),
+        (KeyboardAction.Copy, "Copy"),
+        (KeyboardAction.Paste, "Paste"),
+        (KeyboardAction.CursorControl, "Cursor arrows"),
+        (KeyboardAction.Hide, "Hide"),
+    ];
+
+    // Live <MudKeyboardHost …/> markup for the current toolbar selection.
+    private string ToolbarCode
+    {
+        get
+        {
+            var sb = new System.Text.StringBuilder("<MudKeyboardHost");
+            if (Toolbar.VisibleActions != KeyboardAction.All)
+            {
+                sb.Append("\n                 VisibleActions=\"").Append(FormatActions(Toolbar.VisibleActions)).Append('"');
+            }
+            if (Toolbar.DisabledActions != KeyboardAction.None)
+            {
+                sb.Append("\n                 DisabledActions=\"").Append(FormatActions(Toolbar.DisabledActions)).Append('"');
+            }
+            return sb.Append(" />").ToString();
+        }
+    }
+
+    private static string FormatActions(KeyboardAction actions)
+    {
+        if (actions == KeyboardAction.None)
+        {
+            return "KeyboardAction.None";
+        }
+
+        if (actions == KeyboardAction.All)
+        {
+            return "KeyboardAction.All";
+        }
+
+        var parts = ToolbarButtons
+            .Where(b => (actions & b.Action) == b.Action)
+            .Select(b => "KeyboardAction." + b.Action);
+        return string.Join(" | ", parts);
+    }
+
+    private const string ValidationCode = """
+@* Non-immediate (the default) + Min/Max. The docked keyboard commits and validates on close, so an
+   out-of-range value is clamped when you tap away — exactly like a hardware-keyboard blur. *@
+<MudKeyboardNumericField @bind-Value="_rating" T="int" Min="-10" Max="10"
+                         Label="Rating" DockedKeyboard="true" />
+<MudText>Bound value: <b>@_rating</b></MudText>
+""";
 
     private const string NumericCode = """
 @* The keypad is chosen from T — no data attribute needed. (DockedKeyboard="true" because

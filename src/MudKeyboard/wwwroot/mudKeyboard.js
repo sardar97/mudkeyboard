@@ -91,7 +91,10 @@ function onFocusIn(e) {
     }, 60);
 }
 
-function onFocusOut() {
+function onFocusOut(e) {
+    // The field losing focus, and the field we were actively editing at the moment focus started to leave.
+    const losing = e && e.target;
+    const wasActive = activeEl;
     // Defer: focusout fires before the next focusin, and tapping a key can momentarily move focus.
     // Re-check the real focus target a beat later, then decide whether to close.
     closing += 1;
@@ -99,11 +102,35 @@ function onFocusOut() {
     setTimeout(() => {
         if (ticket !== closing) return; // superseded by a newer focus event
         const act = document.activeElement;
-        if (insideDock(act)) return;     // focus is on the keyboard — keep open
+        if (insideDock(act)) return;     // focus is on the keyboard — keep open, still editing the field
+        // Focus has genuinely left the field we were editing. Commit it (a single settled 'change' that
+        // flushes non-immediate bindings) as a fallback for non-pointer blurs — e.g. Tab — since pointer
+        // interactions are already committed pre-blur by onPointerDownCapture. Skip it when focus merely
+        // bounced back to the same field (a transient blur during a key tap) — we're still editing it.
+        if (losing && losing === wasActive && act !== wasActive) {
+            commitField(losing);
+        }
         if (shouldAttach(act)) return;   // moved to another field — its focusin handles the switch
         activeEl = null;
         if (dotnet) dotnet.invokeMethodAsync('OnFocusOut');
     }, 120);
+}
+
+// Commit the field being edited the instant the user presses somewhere outside it — crucially BEFORE the
+// browser blurs the field. A hardware keyboard fires 'change' before 'blur', and MudBlazor's
+// MudNumericField does its Min/Max clamping AND re-formats the displayed text inside its own blur handler,
+// reading the field's Blazor-side text state. Our programmatic edits (native value setter) never update
+// that state, so the field's native blur would otherwise see stale text and leave an out-of-range value on
+// screen — e.g. 500 left visible in a Max=100 field even though the bound value clamped correctly. Firing
+// 'change' here syncs the Blazor text state first, so the field's own blur then validates and fixes the
+// display exactly as it does for a real keyboard. Key taps never reach this: the dock's mousedown
+// preventDefault keeps the field focused, and we ignore presses inside the dock (and on the field itself).
+function onPointerDownCapture(e) {
+    const el = activeEl;
+    if (!el) return;
+    const target = e && e.target;
+    if (target === el || insideDock(target)) return;
+    commitField(el);
 }
 
 export function initialize(dotnetRef, mode) {
@@ -111,6 +138,7 @@ export function initialize(dotnetRef, mode) {
     if (mode) attachMode = mode;
     document.addEventListener('focusin', onFocusIn, true);
     document.addEventListener('focusout', onFocusOut, true);
+    document.addEventListener('pointerdown', onPointerDownCapture, true);
 }
 
 export function insertText(text) {
@@ -219,12 +247,10 @@ export function blurActive() {
     const el = activeEl;
     activeEl = null;
     if (el) {
-        // A spinbutton (MudNumericField) discards a programmatic value when it sees a trailing 'change'
-        // (see dispatchInput); its value is already committed via 'input', so just blur it. Every other
-        // field gets 'change' so non-immediate bindings commit on close.
-        if (!isSpinButton(el)) {
-            el.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        // Commit + validate the value, like a hardware-keyboard blur, then drop focus. commitField fires a
+        // single settled 'change' (for spinbuttons too — unlike the per-keystroke path, one change once
+        // editing has stopped commits/clamps the value without snapping back).
+        commitField(el);
         try { el.blur(); } catch { /* ignore */ }
     }
 }
@@ -232,6 +258,7 @@ export function blurActive() {
 export function dispose() {
     document.removeEventListener('focusin', onFocusIn, true);
     document.removeEventListener('focusout', onFocusOut, true);
+    document.removeEventListener('pointerdown', onPointerDownCapture, true);
     dotnet = null;
     activeEl = null;
 }
@@ -275,6 +302,20 @@ function isSpinButton(el) {
 function dispatchInput(el) {
     el.dispatchEvent(new Event('input', { bubbles: true }));
     if (!isSpinButton(el)) {
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
+
+// Commit a field's value when the docked keyboard closes (focus leaves the field, the Hide/Enter buttons,
+// or it switches to another field). Programmatic value writes (via the native setter) queue no native
+// 'change', so without this a field with non-immediate binding never flushes its typed value and field
+// validators never run when the keyboard closes — leaving the typed text visible but unbound (e.g. "100"
+// stuck in a MudNumericField with Max=10). A single 'change' here mirrors a hardware-keyboard blur: it
+// commits the value and runs validation/clamping. We DO fire it for spinbuttons (which dispatchInput
+// spares per keystroke to avoid racing MudNumericField's re-render) because, once editing has settled, one
+// 'change' commits and clamps cleanly without snapping back to the old value.
+function commitField(el) {
+    if (el && el.nodeType === 1 && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
         el.dispatchEvent(new Event('change', { bubbles: true }));
     }
 }

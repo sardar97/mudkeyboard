@@ -92,6 +92,8 @@ public static class ReleaseNotes
                 ]),
                 new ChangeGroup("Fixed",
                 [
+                    new ChangeItem("Commit + validate the field on close (#4)",
+                        "The docked keyboard edits the field through the native value setter, which queues no native 'change' — so a non-immediate field (e.g. MudNumericField with Min/Max) used to keep the typed text on screen without committing or validating it (typing 100 then tapping away left 100 visible while the bound value never updated). The shim now mirrors a hardware keyboard's change-before-blur order: it commits the field the instant you press outside it, before the browser blurs it, as well as when the Hide/Enter buttons close the panel. That lets MudNumericField's own blur handler run, so the value commits, validation runs, and the displayed text is re-formatted to the validated value — 100 becomes the clamped 10 in the binding and on screen, even when the clamp equals the value already bound. The per-keystroke behaviour is unchanged, so the money keypad still types cleanly."),
                     new ChangeItem("Safe during prerendering",
                         "MudKeyboardHost guards its JavaScript initialization, so if the JS runtime is not yet available or the circuit has already disconnected it silently does nothing instead of throwing."),
                 ]),
