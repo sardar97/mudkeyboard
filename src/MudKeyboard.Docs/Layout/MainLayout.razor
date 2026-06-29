@@ -36,7 +36,7 @@
                        OnClick="@ToggleDrawer"
                        aria-label="Toggle navigation" />
         <MudLink Href="" Underline="Underline.None" Class="d-flex align-center ml-1" Color="Color.Inherit">
-            <MudImage Src="_content/MudKeyboard/mudkeyboard_logo.svg" Alt="MudKeyboard" Height="34" />
+            <BrandLogo Class="brand-logo--appbar brand-logo--on-accent" />
         </MudLink>
         <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" Class="ml-2 d-none d-sm-flex">docs</MudChip>
         <MudSpacer />
@@ -78,7 +78,7 @@
             <MudContainer MaxWidth="MaxWidth.Large">
                 <div class="docs-footer__inner">
                     <div class="docs-footer__brand">
-                        <MudImage Src="_content/MudKeyboard/mudkeyboard_logo.svg" Alt="MudKeyboard" Height="24" />
+                        <BrandLogo Class="brand-logo--footer" />
                         <MudText Typo="Typo.caption" Class="docs-footer__copy">Open-source · MIT licensed</MudText>
                     </div>
                     <div class="docs-footer__versions">

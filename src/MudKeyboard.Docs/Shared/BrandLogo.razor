@@ -1,0 +1,78 @@
+@namespace MudKeyboard.Docs.Shared
+
+@* The MudKeyboard wordmark rendered as INLINE svg (not an <img>) so the text can follow the
+   MudBlazor theme via CSS variables — see the .brand-logo rules in docs.css. An <img>-referenced
+   SVG is colour-frozen, which is why the old near-white "Keyboard" vanished on light backgrounds.
+   Here "Mud" uses the brand primary and "Keyboard"/tagline use palette text colours, so the
+   wordmark stays legible in both light and dark mode. The keyboard glyph is a solid purple shape
+   that reads on either background, so only the wordmark + tagline are themed. JavaScript-free. *@
+
+<svg class="brand-logo @Class" viewBox="0 0 680 400" role="img" aria-label="MudKeyboard"
+     xmlns="http://www.w3.org/2000/svg" focusable="false">
+    <title>MudKeyboard logo</title>
+
+    @* ---------- Keyboard glyph (solid purple — reads on light or dark) ---------- *@
+    <rect x="60" y="60" width="220" height="150" rx="18" fill="#7C4DFF" />
+
+    @* Row 1 *@
+    <rect x="76" y="76" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="102" y="76" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="128" y="76" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="154" y="76" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="180" y="76" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="206" y="76" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="232" y="76" width="36" height="18" rx="4" fill="#FFFFFF" opacity="0.3" />
+
+    @* Row 2 *@
+    <rect x="76" y="100" width="28" height="18" rx="4" fill="#5C35CC" />
+    <rect x="108" y="100" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="134" y="100" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="160" y="100" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="186" y="100" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="212" y="100" width="56" height="18" rx="4" fill="#FFFFFF" opacity="0.3" />
+
+    @* Row 3 — M U D highlighted *@
+    <rect x="76" y="124" width="22" height="18" rx="4" fill="#FFFFFF" />
+    <text x="87" y="137" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#7C4DFF">M</text>
+    <rect x="102" y="124" width="22" height="18" rx="4" fill="#FFFFFF" />
+    <text x="113" y="137" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#7C4DFF">U</text>
+    <rect x="128" y="124" width="22" height="18" rx="4" fill="#FFFFFF" />
+    <text x="139" y="137" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#7C4DFF">D</text>
+    <rect x="154" y="124" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="180" y="124" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="206" y="124" width="62" height="18" rx="4" fill="#5C35CC" />
+
+    @* Row 4 — spacebar *@
+    <rect x="76" y="148" width="30" height="18" rx="4" fill="#5C35CC" />
+    <rect x="110" y="148" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="136" y="148" width="96" height="18" rx="4" fill="#FFFFFF" opacity="0.5" />
+    <rect x="236" y="148" width="22" height="18" rx="4" fill="#5C35CC" />
+    <rect x="262" y="148" width="16" height="18" rx="4" fill="#5C35CC" />
+
+    @* Shine *@
+    <rect x="70" y="62" width="200" height="3" rx="1" fill="#FFFFFF" opacity="0.12" />
+
+    @* ---------- Wordmark (themed) ---------- *@
+    <text class="brand-logo__mud" x="298" y="160" font-family="system-ui, sans-serif" font-size="52" font-weight="700">Mud</text>
+    <text class="brand-logo__kbd" x="404" y="160" font-family="system-ui, sans-serif" font-size="52" font-weight="300">Keyboard</text>
+
+    @* Tagline (themed) *@
+    <text class="brand-logo__tag" x="300" y="190" font-family="system-ui, sans-serif" font-size="15" font-weight="400">PURE BLAZOR</text>
+
+    @* ---------- Numpad decoration ---------- *@
+    <rect x="580" y="80" width="60" height="66" rx="10" fill="#7C4DFF" opacity="0.15" />
+    <rect x="586" y="87" width="14" height="14" rx="3" fill="#7C4DFF" opacity="0.5" />
+    <rect x="604" y="87" width="14" height="14" rx="3" fill="#7C4DFF" opacity="0.5" />
+    <rect x="622" y="87" width="14" height="14" rx="3" fill="#7C4DFF" opacity="0.5" />
+    <rect x="586" y="105" width="14" height="14" rx="3" fill="#7C4DFF" opacity="0.5" />
+    <rect x="604" y="105" width="14" height="14" rx="3" fill="#7C4DFF" opacity="0.5" />
+    <rect x="622" y="105" width="14" height="14" rx="3" fill="#7C4DFF" opacity="0.5" />
+    <rect x="586" y="123" width="32" height="14" rx="3" fill="#7C4DFF" opacity="0.7" />
+    <rect x="622" y="123" width="14" height="14" rx="3" fill="#7C4DFF" opacity="0.5" />
+</svg>
+
+@code {
+    /// <summary>Extra CSS classes appended to the root svg — e.g. a sizing class or
+    /// <c>brand-logo--on-accent</c> when the logo sits on a solid accent surface (the app bar).</summary>
+    [Parameter] public string? Class { get; set; }
+}

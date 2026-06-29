@@ -171,6 +171,25 @@ function onInputCapture(e) {
     }
 }
 
+// Snap the field's caret to the very end of its value (and keep the preview cursor in step).
+function caretToEnd(el) {
+    if (!el) return;
+    setCaret(el, (el.value ?? '').length);
+    reportValueChanged(el);
+}
+
+// The docked keyboard always types at the END of the field. A tap inside the field makes the browser
+// drop the caret wherever the user pressed, so the next key would insert mid-text (e.g. typing into
+// "sardar" tapped before "rdar" gives "sa…rdar"). Override that here: on pointerup — which fires AFTER
+// the browser has positioned the caret from the tap — move it back to the end. This covers both the
+// first focusing tap and any later re-tap inside the same already-focused field (where focusin never
+// fires again), so the cursor is always at the end after the user clicks anywhere in the field.
+function onPointerUpCapture(e) {
+    const el = activeEl;
+    if (!el) return;
+    if (e && e.target === el) caretToEnd(el);
+}
+
 export function initialize(dotnetRef, mode, report) {
     dotnet = dotnetRef;
     if (mode) attachMode = mode;
@@ -178,6 +197,7 @@ export function initialize(dotnetRef, mode, report) {
     document.addEventListener('focusin', onFocusIn, true);
     document.addEventListener('focusout', onFocusOut, true);
     document.addEventListener('pointerdown', onPointerDownCapture, true);
+    document.addEventListener('pointerup', onPointerUpCapture, true);
     document.addEventListener('input', onInputCapture, true);
 }
 
@@ -319,6 +339,7 @@ export function dispose() {
     document.removeEventListener('focusin', onFocusIn, true);
     document.removeEventListener('focusout', onFocusOut, true);
     document.removeEventListener('pointerdown', onPointerDownCapture, true);
+    document.removeEventListener('pointerup', onPointerUpCapture, true);
     document.removeEventListener('input', onInputCapture, true);
     dotnet = null;
     activeEl = null;
