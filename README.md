@@ -15,6 +15,10 @@ terminals and any interface where a hardware keyboard is unavailable or impracti
 
 **Documentation and live demo: [mudkeyboard.pages.dev](https://mudkeyboard.pages.dev)**
 
+> **Using an AI coding assistant?** MudKeyboard ships machine-readable docs and an agent skill so tools
+> like Claude Code, Cursor or Copilot can integrate it correctly in any render mode. See
+> [For AI agents & LLMs](#for-ai-agents--llms).
+
 ## Highlights
 
 - **JavaScript-free core.** Rendering, the text engine, shift/caps and the symbol toggle are 100%
@@ -453,6 +457,52 @@ The Server demo showcases every variant, two-way binding, the `OnEnter` callback
 `KeyboardPalette` override and the global docked keyboard — plus a static-SSR login page at
 `/components/ssr-login-demo` that proves the docked keyboard works with no per-page render mode. A
 hosted version is available on the [documentation site](https://mudkeyboard.pages.dev).
+
+---
+
+## For AI agents & LLMs
+
+MudKeyboard publishes machine-readable documentation so AI coding assistants can add and configure it
+correctly — across every render mode (Interactive Server, WebAssembly, static SSR, with or without
+prerendering) and whether or not your own fields are MudBlazor inputs.
+
+> **Why this exists:** the documentation site is a Blazor **WebAssembly single-page app**, so a plain HTTP
+> fetch of a page URL returns an empty JavaScript shell — an LLM can't read it that way. The resources
+> below are plain text/Markdown served at the site origin (and mirrored in the repo), so agents can read
+> the latest docs directly.
+
+| Resource | URL | What it is |
+| --- | --- | --- |
+| **Agent skill** | [`/skill.md`](https://mudkeyboard.pages.dev/skill.md) | A task-focused "how to integrate MudKeyboard in any situation" guide with YAML frontmatter, ready to drop in as a Claude Code / agent **skill**. |
+| **Full docs (one file)** | [`/llms-full.txt`](https://mudkeyboard.pages.dev/llms-full.txt) | The complete documentation as a single Markdown file. |
+| **AI index** | [`/llms.txt`](https://mudkeyboard.pages.dev/llms.txt) | An [llms.txt](https://llmstxt.org)-format index linking the resources above. |
+
+The same files are in this repository under
+[`src/MudKeyboard.Docs/wwwroot/`](https://github.com/sardar97/mudkeyboard/tree/master/src/MudKeyboard.Docs/wwwroot)
+(`skill.md`, `llms-full.txt`, `llms.txt`).
+
+### Use it as a Claude Code skill
+
+Download the skill into your Claude Code skills folder (the file already has the required frontmatter):
+
+```bash
+mkdir -p ~/.claude/skills/mudkeyboard
+curl -fsSL https://mudkeyboard.pages.dev/skill.md -o ~/.claude/skills/mudkeyboard/SKILL.md
+```
+
+Or, to scope it to one project, save it under `.claude/skills/mudkeyboard/SKILL.md` in the repo. Cursor,
+Windsurf, Copilot and similar tools can ingest the same file (e.g. as a rule/context file) or fetch
+`/llms-full.txt` directly.
+
+### Point an agent at the docs
+
+If you just want an assistant to read the current docs, give it one of these plain-text URLs (not a page
+URL, which is the un-readable SPA shell):
+
+```
+https://mudkeyboard.pages.dev/llms-full.txt   # full documentation
+https://mudkeyboard.pages.dev/skill.md        # integration skill
+```
 
 ---
 

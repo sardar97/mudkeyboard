@@ -77,8 +77,29 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://mudkeyboard.pages.dev/ai</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://mudkeyboard.pages.dev/releases</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <!-- Machine-readable resources for AI agents / LLMs (plain text, not the SPA). -->
+  <url>
+    <loc>https://mudkeyboard.pages.dev/llms.txt</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://mudkeyboard.pages.dev/llms-full.txt</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://mudkeyboard.pages.dev/skill.md</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
 </urlset>

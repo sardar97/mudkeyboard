@@ -55,6 +55,19 @@
     <None Include="..\..\README.md" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 
+  <!--
+    Machine-readable docs for AI coding agents, shipped inside the package so an assistant working
+    against the restored package can read how to use MudKeyboard offline. The canonical copies live in
+    the docs site (src/MudKeyboard.Docs/wwwroot/) so they are also served at the site origin
+    (e.g. https://mudkeyboard.pages.dev/skill.md); we pack the same files under docs/ to avoid drift.
+      - skill.md       : task-focused integration guide with agent-skill frontmatter
+      - llms-full.txt  : the full documentation as a single Markdown file
+  -->
+  <ItemGroup>
+    <None Include="..\MudKeyboard.Docs\wwwroot\skill.md" Pack="true" PackagePath="docs\" Visible="false" />
+    <None Include="..\MudKeyboard.Docs\wwwroot\llms-full.txt" Pack="true" PackagePath="docs\" Visible="false" />
+  </ItemGroup>
+
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>

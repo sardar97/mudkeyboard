@@ -1,0 +1,80 @@
+@page "/ai"
+@page "/llms"
+
+<PageTitle>For AI agents & LLMs · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Tools"
+            Title="For AI agents & LLMs"
+            Lead="Machine-readable documentation and a ready-to-install agent skill, so tools like Claude Code, Cursor and Copilot can add and configure MudKeyboard correctly in any render mode." />
+
+<MudText id="why" Typo="Typo.h5" Class="docs-section-title">Why these exist</MudText>
+<div class="docs-prose">
+    <p>
+        This documentation site is a Blazor <strong>WebAssembly single-page app</strong>. A plain HTTP fetch
+        of a page URL returns an empty JavaScript shell, so an LLM that fetches, say,
+        <code class="docs-inline-code">/components/docked-keyboard</code> sees no content. To fix that,
+        MudKeyboard publishes plain-text and Markdown resources at the site origin (and mirrors them in the
+        repository) that agents can read directly — always reflecting the latest docs.
+    </p>
+</div>
+
+<MudText id="resources" Typo="Typo.h5" Class="docs-section-title">The resources</MudText>
+<div class="docs-prose">
+    <ul>
+        <li>
+            <MudLink Href="skill.md" Target="_blank"><code class="docs-inline-code">/skill.md</code></MudLink>
+            — a task-focused “how to integrate MudKeyboard in any situation” guide with YAML frontmatter,
+            ready to drop in as a Claude Code / agent <strong>skill</strong>.
+        </li>
+        <li>
+            <MudLink Href="llms-full.txt" Target="_blank"><code class="docs-inline-code">/llms-full.txt</code></MudLink>
+            — the complete documentation as a single Markdown file.
+        </li>
+        <li>
+            <MudLink Href="llms.txt" Target="_blank"><code class="docs-inline-code">/llms.txt</code></MudLink>
+            — an <MudLink Href="https://llmstxt.org" Target="_blank">llms.txt</MudLink>-format index that links the resources above.
+        </li>
+    </ul>
+    <p>The same files live in the repository under <code class="docs-inline-code">src/MudKeyboard.Docs/wwwroot/</code>.</p>
+</div>
+
+<MudText id="claude-code" Typo="Typo.h5" Class="docs-section-title">Install as a Claude Code skill</MudText>
+<div class="docs-prose">
+    <p>Download the skill into your Claude Code skills folder — the file already has the required frontmatter:</p>
+</div>
+<CodeBlock Language="bash" Code="@InstallCmd" />
+<div class="docs-prose mt-3">
+    <p>
+        To scope it to a single project, save it as <code class="docs-inline-code">.claude/skills/mudkeyboard/SKILL.md</code>
+        in the repository instead. Cursor, Windsurf, Copilot and similar tools can ingest the same file as a
+        rule/context file, or fetch <code class="docs-inline-code">/llms-full.txt</code> directly.
+    </p>
+</div>
+
+<MudText id="point-an-agent" Typo="Typo.h5" Class="docs-section-title">Point an agent at the docs</MudText>
+<div class="docs-prose">
+    <p>If you just want an assistant to read the current docs, give it a plain-text URL (not a page URL):</p>
+</div>
+<CodeBlock Language="bash" Code="@FetchCmd" />
+
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="my-4">
+    Replace <code class="docs-inline-code">https://mudkeyboard.pages.dev</code> with your deployed origin if
+    you self-host these docs.
+</MudAlert>
+
+<div class="docs-nav-footer">
+    <MudButton Href="api" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">API reference</MudButton>
+    <MudButton Href="releases" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Releases &amp; changelog</MudButton>
+</div>
+
+@code {
+    private const string InstallCmd = """
+mkdir -p ~/.claude/skills/mudkeyboard
+curl -fsSL https://mudkeyboard.pages.dev/skill.md -o ~/.claude/skills/mudkeyboard/SKILL.md
+""";
+
+    private const string FetchCmd = """
+https://mudkeyboard.pages.dev/llms-full.txt   # full documentation
+https://mudkeyboard.pages.dev/skill.md        # integration skill
+""";
+}
