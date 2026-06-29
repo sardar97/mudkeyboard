@@ -13,7 +13,9 @@ public sealed class DocsKeyboardToolbarState
     private KeyboardAction _visibleActions = KeyboardAction.All;
     private KeyboardAction _disabledActions = KeyboardAction.None;
     private bool _allowNegative;
-    private bool _showValuePreview;
+    private bool _showValuePreview = true;
+    private bool _showCancel = true;
+    private bool _defaultCapsLock;
     private bool _showBackdrop;
     private bool _disableBackdropClick;
     private bool _sound;
@@ -34,6 +36,20 @@ public sealed class DocsKeyboardToolbarState
     {
         get => _showValuePreview;
         set => Set(ref _showValuePreview, value);
+    }
+
+    /// <summary>Whether the docked keyboard shows the Cancel key next to Enter. Bound to <c>MudKeyboardHost.ShowCancel</c>.</summary>
+    public bool ShowCancel
+    {
+        get => _showCancel;
+        set => Set(ref _showCancel, value);
+    }
+
+    /// <summary>Whether the docked keyboard starts with caps lock on. Bound to <c>MudKeyboardHost.DefaultCapsLock</c>.</summary>
+    public bool DefaultCapsLock
+    {
+        get => _defaultCapsLock;
+        set => Set(ref _defaultCapsLock, value);
     }
 
     /// <summary>Whether a dimming backdrop is shown behind the docked keyboard. Bound to <c>MudKeyboardHost.ShowBackdrop</c>.</summary>
@@ -92,12 +108,14 @@ public sealed class DocsKeyboardToolbarState
     public void SetDisabled(KeyboardAction action, bool disabled) =>
         DisabledActions = disabled ? _disabledActions | action : _disabledActions & ~action;
 
-    /// <summary>Restores the defaults (all buttons visible, none disabled, new features off).</summary>
+    /// <summary>Restores the defaults (all buttons visible, none disabled; preview + Cancel on, the rest off).</summary>
     public void Reset()
     {
         _disabledActions = KeyboardAction.None;
         _allowNegative = false;
-        _showValuePreview = false;
+        _showValuePreview = true;
+        _showCancel = true;
+        _defaultCapsLock = false;
         _showBackdrop = false;
         _disableBackdropClick = false;
         _sound = false;

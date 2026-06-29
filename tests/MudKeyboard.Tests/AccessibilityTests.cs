@@ -240,7 +240,10 @@ public class MudKeyboardHostAccessibilityTests : MudComponentTestContext, IAsync
     [Fact]
     public void OpenDock_ToolbarButtons_AllCarryAriaLabels()
     {
-        var (cut, interop) = RenderHost();
+        // ShowCancel is on by default and suppresses the Hide button, so turn it off here to exercise the
+        // full toolbar (Clear … Hide) and confirm every button carries an aria-label.
+        var cut = Render<MudKeyboardHost>(p => p.Add(c => c.ShowCancel, false));
+        var interop = Services.GetRequiredService<KeyboardInteropService>();
 
         cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000));
 

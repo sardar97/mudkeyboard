@@ -40,6 +40,12 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     // changes back for the live preview bar.
     private bool _reportValueChanges;
 
+    // True between focusing a numeric/money keypad field and the first digit pressed on it: the first digit
+    // replaces the field's existing value rather than appending to it (so a pre-filled "6.00" becomes the
+    // typed amount instead of "6.005"). Any other action — backspace, sign toggle, caret move — cancels it,
+    // since the user is then clearly editing the existing value. Only set for keypad layouts, never text.
+    private bool _replacePending;
+
     /// <summary>Creates the service. <paramref name="js"/> and <paramref name="options"/> are injected.</summary>
     /// <param name="js">The JS runtime used to load and call the focus-capture module.</param>
     /// <param name="options">Global keyboard configuration.</param>
@@ -61,6 +67,12 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// <see cref="MudKeyboard.Components.MudKeyboardHost"/> from its <c>AllowNegative</c> parameter.
     /// </summary>
     public bool AllowNegativeDefault { get; set; }
+
+    /// <summary>
+    /// The global default (from <see cref="MudKeyboardOptions.DefaultCapsLock"/>) for whether the docked
+    /// keyboard starts with caps lock on. Read by <see cref="MudKeyboard.Components.MudKeyboardHost"/>.
+    /// </summary>
+    public bool DefaultCapsLock => _options.DefaultCapsLock;
 
     /// <summary>
     /// Whether the focused field's value should be reported back from JS on every change, so the docked
@@ -98,6 +110,13 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// set. Drives the docked keyboard's value-preview bar. Empty before the first focus.
     /// </summary>
     public string CurrentValue { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// The focused field's caret position (offset into <see cref="CurrentValue"/>), kept in sync from JS
+    /// while <see cref="ReportValueChanges"/> is set, so the value-preview bar can render a cursor at the
+    /// right spot. Clamped to <c>[0, CurrentValue.Length]</c>.
+    /// </summary>
+    public int CurrentCaret { get; private set; }
 
     /// <summary>The base layout to show for the focused field, or <see langword="null"/> before first focus.</summary>
     public KeyboardLayout? CurrentLayout { get; private set; }
@@ -170,9 +189,13 @@ public sealed class KeyboardInteropService : IAsyncDisposable
         // tapping continues from the shown amount; harmless for non-money layouts, which never read them.
         _moneyDigits = PricepadFormatter.ExtractDigits(currentValue).TrimStart('0');
         _moneyNegative = PricepadFormatter.IsNegative(currentValue);
+        // On a numeric/money keypad, the first digit pressed replaces the field's existing value rather
+        // than appending to it (see _replacePending). Text fields keep appending at the caret as before.
+        _replacePending = LayoutLibrary.IsKeypad(CurrentLayout);
         // Remember the value to revert to on Cancel, and seed the live preview so it shows immediately.
         OriginalValue = currentValue;
         CurrentValue = currentValue;
+        CurrentCaret = currentValue.Length;
         PageMaxZIndex = pageMaxZIndex;
         IsOpen = true;
         StateChanged?.Invoke();
@@ -184,15 +207,28 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// in sync so the docked keyboard's value-preview bar shows the live value.
     /// </summary>
     /// <param name="value">The focused field's new value.</param>
+    /// <param name="caret">
+    /// The field's caret offset into <paramref name="value"/>, used to position the preview cursor. A
+    /// negative value (the default, e.g. when invoked from tests) means "place the caret at the end".
+    /// </param>
     [JSInvokable]
-    public void OnValueChanged(string value)
+    public void OnValueChanged(string value, int caret = -1)
     {
-        if (string.Equals(value, CurrentValue, StringComparison.Ordinal))
+        if (caret < 0 || caret > value.Length)
+        {
+            caret = value.Length;
+        }
+
+        // The user is now editing directly (on-screen key or hardware), so any pending value-replace lapses.
+        _replacePending = false;
+
+        if (string.Equals(value, CurrentValue, StringComparison.Ordinal) && caret == CurrentCaret)
         {
             return;
         }
 
         CurrentValue = value;
+        CurrentCaret = caret;
         StateChanged?.Invoke();
     }
 
@@ -214,30 +250,59 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     public ValueTask InsertTextAsync(string text) =>
         _module?.InvokeVoidAsync("insertText", text) ?? ValueTask.CompletedTask;
 
+    /// <summary>
+    /// Inserts <paramref name="text"/> on a numeric/decimal keypad field, replacing the field's whole value
+    /// when this is the first key pressed since focus (see <see cref="_replacePending"/>) and inserting at
+    /// the caret otherwise.
+    /// </summary>
+    /// <param name="text">The digit(s) just pressed.</param>
+    public ValueTask InsertNumericAsync(string text)
+    {
+        if (_replacePending)
+        {
+            _replacePending = false;
+            return SetValueAsync(text);
+        }
+
+        return InsertTextAsync(text);
+    }
+
     /// <summary>Deletes the character before the focused field's caret.</summary>
-    public ValueTask BackspaceAsync() =>
-        _module?.InvokeVoidAsync("backspace") ?? ValueTask.CompletedTask;
+    public ValueTask BackspaceAsync()
+    {
+        _replacePending = false;
+        return _module?.InvokeVoidAsync("backspace") ?? ValueTask.CompletedTask;
+    }
 
     /// <summary>Emulates Enter on the focused field. The host closes the keyboard afterwards.</summary>
     public ValueTask EnterAsync() =>
         _module?.InvokeVoidAsync("enter") ?? ValueTask.CompletedTask;
 
     /// <summary>Empties the focused field.</summary>
-    public ValueTask ClearAsync() =>
-        _module?.InvokeVoidAsync("clear") ?? ValueTask.CompletedTask;
+    public ValueTask ClearAsync()
+    {
+        _replacePending = false;
+        return _module?.InvokeVoidAsync("clear") ?? ValueTask.CompletedTask;
+    }
 
     /// <summary>Copies the focused field's selection (or whole value) to the clipboard.</summary>
     public ValueTask CopyAsync() =>
         _module?.InvokeVoidAsync("copy") ?? ValueTask.CompletedTask;
 
     /// <summary>Pastes the clipboard contents at the focused field's caret.</summary>
-    public ValueTask PasteAsync() =>
-        _module?.InvokeVoidAsync("paste") ?? ValueTask.CompletedTask;
+    public ValueTask PasteAsync()
+    {
+        _replacePending = false;
+        return _module?.InvokeVoidAsync("paste") ?? ValueTask.CompletedTask;
+    }
 
     /// <summary>Moves the focused field's caret one character left (<paramref name="delta"/> &lt; 0) or right (&gt; 0).</summary>
     /// <param name="delta">Direction/amount to move the caret; typically <c>-1</c> or <c>1</c>.</param>
-    public ValueTask MoveCaretAsync(int delta) =>
-        _module?.InvokeVoidAsync("moveCaret", delta) ?? ValueTask.CompletedTask;
+    public ValueTask MoveCaretAsync(int delta)
+    {
+        _replacePending = false;
+        return _module?.InvokeVoidAsync("moveCaret", delta) ?? ValueTask.CompletedTask;
+    }
 
     /// <summary>
     /// Appends <paramref name="digits"/> to the focused money field and re-formats it pence-first,
@@ -246,6 +311,15 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// <param name="digits">The digit(s) just pressed (for example <c>"5"</c> or <c>"00"</c>).</param>
     public Task AppendMoneyDigitsAsync(string digits)
     {
+        // First digit since focus: discard the field's existing amount (and sign) and start fresh, so a
+        // pre-filled "6.00" is replaced rather than extended (which would give "60.05").
+        if (_replacePending)
+        {
+            _replacePending = false;
+            _moneyDigits = string.Empty;
+            _moneyNegative = false;
+        }
+
         _moneyDigits += PricepadFormatter.ExtractDigits(digits);
         return WriteMoneyAsync();
     }
@@ -253,6 +327,7 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// <summary>Removes the last entered digit from the focused money field, re-formatting pence-first.</summary>
     public Task BackspaceMoneyAsync()
     {
+        _replacePending = false;
         if (_moneyDigits.Length > 0)
         {
             _moneyDigits = _moneyDigits[..^1];
@@ -264,6 +339,7 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// <summary>Toggles the sign of the focused money field (positive ↔ negative) and re-formats it.</summary>
     public Task ToggleMoneySignAsync()
     {
+        _replacePending = false;
         _moneyNegative = !_moneyNegative;
         return WriteMoneyAsync();
     }
@@ -271,8 +347,11 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     /// <summary>
     /// Toggles a leading minus sign on the focused field's value (for the plain/decimal numeric keypads).
     /// </summary>
-    public ValueTask ToggleSignAsync() =>
-        _module?.InvokeVoidAsync("toggleSign") ?? ValueTask.CompletedTask;
+    public ValueTask ToggleSignAsync()
+    {
+        _replacePending = false;
+        return _module?.InvokeVoidAsync("toggleSign") ?? ValueTask.CompletedTask;
+    }
 
     // Format the accumulated digits pence-first and write them to the focused field in a single interop.
     private async Task WriteMoneyAsync() =>

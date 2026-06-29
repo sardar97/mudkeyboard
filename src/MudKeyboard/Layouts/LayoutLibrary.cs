@@ -108,6 +108,41 @@ public static class LayoutLibrary
         return new KeyboardLayout { Rows = rows };
     }
 
+    /// <summary>
+    /// Returns a copy of <paramref name="layout"/> with a <see cref="KeyTokens.Cancel"/> key inserted
+    /// immediately before the first <see cref="KeyTokens.Enter"/> key, so the docked keyboard can render
+    /// <c>[Cancel] [Enter]</c> together. When the layout has no Enter key it is returned unchanged. Returns
+    /// <see langword="null"/> for a <see langword="null"/> input.
+    /// </summary>
+    /// <param name="layout">The layout to copy; typically a built-in keypad or the QWERTY layout.</param>
+    internal static KeyboardLayout? WithCancelKey(KeyboardLayout? layout)
+    {
+        if (layout is null)
+        {
+            return null;
+        }
+
+        // A {cancel} already present (e.g. a custom layout) means there is nothing to inject.
+        if (layout.Rows.Any(r => r.Contains(KeyTokens.Cancel)))
+        {
+            return layout;
+        }
+
+        var rows = layout.Rows.Select(r => r.ToArray()).ToArray();
+        for (var r = 0; r < rows.Length; r++)
+        {
+            var enterIndex = Array.IndexOf(rows[r], KeyTokens.Enter);
+            if (enterIndex >= 0)
+            {
+                rows[r] = [.. rows[r][..enterIndex], KeyTokens.Cancel, .. rows[r][enterIndex..]];
+                return new KeyboardLayout { Rows = rows };
+            }
+        }
+
+        // No Enter key to anchor against — leave the layout untouched.
+        return layout;
+    }
+
     /// <summary>True when <paramref name="layout"/> is the money/price keypad (signed or not).</summary>
     internal static bool IsMoney(KeyboardLayout? layout) =>
         ReferenceEquals(layout, Price) || ReferenceEquals(layout, PriceSigned);

@@ -188,12 +188,18 @@ New in 1.2.0 (all opt-in, default off):
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
-| `ShowValuePreview` | `bool` | `false` | Shows a bar at the top of the docked keyboard with the focused field's live value. Edits apply live; Cancel reverts to the value at focus-in. |
+| `ShowValuePreview` | `bool` | `true` | Shows a bar at the top of the docked keyboard with the focused field's live value and a caret at the cursor position. Edits apply live. |
+| `ShowCancel` | `bool` | `true` | Renders a **Cancel** key next to Enter that reverts to the value at focus-in and closes. While shown, the chevron-down Hide button is suppressed. |
+| `CancelLabel` | `string` | `"Cancel"` | Text shown on the Cancel key. |
+| `DefaultCapsLock` | `bool?` | `null` | Whether the keyboard starts caps-locked. `null` = use the global `MudKeyboardOptions.DefaultCapsLock`. |
 | `ShowBackdrop` | `bool` | `false` | Dims the page behind the docked keyboard; a backdrop click cancels (reverts) and closes — unless `DisableBackdropClick` is set. |
-| `DisableBackdropClick` | `bool` | `false` | Backdrop clicks no longer dismiss; a **Cancel** button is shown in the preview bar instead (requires `ShowValuePreview`). |
-| `CancelLabel` | `string` | `"Cancel"` | Text for the Cancel button. |
+| `DisableBackdropClick` | `bool` | `false` | Backdrop clicks no longer dismiss, requiring an explicit Enter or Cancel. Effective only with `ShowBackdrop`. |
 | `Sound` | `bool` | `false` | Plays a click sound on key press (pure-Blazor `<audio>`, no JavaScript). |
 | `SoundSrc` | `string?` | `null` | Custom click-sound source; defaults to the built-in click. |
+
+The number and money keypads **replace** the field's existing value on the first digit pressed after
+focus (a pre-filled `6.00` becomes the typed amount, not `6.005`); backspace, sign or a caret move resumes
+editing the existing value.
 
 ### `<MudKeyboardTextField>` (`@typeparam T`)
 
@@ -245,6 +251,7 @@ are constants on `KeyTokens`:
 | `{caps}` | `KeyTokens.Caps` | Caps lock |
 | `{sym}` | `KeyTokens.SymbolToggle` | Flip between letters and numbers/symbols |
 | `{esc}` | `KeyTokens.Escape` | Dismiss (raises `OnEscape`) |
+| `{cancel}` | `KeyTokens.Cancel` | Revert and dismiss (raises `OnCancel`); docked keyboard renders it next to Enter |
 
 Built-in layouts on `LayoutLibrary`: `Qwerty`, `Symbols`, `Numeric`, `Numpad`, `NumpadWithDecimal`,
 `Price`. Helpers: `LayoutLibrary.ForVariant(variant)` (throws for `Custom`) and
@@ -370,17 +377,19 @@ currency from a plain decimal. `MudKeyboardNumericField<T>` resolves the keypad 
 
 You can also force money on any field with `data-mudkeyboard-layout="money"`.
 
-### Value preview, backdrop & cancel (opt-in)
+### Value preview, cancel & caps lock
 
-`ShowValuePreview="true"` adds a bar at the top of the docked keyboard showing the focused field's live
-value — handy when the field is hidden behind the panel. Focusing a field that already contains text shows
-it immediately; the keys edit it live. `ShowBackdrop="true"` dims the page; a backdrop tap **cancels**,
-reverting the field to the value it held at focus-in. `DisableBackdropClick="true"` stops the backdrop
-dismissing and shows a **Cancel** button in the preview bar instead (so the keyboard stays open until ⏎ /
-the ⌄ Hide button confirms, or Cancel reverts); rename it with `CancelLabel`.
+`ShowValuePreview` (on by default) shows a bar at the top of the docked keyboard with the focused field's
+live value and a blinking caret at the cursor position — handy when the field is hidden behind the panel,
+and so caret moves (the ◂ ▸ arrows) are visible. `ShowCancel` (on by default) renders a **Cancel** key next
+to Enter: Enter commits and closes, Cancel reverts to the value the field held at focus-in and closes;
+rename the key with `CancelLabel`, or set `ShowCancel="false"` to drop it (which restores the chevron-down
+Hide button). `DefaultCapsLock="true"` starts the keyboard caps-locked (or globally:
+`AddMudKeyboard(o => o.DefaultCapsLock = true)`). `ShowBackdrop="true"` dims the page; a backdrop tap
+cancels (reverts and closes) unless `DisableBackdropClick="true"`.
 
 ```razor
-<MudKeyboardHost ShowValuePreview="true" ShowBackdrop="true" DisableBackdropClick="true" />
+<MudKeyboardHost ShowValuePreview="true" ShowCancel="true" CancelLabel="Cancel" DefaultCapsLock="false" />
 ```
 
 ### Key click sound (opt-in, JavaScript-free)

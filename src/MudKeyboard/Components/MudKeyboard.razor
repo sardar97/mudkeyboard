@@ -82,6 +82,24 @@
     [Parameter] public EventCallback OnEscape { get; set; }
 
     /// <summary>
+    /// Raised when a Cancel (<c>{cancel}</c>) key is pressed. Add a <c>{cancel}</c> token to a custom
+    /// layout to surface it; the global docked keyboard uses this to revert and dismiss.
+    /// </summary>
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Overrides the label shown on the Cancel (<c>{cancel}</c>) key. When unset it shows <c>"Cancel"</c>.
+    /// </summary>
+    [Parameter] public string? CancelLabel { get; set; }
+
+    /// <summary>
+    /// When <see langword="true"/>, the keyboard starts with caps lock on (letters upper-cased until the
+    /// shift key turns it off). Default <see langword="false"/>. Applied once on first render; toggling the
+    /// shift key afterwards behaves normally.
+    /// </summary>
+    [Parameter] public bool StartCapsLocked { get; set; }
+
+    /// <summary>
     /// When set, the keyboard runs in <em>emit mode</em>: each press raises this callback instead of
     /// mutating <see cref="Value"/>, letting a host route the input elsewhere (for example into the
     /// caret of the currently focused field — see <see cref="MudKeyboardHost"/>). Shift, caps and the
@@ -92,6 +110,17 @@
 
     // In emit mode the keyboard produces KeyboardInput events rather than editing its own Value.
     private bool EmitMode => OnInput.HasDelegate;
+
+    // Apply the caps-lock default exactly once. Parameters are set before OnInitialized runs, so
+    // StartCapsLocked is available here; doing it in OnParametersSet instead would re-lock caps on every
+    // re-render and the user could never turn it off.
+    protected override void OnInitialized()
+    {
+        if (StartCapsLocked)
+        {
+            _shiftState = ShiftState.Locked;
+        }
+    }
 
     protected override void OnParametersSet()
     {
@@ -112,10 +141,43 @@
     private KeyboardLayout? ActiveLayout =>
         _symbolMode && _symbolLayout is not null ? _symbolLayout : _baseLayout;
 
-    private void RebuildKeys() =>
+    private void RebuildKeys()
+    {
         _displayKeys = ActiveLayout is { } layout
             ? KeyboardEngine.BuildDisplayKeys(layout, _shiftState, _symbolMode)
             : [];
+
+        // A custom Cancel label overrides the default "Cancel" face on any {cancel} key in the layout.
+        if (!string.IsNullOrWhiteSpace(CancelLabel) && CancelLabel != "Cancel")
+        {
+            _displayKeys = RelabelCancelKeys(_displayKeys, CancelLabel);
+        }
+    }
+
+    // Returns the rows with every {cancel} key's display label swapped for the custom label. Touches only
+    // the cancel keys (returning the original row otherwise), so non-cancel layouts allocate nothing.
+    private static IReadOnlyList<IReadOnlyList<KeyboardKey>> RelabelCancelKeys(
+        IReadOnlyList<IReadOnlyList<KeyboardKey>> rows, string label)
+    {
+        var result = new IReadOnlyList<KeyboardKey>[rows.Count];
+        for (var r = 0; r < rows.Count; r++)
+        {
+            var row = rows[r];
+            KeyboardKey[]? rebuilt = null;
+            for (var c = 0; c < row.Count; c++)
+            {
+                if (row[c].ActionToken == KeyTokens.Cancel)
+                {
+                    rebuilt ??= [.. row];
+                    rebuilt[c] = row[c] with { DisplayLabel = label };
+                }
+            }
+
+            result[r] = rebuilt ?? row;
+        }
+
+        return result;
+    }
 
     private async Task HandleKeyPressAsync(KeyboardKey key)
     {
@@ -150,6 +212,14 @@
                 }
 
                 await OnEscape.InvokeAsync();
+                break;
+            case KeyTokens.Cancel:
+                if (EmitMode)
+                {
+                    await OnInput.InvokeAsync(KeyboardInput.Cancel);
+                }
+
+                await OnCancel.InvokeAsync();
                 break;
             case KeyTokens.Backspace:
                 if (EmitMode)

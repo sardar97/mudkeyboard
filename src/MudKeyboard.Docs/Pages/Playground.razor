@@ -133,18 +133,22 @@
                     </div>
 
                     <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowValuePreview"
-                               ValueChanged="@(v => Toolbar.ShowValuePreview = v)" Class="mb-1" Label="Value preview" />
+                               ValueChanged="@(v => Toolbar.ShowValuePreview = v)" Class="mb-1" Label="Value preview (with caret)" />
+                    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowCancel"
+                               ValueChanged="@(v => Toolbar.ShowCancel = v)" Class="mb-1" Label="Cancel key (next to Enter)" />
+                    <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.DefaultCapsLock"
+                               ValueChanged="@(v => Toolbar.DefaultCapsLock = v)" Class="mb-1" Label="Caps lock on by default" />
                     <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowBackdrop"
                                ValueChanged="@(v => Toolbar.ShowBackdrop = v)" Class="mb-1" Label="Backdrop (dim page)" />
                     <MudSwitch T="bool" Color="Color.Secondary" Value="@Toolbar.DisableBackdropClick"
                                ValueChanged="@(v => Toolbar.DisableBackdropClick = v)" Class="mb-1"
-                               Label="Disable backdrop click (show Cancel)" />
+                               Label="Disable backdrop click" />
                     <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.AllowNegative"
                                ValueChanged="@(v => Toolbar.AllowNegative = v)" Class="mb-1" Label="Allow negative (± on keypads)" />
                     <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.Sound"
                                ValueChanged="@(v => Toolbar.Sound = v)" Class="mb-1" Label="Key click sound" />
 
-                    @if (Toolbar.DisableBackdropClick)
+                    @if (Toolbar.ShowCancel)
                     {
                         <MudTextField Value="@Toolbar.CancelLabel" ValueChanged="@((string v) => Toolbar.CancelLabel = v)"
                                       T="string" Label="CancelLabel" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2 mb-1" />
@@ -390,9 +394,18 @@
             {
                 attrs.Add("AllowNegative=\"true\"");
             }
-            if (Toolbar.ShowValuePreview)
+            // ShowValuePreview and ShowCancel default to true, so only emit them when turned off.
+            if (!Toolbar.ShowValuePreview)
             {
-                attrs.Add("ShowValuePreview=\"true\"");
+                attrs.Add("ShowValuePreview=\"false\"");
+            }
+            if (!Toolbar.ShowCancel)
+            {
+                attrs.Add("ShowCancel=\"false\"");
+            }
+            if (Toolbar.DefaultCapsLock)
+            {
+                attrs.Add("DefaultCapsLock=\"true\"");
             }
             if (Toolbar.ShowBackdrop)
             {
@@ -402,7 +415,7 @@
             {
                 attrs.Add("DisableBackdropClick=\"true\"");
             }
-            if (Toolbar.DisableBackdropClick && Toolbar.CancelLabel != "Cancel")
+            if (Toolbar.ShowCancel && Toolbar.CancelLabel != "Cancel")
             {
                 attrs.Add($"CancelLabel=\"{Toolbar.CancelLabel}\"");
             }

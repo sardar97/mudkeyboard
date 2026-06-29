@@ -32,4 +32,12 @@ public sealed class MudKeyboardOptions
     /// Which fields the docked keyboard attaches to. Default <see cref="KeyboardAttachMode.AllInputs"/>.
     /// </summary>
     public KeyboardAttachMode AttachMode { get; set; } = KeyboardAttachMode.AllInputs;
+
+    /// <summary>
+    /// When <see langword="true"/>, the global docked keyboard (<see cref="MudKeyboard.Components.MudKeyboardHost"/>)
+    /// starts with caps lock on — letters are entered upper-case until the shift key turns it off. A
+    /// <see cref="MudKeyboard.Components.MudKeyboardHost.DefaultCapsLock"/> set on the host overrides this.
+    /// Default <see langword="false"/>.
+    /// </summary>
+    public bool DefaultCapsLock { get; set; }
 }

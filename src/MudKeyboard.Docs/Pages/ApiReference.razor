@@ -137,9 +137,12 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("SoundSrc", "string?", "null", "Custom click-sound source; defaults to the built-in click."),
         new("Palette", "KeyboardPalette?", "null", "Per-keyboard colour overrides."),
         new("AriaLabel", "string?", "\"On-screen keyboard\"", "Accessible name for the root role=\"group\"."),
+        new("StartCapsLocked", "bool", "false", "Starts with caps lock on (applied once on first render)."),
+        new("CancelLabel", "string?", "null", "Overrides the label on a {cancel} key; defaults to \"Cancel\"."),
         new("Class / Style", "string?", "null", "Passthrough CSS."),
         new("OnEnter", "EventCallback", "—", "Fires on the Enter key."),
         new("OnEscape", "EventCallback", "—", "Fires on an {esc} key."),
+        new("OnCancel", "EventCallback", "—", "Fires on a {cancel} key."),
         new("OnInput", "EventCallback<KeyboardInput>", "—", "Emit mode: route each press elsewhere."),
     ];
 
@@ -183,10 +186,12 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("VisibleActions", "KeyboardAction", "All", "[Flags] set of toolbar buttons to render. Remove buttons with & ~, or use None to drop the toolbar."),
         new("DisabledActions", "KeyboardAction", "None", "[Flags] set of toolbar buttons to render greyed-out. Hiding via VisibleActions wins over disabling."),
         new("AllowNegative", "bool", "false", "Global default for showing the ± sign-toggle key on numeric keypads; a field's data-mudkeyboard-allow-negative overrides it."),
-        new("ShowValuePreview", "bool", "false", "Shows a live value-preview bar at the top of the docked keyboard; edits apply live, Cancel reverts to the value at focus-in."),
+        new("ShowValuePreview", "bool", "true", "Shows a live value-preview bar at the top of the docked keyboard with a caret at the cursor position; edits apply live."),
+        new("ShowCancel", "bool", "true", "Renders a Cancel key next to Enter that reverts to the value at focus-in and closes; suppresses the chevron-down Hide button while shown."),
+        new("CancelLabel", "string", "\"Cancel\"", "Text shown on the Cancel key next to Enter."),
+        new("DefaultCapsLock", "bool?", "null", "Whether the keyboard starts caps-locked. null = use the global MudKeyboardOptions.DefaultCapsLock."),
         new("ShowBackdrop", "bool", "false", "Dims the page behind the docked keyboard; a backdrop click cancels (reverts) and closes — unless DisableBackdropClick is set."),
-        new("DisableBackdropClick", "bool", "false", "Backdrop clicks no longer dismiss; a Cancel button is shown in the preview bar instead (requires ShowValuePreview)."),
-        new("CancelLabel", "string", "\"Cancel\"", "Text for the Cancel button in the value-preview bar."),
+        new("DisableBackdropClick", "bool", "false", "Backdrop clicks no longer dismiss, requiring an explicit Enter or Cancel. Effective only when ShowBackdrop is set."),
         new("Sound", "bool", "false", "Plays a click sound on key press (pure-Blazor <audio>, no JavaScript)."),
         new("SoundSrc", "string?", "null", "Custom click-sound source; defaults to the built-in click."),
     ];
@@ -247,7 +252,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("KeyboardInput.Kind", "KeyboardInputKind", "—", "What the press represents."),
         new("KeyboardInput.Text", "string", "\"\"", "Literal text when Kind is Text."),
         new("KeyboardInput.Char(text)", "static KeyboardInput", "—", "Creates a literal-text input."),
-        new("KeyboardInput.Backspace / Enter / Escape / Sign", "static KeyboardInput", "—", "The command inputs (Sign = ± toggle)."),
+        new("KeyboardInput.Backspace / Enter / Escape / Sign / Cancel", "static KeyboardInput", "—", "The command inputs (Sign = ± toggle, Cancel = revert)."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> TokenMembers =
@@ -260,6 +265,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("SymbolToggle", "const \"{sym}\"", "Flip letters ⇄ numbers/symbols."),
         new("Sign", "const \"{sign}\"", "Toggle a numeric value's sign (±)."),
         new("Escape", "const \"{esc}\"", "Dismiss (raises OnEscape)."),
+        new("Cancel", "const \"{cancel}\"", "Revert and dismiss (raises OnCancel); docked keyboard renders it next to Enter."),
         new("IsCommand(token)", "static bool", "True when the token is a braced command."),
         new("IsEnter(token)", "static bool", "True when the token is {enter}."),
     ];
@@ -267,6 +273,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
     private static readonly IReadOnlyList<ApiMember> OptionMembers =
     [
         new("AttachMode", "KeyboardAttachMode", "AllInputs", "Which fields the docked keyboard attaches to."),
+        new("DefaultCapsLock", "bool", "false", "Global default for whether the docked keyboard starts with caps lock on (host DefaultCapsLock overrides)."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> AttachMembers =

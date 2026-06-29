@@ -222,6 +222,7 @@ public sealed record KeyboardLayout
 | `{caps}` | `KeyTokens.Caps` | Caps lock |
 | `{sym}` | `KeyTokens.SymbolToggle` | Flip letters ↔ numbers/symbols (`123`/`ABC`) |
 | `{esc}` | `KeyTokens.Escape` | Dismiss (raises `OnEscape`) |
+| `{cancel}` | `KeyTokens.Cancel` | Revert & dismiss (raises `OnCancel`); docked keyboard places it next to Enter |
 
 ### Built-in layouts (`LayoutLibrary`)
 
@@ -333,23 +334,31 @@ toolbar with `VisibleActions="KeyboardAction.None"`, or grey one out with
 `±` sign-toggle key on the numeric keypads. Override it per field with
 `data-mudkeyboard-allow-negative="true"`/`"false"`, which `MudKeyboardNumericField.AllowNegative` emits.
 
-### Value preview, backdrop, cancel & sound (all opt-in, new in 1.2.0)
+### Value preview, cancel, caps lock, backdrop & sound
 
-- `ShowValuePreview` (`bool`, default `false`) — show a bar at the top of the docked keyboard with the
-  focused field's **live value**, so the user always sees what they're editing (useful when the field is
-  hidden behind the panel). Editing is live; a focused field that already contains text shows it at once.
+- `ShowValuePreview` (`bool`, default `true`) — show a bar at the top of the docked keyboard with the
+  focused field's **live value** and a blinking **caret** at the cursor position, so the user always sees
+  what they're editing and where the caret is (useful when the field is hidden behind the panel, and as the
+  ◂ ▸ arrows move the caret). Editing is live; a focused field that already contains text shows it at once.
+- `ShowCancel` (`bool`, default `true`) — render a **Cancel** key next to Enter that reverts to the value
+  the field held at focus-in and closes. While shown, the chevron-down Hide button is suppressed (Cancel
+  already dismisses). `CancelLabel` (`string`, default `"Cancel"`) renames it; `ShowCancel="false"` drops it.
+- `DefaultCapsLock` (`bool?`, default `null`) — start the keyboard with caps lock on. `null` uses the
+  global `MudKeyboardOptions.DefaultCapsLock` (set via `AddMudKeyboard(o => o.DefaultCapsLock = true)`).
+- The **number and money keypads replace** the field's existing value on the first digit pressed after
+  focus (a pre-filled `6.00` becomes the typed amount, not `6.005`); backspace / sign / a caret move resume
+  editing the existing value.
 - `ShowBackdrop` (`bool`, default `false`) — dim the page behind the keyboard. A backdrop click
   **cancels** the edit, reverting the field to the value it had at focus-in, and closes.
-- `DisableBackdropClick` (`bool`, default `false`) — stop the backdrop dismissing; instead show a
-  **Cancel** button in the preview bar (so the keyboard stays open until ⏎ / the ⌄ Hide button confirms,
-  or Cancel reverts). `CancelLabel` (`string`, default `"Cancel"`) renames it.
+- `DisableBackdropClick` (`bool`, default `false`) — stop the backdrop dismissing, requiring an explicit
+  Enter or Cancel. Effective only when `ShowBackdrop` is set.
 - `Sound` (`bool`, default `false`) + `SoundSrc` (`string?`) — play a click on every key press via a
   Blazor `<audio>` element (no JavaScript). `SoundSrc` overrides the built-in synthesised click with any
   URL or `data:` URI. The same two parameters exist on the inline `MudKeyboard` / `MudNumpad` /
   `MudPricepad`.
 
 ```razor
-<MudKeyboardHost ShowValuePreview="true" ShowBackdrop="true" DisableBackdropClick="true" Sound="true" />
+<MudKeyboardHost ShowValuePreview="true" ShowCancel="true" DefaultCapsLock="false" Sound="true" />
 ```
 
 ### Controlling which fields attach
@@ -616,7 +625,7 @@ builder.Services.AddMudKeyboard();
 - **Layouts** (`MudKeyboard.Layouts`): `LayoutLibrary` (`Qwerty`, `Symbols`, `Numeric`, `Numpad`,
   `NumpadWithDecimal`, `Price`, `ForVariant`, `SymbolsForVariant`).
 - **Services / DI** (`MudKeyboard.Services`, `MudKeyboard.Extensions`): `AddMudKeyboard(Action<MudKeyboardOptions>?)`,
-  `MudKeyboardOptions { AttachMode }`, `KeyboardAttachMode` (`AllInputs`/`OptIn`), `KeyboardInteropService`
+  `MudKeyboardOptions { AttachMode, DefaultCapsLock }`, `KeyboardAttachMode` (`AllInputs`/`OptIn`), `KeyboardInteropService`
   (internal interop; the only place that uses JS).
 
 ---

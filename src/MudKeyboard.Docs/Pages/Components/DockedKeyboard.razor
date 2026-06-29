@@ -139,7 +139,8 @@
     <ul>
         <li>The docked panel includes <strong>clear, copy, paste</strong> and <strong>cursor</strong> controls (cursor arrows are hidden for pence-first money entry, which always appends).</li>
         <li>It automatically docks <strong>one layer above the top-most element on the page</strong>, so it floats over dialogs and overlays. <code class="docs-inline-code">MinZIndex</code> sets the floor.</li>
-        <li>Pressing <strong>⏎</strong> commits the value and closes the keyboard; the ⌄ button hides it.</li>
+        <li>Pressing <strong>⏎</strong> commits the value and closes the keyboard; the <strong>Cancel</strong> key (next to Enter, shown by default) reverts and closes. The chevron-down ⌄ Hide button appears only when the Cancel key is turned off.</li>
+        <li>On the <strong>number and money keypads</strong>, the first digit pressed replaces the field's existing value (so a pre-filled <code class="docs-inline-code">6.00</code> becomes the typed amount, not <code class="docs-inline-code">6.005</code>); backspace, sign or a caret move resumes editing the existing value.</li>
         <li>The money layout reuses the same pence-first logic as <MudLink Href="components/pricepad">MudPricepad</MudLink>.</li>
         <li>It works on <strong>static-SSR pages</strong> too (it types via JavaScript, not Blazor binding) — see the <MudLink Href="features/ssr">Static SSR guide</MudLink>.</li>
         <li>While hidden it is <code class="docs-inline-code">inert</code> and <code class="docs-inline-code">aria-hidden</code> (out of the tab order); the toolbar and keys are fully labelled. See <MudLink Href="features/accessibility">Accessibility</MudLink>.</li>
@@ -152,7 +153,7 @@
         The docked keyboard edits the field through the browser's native value setter, then mirrors a
         hardware keyboard's <code class="docs-inline-code">change</code> → <code class="docs-inline-code">blur</code>
         order: it commits the field the instant you press outside it — <strong>before</strong> the field
-        blurs — and when <strong>⏎</strong> or the <strong>⌄</strong> button closes the panel. So the value
+        blurs — and when <strong>⏎</strong> (or the <strong>Cancel</strong> key) closes the panel. So the value
         flows into your binding and the field's own validation runs on close, exactly as if you'd typed on a
         physical keyboard and clicked away. The field below is bound to an <code class="docs-inline-code">int</code>
         with <code class="docs-inline-code">Min="-10"</code>/<code class="docs-inline-code">Max="10"</code> and
@@ -218,21 +219,28 @@
 </MudPaper>
 <CodeBlock Language="razor" Code="@ToolbarCode" />
 
-<MudText id="edit-cancel" Typo="Typo.h5" Class="docs-section-title">Value preview, backdrop &amp; cancel</MudText>
+<MudText id="edit-cancel" Typo="Typo.h5" Class="docs-section-title">Value preview, cancel &amp; backdrop</MudText>
 <div class="docs-prose">
     <p>
-        <code class="docs-inline-code">ShowValuePreview="true"</code> adds a bar at the top of the docked
-        keyboard showing the focused field's <strong>live value</strong> — so the user always sees what they
-        are editing, even when the field sits behind the panel. Focus a field that already contains text
-        (say <em>"sardar"</em>) and it appears immediately; the keys edit it live.
+        <code class="docs-inline-code">ShowValuePreview</code> (on by default) shows a bar at the top of the
+        docked keyboard with the focused field's <strong>live value</strong> and a <strong>blinking caret</strong>
+        at the cursor position — so the user always sees what they are editing and where the caret sits, even
+        when the field is behind the panel. Focus a field that already contains text (say <em>"sardar"</em>)
+        and it appears immediately; the keys edit it live, and the cursor moves with the ◂ ▸ arrows.
+    </p>
+    <p>
+        <code class="docs-inline-code">ShowCancel</code> (on by default) renders a <strong>Cancel</strong> key
+        next to <strong>Enter</strong>: Enter commits and closes, Cancel reverts to the value the field held at
+        focus-in and closes. Rename the key with <code class="docs-inline-code">CancelLabel</code>, or set
+        <code class="docs-inline-code">ShowCancel="false"</code> to drop it (which brings back the chevron-down
+        Hide button). <code class="docs-inline-code">DefaultCapsLock="true"</code> makes the keyboard start
+        with caps lock on; set it globally with <code class="docs-inline-code">AddMudKeyboard(o =&gt; o.DefaultCapsLock = true)</code>.
     </p>
     <p>
         <code class="docs-inline-code">ShowBackdrop="true"</code> dims the page behind the keyboard; a tap on
-        the backdrop <strong>cancels</strong> the edit, reverting the field to the value it held when it was
-        focused. Set <code class="docs-inline-code">DisableBackdropClick="true"</code> to require an explicit
-        choice: the backdrop no longer dismisses and a <strong>Cancel</strong> button appears in the preview
-        bar instead (⏎ commits, ⌄ hides). Rename it with <code class="docs-inline-code">CancelLabel</code>.
-        Everything here is opt-in, so existing apps are unaffected.
+        the backdrop <strong>cancels</strong> the edit (reverts and closes). Set
+        <code class="docs-inline-code">DisableBackdropClick="true"</code> so the backdrop no longer dismisses,
+        requiring an explicit Enter or Cancel.
     </p>
 </div>
 <MudPaper Class="pa-4 mb-3" Outlined="true">
@@ -243,11 +251,15 @@
     </div>
     <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="4">
         <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowValuePreview"
-                   ValueChanged="@(v => Toolbar.ShowValuePreview = v)" Label="Value preview" />
+                   ValueChanged="@(v => Toolbar.ShowValuePreview = v)" Label="Value preview (with caret)" />
+        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowCancel"
+                   ValueChanged="@(v => Toolbar.ShowCancel = v)" Label="Cancel key" />
+        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.DefaultCapsLock"
+                   ValueChanged="@(v => Toolbar.DefaultCapsLock = v)" Label="Caps lock by default" />
         <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.ShowBackdrop"
                    ValueChanged="@(v => Toolbar.ShowBackdrop = v)" Label="Backdrop" />
         <MudSwitch T="bool" Color="Color.Secondary" Value="@Toolbar.DisableBackdropClick"
-                   ValueChanged="@(v => Toolbar.DisableBackdropClick = v)" Label="Disable backdrop click (show Cancel)" />
+                   ValueChanged="@(v => Toolbar.DisableBackdropClick = v)" Label="Disable backdrop click" />
         <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.Sound"
                    ValueChanged="@(v => Toolbar.Sound = v)" Label="Key click sound" />
     </MudStack>
@@ -365,12 +377,17 @@
 """;
 
     private const string PreviewCode = """
-@* Show the live value at the top of the docked keyboard, dim the page, and require an explicit
-   Cancel / confirm (the backdrop no longer dismisses). All opt-in. *@
+@* Value preview (with caret) and the Cancel key are on by default. Defaults shown explicitly here; you
+   can drop any line. Add a dimming backdrop and require an explicit Enter / Cancel to dismiss. *@
 <MudKeyboardHost ShowValuePreview="true"
+                 ShowCancel="true"
+                 CancelLabel="Cancel"
                  ShowBackdrop="true"
-                 DisableBackdropClick="true"
-                 CancelLabel="Cancel" />
+                 DisableBackdropClick="true" />
+
+@* Start with caps lock on — per host, or globally in Program.cs: *@
+<MudKeyboardHost DefaultCapsLock="true" />
+@* builder.Services.AddMudKeyboard(o => o.DefaultCapsLock = true); *@
 """;
 
     private const string SoundCode = """
@@ -480,10 +497,12 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("VisibleActions", "KeyboardAction", "All", "Which toolbar buttons render (Clear, Copy, Paste, the cursor arrows, Hide). A [Flags] set: remove buttons with & ~, or use None to drop the whole toolbar."),
         new("DisabledActions", "KeyboardAction", "None", "Which toolbar buttons render greyed-out and non-interactive. A [Flags] set; hiding via VisibleActions wins over disabling."),
         new("AllowNegative", "bool", "false", "Global default for whether numeric keypads show the ± sign-toggle key. A field's data-mudkeyboard-allow-negative (or MudKeyboardNumericField.AllowNegative) overrides it."),
-        new("ShowValuePreview", "bool", "false", "Shows a bar at the top of the docked keyboard with the focused field's live value. Edits apply live; Cancel reverts to the value the field had at focus-in."),
+        new("ShowValuePreview", "bool", "true", "Shows a bar at the top of the docked keyboard with the focused field's live value and a caret at the cursor position. Edits apply live."),
+        new("ShowCancel", "bool", "true", "Renders a Cancel key next to Enter that reverts to the value the field had at focus-in and closes. While shown, the chevron-down Hide button is suppressed."),
+        new("CancelLabel", "string", "\"Cancel\"", "Text shown on the Cancel key next to Enter."),
+        new("DefaultCapsLock", "bool?", "null", "Whether the keyboard starts with caps lock on. null = use the global MudKeyboardOptions.DefaultCapsLock; set here to override per host."),
         new("ShowBackdrop", "bool", "false", "Dims the page behind the docked keyboard while it is open. A backdrop click cancels (reverts) and closes — unless DisableBackdropClick is set."),
-        new("DisableBackdropClick", "bool", "false", "Backdrop clicks no longer dismiss the keyboard; instead a Cancel button is shown in the value-preview bar (so ShowValuePreview must also be set for the button to appear)."),
-        new("CancelLabel", "string", "\"Cancel\"", "Text for the Cancel button in the value-preview bar."),
+        new("DisableBackdropClick", "bool", "false", "Backdrop clicks no longer dismiss the keyboard, so closing requires an explicit Enter or Cancel. Effective only when ShowBackdrop is set."),
         new("Sound", "bool", "false", "Plays a short click sound on every key press, via a Blazor <audio> element (no JavaScript)."),
         new("SoundSrc", "string?", "null", "Custom click-sound source (URL or data: URI). Defaults to the built-in synthesised click. Ignored unless Sound is set."),
     ];

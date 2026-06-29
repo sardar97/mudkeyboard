@@ -76,6 +76,31 @@ public class LayoutLibraryTests
         Assert.Contains("00", decimalRow);
         Assert.Equal("00", decimalRow[zeroIndex + 1]);
     }
+
+    [Theory]
+    [InlineData("qwerty")] // Qwerty's Enter row is [{sym} {space} {enter}]
+    [InlineData("numpad")] // Numpad's Enter row is [{enter}]
+    public void WithCancelKey_InsertsCancelImmediatelyBeforeEnter(string which)
+    {
+        var source = which == "numpad" ? LayoutLibrary.Numpad : LayoutLibrary.Qwerty;
+
+        var result = LayoutLibrary.WithCancelKey(source)!;
+
+        var enterRow = result.Rows.First(r => r.Contains(KeyTokens.Enter)).ToList();
+        Assert.Equal(KeyTokens.Cancel, enterRow[enterRow.IndexOf(KeyTokens.Enter) - 1]);
+    }
+
+    [Fact]
+    public void WithCancelKey_Null_ReturnsNull() =>
+        Assert.Null(LayoutLibrary.WithCancelKey(null));
+
+    [Fact]
+    public void WithCancelKey_LeavesOnlyOneCancel_WhenCalledTwice()
+    {
+        var twice = LayoutLibrary.WithCancelKey(LayoutLibrary.WithCancelKey(LayoutLibrary.Numpad))!;
+
+        Assert.Equal(1, twice.Rows.SelectMany(r => r).Count(t => t == KeyTokens.Cancel));
+    }
 }
 
 public class MoneyEntryTests

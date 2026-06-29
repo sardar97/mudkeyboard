@@ -68,11 +68,20 @@ function insideBackdrop(el) {
     return !!(el && el.closest && el.closest(BACKDROP_SELECTOR));
 }
 
-// Push the focused field's current value to .NET so the value-preview bar can mirror it. One-way and
-// display-only — it never writes back to the field, so it cannot race the field's own re-render.
+// The caret offset of a field, or the end of its value when selection is unavailable (number/email
+// inputs disallow selectionStart). Used to position the preview bar's cursor.
+function caretOf(el) {
+    const len = (el.value ?? '').length;
+    const pos = el.selectionStart;
+    return typeof pos === 'number' ? pos : len;
+}
+
+// Push the focused field's current value AND caret position to .NET so the value-preview bar can mirror
+// the value and show a cursor where the caret is. One-way and display-only — it never writes back to the
+// field, so it cannot race the field's own re-render.
 function reportValueChanged(el) {
     if (!reportValue || !dotnet || !el) return;
-    dotnet.invokeMethodAsync('OnValueChanged', el.value ?? '');
+    dotnet.invokeMethodAsync('OnValueChanged', el.value ?? '', caretOf(el));
 }
 
 // Highest z-index currently used anywhere on the page, ignoring our own dock (which carries the
@@ -290,6 +299,8 @@ export function moveCaret(delta) {
         ? (delta < 0 ? start : end)
         : Math.max(0, Math.min(value.length, start + delta));
     setCaret(el, pos);
+    // No 'input' event fires for a pure caret move, so report it explicitly to keep the preview cursor synced.
+    reportValueChanged(el);
 }
 
 export function blurActive() {
