@@ -60,6 +60,17 @@
 </div>
 <CodeBlock Language="razor" Code="@FieldCode" />
 <ParamTable Members="TextFieldParameters" />
+<div class="docs-prose mt-3">
+    <p>
+        For numeric inputs there's a matching <code class="docs-inline-code">&lt;MudKeyboardNumericField&lt;T&gt;&gt;</code>
+        over <code class="docs-inline-code">MudNumericField&lt;T&gt;</code>. It opts the field in the same way
+        and, on top of that, picks the keypad from the bound type — <code class="docs-inline-code">decimal</code>
+        → money, <code class="docs-inline-code">double</code>/<code class="docs-inline-code">float</code> →
+        decimal keypad, integers → plain numpad (see
+        <MudLink Href="components/docked-keyboard#numeric">Type-aware numeric fields</MudLink>):
+    </p>
+</div>
+<CodeBlock Language="razor" Code="@NumericFieldCode" />
 
 <MudText id="alternative" Typo="Typo.h5" Class="docs-section-title">Alternative: a plain MudTextField</MudText>
 <div class="docs-prose">
@@ -122,6 +133,14 @@
     private void SignIn() { /* Input.Username / Input.Password are bound from the POST */ }
     private sealed class LoginModel { public string? Username { get; set; } public string? Password { get; set; } }
 }
+""";
+
+    private const string NumericFieldCode = """
+<MudKeyboardNumericField @bind-Value="Input.Price" T="decimal" Format="N2"
+                         DockedKeyboard="true" name="Input.Price" />   @* decimal → money keypad *@
+
+<MudKeyboardNumericField @bind-Value="Input.Quantity" T="int"
+                         DockedKeyboard="true" name="Input.Quantity" /> @* int → plain numpad *@
 """;
 
     private const string AltCode = """

@@ -9,13 +9,22 @@ namespace MudKeyboard.Tests;
 /// bUnit component tests. MudBlazor needs its services registered and a loose JS interop
 /// (MudButton's ripple etc. call into JS, which we no-op in the test renderer).
 /// </summary>
-public abstract class MudComponentTestContext : BunitContext
+public abstract class MudComponentTestContext : BunitContext, IAsyncLifetime
 {
     protected MudComponentTestContext()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddMudServices();
     }
+
+    Task IAsyncLifetime.InitializeAsync() => Task.CompletedTask;
+
+    // Some MudBlazor components (for example MudNumericField) register services that implement ONLY
+    // IAsyncDisposable, such as KeyInterceptorService. bUnit's synchronous Dispose() cannot tear those
+    // down — the DI container throws "type only implements IAsyncDisposable". Disposing the context
+    // asynchronously here lets the container dispose them correctly; the subsequent synchronous Dispose
+    // then finds an already-disposed provider and is a no-op.
+    async Task IAsyncLifetime.DisposeAsync() => await ((IAsyncDisposable)this).DisposeAsync();
 }
 
 public class MudNumpadComponentTests : MudComponentTestContext

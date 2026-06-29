@@ -9,7 +9,9 @@
 <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-6">
     <strong>Try it now.</strong> Tap any field in the live demo below — the docked keyboard slides up
     from the bottom of <em>this</em> page. The layout is chosen per field (text → QWERTY,
-    number → numpad, money → pence-first).
+    number → numpad, money → pence-first). For fields bound to a numeric type, use
+    <code>MudKeyboardNumericField&lt;T&gt;</code> and the keypad follows the type — see
+    <MudLink Href="components/docked-keyboard#numeric">Type-aware numeric fields</MudLink> below.
 </MudAlert>
 
 <ExampleCard Title="Focus any field"
@@ -59,6 +61,53 @@
     docked keyboard — the inline-keyboard examples elsewhere on the site are left untouched.
 </MudAlert>
 
+<MudText id="numeric" Typo="Typo.h5" Class="docs-section-title">Type-aware numeric fields</MudText>
+<div class="docs-prose">
+    <p>
+        The focus-capture shim only sees the rendered HTML, and a <code class="docs-inline-code">decimal</code>,
+        a <code class="docs-inline-code">double</code> and a <code class="docs-inline-code">float</code> all
+        render the same <code class="docs-inline-code">inputmode="decimal"</code> — so JavaScript alone can't
+        tell a currency field from a plain decimal. <code class="docs-inline-code">MudKeyboardNumericField&lt;T&gt;</code>
+        wraps <code class="docs-inline-code">MudNumericField&lt;T&gt;</code> and resolves the keypad from the
+        bound CLR type, with no data attribute to remember:
+    </p>
+    <ul>
+        <li><code class="docs-inline-code">decimal</code> → the <strong>money</strong> keypad (pence-first, like <MudLink Href="components/pricepad">MudPricepad</MudLink>).</li>
+        <li><code class="docs-inline-code">double</code> / <code class="docs-inline-code">float</code> → the numeric keypad <strong>with</strong> a "." key.</li>
+        <li><code class="docs-inline-code">int</code>, <code class="docs-inline-code">long</code>, <code class="docs-inline-code">short</code>, … → the numeric keypad <strong>without</strong> a "." key.</li>
+    </ul>
+    <p>
+        It forwards the common <code class="docs-inline-code">MudNumericField</code> parameters
+        (<code class="docs-inline-code">For</code>, <code class="docs-inline-code">Format</code>,
+        <code class="docs-inline-code">Min</code>/<code class="docs-inline-code">Max</code>/<code class="docs-inline-code">Step</code>,
+        <code class="docs-inline-code">Adornment</code>, …) and any extra attributes. Set
+        <code class="docs-inline-code">DockedKeyboardLayout</code> to override the auto choice for a field.
+    </p>
+</div>
+<ExampleCard Title="Keypad follows the bound type"
+             Description="Bound to decimal, double and int respectively. The site runs in OptIn mode, so each field is opted in with DockedKeyboard."
+             Code="@NumericCode">
+    <MudKeyboardNumericField @bind-Value="_price" T="decimal" Format="N2" Label="Price (decimal → money £)"
+                             Variant="Variant.Outlined" Immediate="true" Min="0m" DockedKeyboard="true"
+                             Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound" />
+    <MudKeyboardNumericField @bind-Value="_measure" T="double" Label="Measurement (double → numeric with .)"
+                             Variant="Variant.Outlined" Immediate="true" DockedKeyboard="true" />
+    <MudKeyboardNumericField @bind-Value="_quantity" T="int" Label="Quantity (int → numeric, no .)"
+                             Variant="Variant.Outlined" Immediate="true" DockedKeyboard="true" />
+</ExampleCard>
+<MudText id="numeric-parameters" Typo="Typo.subtitle1" Class="mt-4 mb-1"><b>MudKeyboardNumericField parameters</b></MudText>
+<ParamTable Members="NumericFieldParameters" />
+<div class="docs-prose mt-2">
+    <p>
+        A raw <code class="docs-inline-code">MudNumericField</code> still auto-detects integer
+        (<code class="docs-inline-code">inputmode="numeric"</code> → plain numpad) vs. floating-point
+        (<code class="docs-inline-code">inputmode="decimal"</code> → decimal keypad) on its own. Only the
+        <code class="docs-inline-code">decimal</code> → money choice needs the bound type — which is exactly
+        what the wrapper supplies. You can always force <code class="docs-inline-code">money</code> on a raw
+        field with <code class="docs-inline-code">data-mudkeyboard-layout="money"</code>.
+    </p>
+</div>
+
 <MudText id="behaviour" Typo="Typo.h5" Class="docs-section-title">Built-in behaviour</MudText>
 <div class="docs-prose">
     <ul>
@@ -94,6 +143,21 @@
     private string _text = string.Empty;
     private string _number = string.Empty;
     private string _money = string.Empty;
+    private decimal _price;
+    private double _measure;
+    private int _quantity;
+
+    private const string NumericCode = """
+@* The keypad is chosen from T — no data attribute needed. (DockedKeyboard="true" because
+   this site runs in OptIn mode; in the default AllInputs mode you can omit it.) *@
+<MudKeyboardNumericField @bind-Value="Model.Price" T="decimal" Format="N2"
+                         Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound"
+                         DockedKeyboard="true" />   @* decimal → money keypad *@
+
+<MudKeyboardNumericField @bind-Value="_measure" T="double" DockedKeyboard="true" /> @* double → numeric with . *@
+
+<MudKeyboardNumericField @bind-Value="_quantity" T="int" DockedKeyboard="true" />   @* int → numeric, no . *@
+""";
 
     private const string DemoCode = """
 @* The site runs the host in OptIn mode, so fields are marked with data-mudkeyboard. *@
@@ -149,7 +213,17 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
     [
         new("data-mudkeyboard-ignore", "—", "—", "Never raise the keyboard for this field (AllInputs mode)."),
         new("data-mudkeyboard", "—", "—", "Opt this field in when using KeyboardAttachMode.OptIn."),
-        new("data-mudkeyboard-layout=\"…\"", "—", "—", "Force a layout: qwerty, numpad, decimal, or money / price."),
+        new("data-mudkeyboard-layout=\"…\"", "—", "—", "Force a layout: qwerty, numpad, decimal, or money / price. For numeric fields, MudKeyboardNumericField sets this from the bound type."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> NumericFieldParameters =
+    [
+        new("Value / ValueChanged", "T", "default", "Two-way bindable numeric value (@bind-Value)."),
+        new("For", "Expression<Func<T>>?", "null", "Validation expression, e.g. @(() => Model.Price)."),
+        new("Format", "string?", "null", "Numeric format string applied to the value (e.g. \"N2\")."),
+        new("Min / Max / Step", "T?", "null", "Forwarded to MudNumericField."),
+        new("DockedKeyboard", "bool", "false", "Adds data-mudkeyboard=\"true\" (needed in OptIn mode)."),
+        new("DockedKeyboardLayout", "string", "\"\"", "Overrides the auto layout (money, decimal, numpad, qwerty). Empty = resolve from T."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> HostParameters =

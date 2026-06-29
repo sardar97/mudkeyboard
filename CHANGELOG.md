@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`MudKeyboardNumericField` — type-aware numeric keypads for the docked keyboard.** A new generic
+  (`@typeparam T`) wrapper over `MudNumericField<T>` that chooses the docked keypad from the bound CLR
+  type, with no data attribute to remember: `decimal` → the **money** keypad (pence-first, like
+  `MudPricepad`), `double`/`float` → the numeric keypad **with** a `.` key, and integer types
+  (`int`, `long`, `short`, …) → the numeric keypad **without** a `.` key. This closes a gap that
+  JavaScript alone cannot: a `decimal` and a `double` both render `inputmode="decimal"`, so only the
+  bound type can distinguish currency from a plain decimal. It forwards the common `MudNumericField`
+  parameters (`For`, `Format`, `Min`/`Max`/`Step`, `Adornment`, …) and any extra attributes, exposes an
+  optional `DockedKeyboardLayout` override and a `DockedKeyboard` opt-in marker, and is AOT/trim friendly
+  (a single trim-safe `typeof` comparison — no member reflection). Lives in the `MudKeyboard.Components`
+  namespace. Documented on the *Docked keyboard* page and demonstrated in both demos.
 - **Accessibility, end to end.** Every keyboard surface is now a labelled `role="group"`, and each key is a
   real `<button>` carrying a spoken `aria-label` (so `⌫` reads *"Backspace"*, the blank space bar reads
   *"Space"*, `123`/`ABC` reads *"Numbers and symbols"*/*"Letters"*, etc.). The shift/caps and symbol-toggle

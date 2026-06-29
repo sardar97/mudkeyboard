@@ -156,7 +156,11 @@ builder.Services.AddMudKeyboard();   // MudKeyboard docked-keyboard services
 ```
 
 That is all — every editable text or number field now raises the keyboard on focus. The layout is
-inferred per field (text maps to QWERTY, number to numpad, and so on).
+inferred per field: text maps to QWERTY, integer fields to a plain numpad, and floating-point fields to
+a numpad with a decimal point. Currency is the one case the rendered HTML can't reveal — a `decimal` and
+a `double` look identical to JavaScript — so bind money fields with
+[`MudKeyboardNumericField<T>`](#mudkeyboardnumericfield), which picks the keypad from the bound CLR type
+and routes `decimal` to the pence-first money keypad. See [Type-aware numeric fields](#type-aware-numeric-fields).
 
 ### Controlling which fields attach
 
@@ -183,6 +187,32 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
 
 The docked panel also includes clear, copy, paste and cursor controls, and automatically docks one
 layer above the top-most element on the page, so it floats over dialogs and overlays.
+
+### Type-aware numeric fields
+
+A `decimal`, a `double` and a `float` all render the same `inputmode="decimal"`, so the focus-capture
+shim can't tell a currency field from a plain decimal on its own. `MudKeyboardNumericField<T>` wraps
+`MudNumericField<T>` and resolves the keypad from the **bound CLR type** — no data attribute to remember:
+
+| Bound type | Docked keypad |
+| --- | --- |
+| `decimal` | Money — pence-first (type `5·2·3` → `5.23`), like `MudPricepad`. |
+| `double` / `float` | Numeric keypad **with** a `.` key. |
+| `int`, `long`, `short`, … | Numeric keypad **without** a `.` key. |
+
+```razor
+@* The keypad follows T — nothing else to configure (DockedKeyboard="true" is only needed in OptIn mode). *@
+<MudKeyboardNumericField @bind-Value="Model.Price" T="decimal" Format="N2"
+                         Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound" />
+
+<MudKeyboardNumericField @bind-Value="_measure" T="double" />   @* numeric keypad with "." *@
+<MudKeyboardNumericField @bind-Value="_quantity" T="int" />     @* numeric keypad, no "." *@
+```
+
+Set `DockedKeyboardLayout` to override the auto choice for a field (for example a non-money `decimal`:
+`DockedKeyboardLayout="decimal"`). A raw `MudNumericField` still auto-detects integer vs. floating-point
+on its own; only `decimal` → money needs the bound type. You can also force money on any field with
+`data-mudkeyboard-layout="money"`.
 
 ---
 
@@ -298,6 +328,20 @@ keyboard. Forwards the common text-field parameters (`Value`/`ValueChanged`/`Val
 | --- | --- | --- | --- |
 | `DockedKeyboard` | `bool` | `false` | Adds `data-mudkeyboard="true"` so the docked keyboard attaches to this field. |
 | `DockedKeyboardLayout` | `string` | `""` | Forces the layout via `data-mudkeyboard-layout` (`qwerty`, `numpad`, `decimal`, `money`). Empty = infer. |
+
+### `<MudKeyboardNumericField>`
+
+A generic (`@typeparam T`) wrapper over `MudNumericField<T>` that makes the global docked keyboard show
+the right keypad for the field's numeric type (`decimal` → money, `double`/`float` → decimal keypad,
+integers → plain numpad). Forwards the common numeric parameters (`Value`/`ValueChanged`, `For`, `Label`,
+`Placeholder`, `HelperText`, `Variant`, `Margin`, `Adornment`, `AdornmentIcon`, `Immediate`, `Disabled`,
+`ReadOnly`, `ShrinkLabel`, `Format`, `Min`, `Max`, `Step`, `Class`, `Style`) plus any extra attributes
+(such as `name`).
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `DockedKeyboard` | `bool` | `false` | Adds `data-mudkeyboard="true"` (required in `OptIn` mode). |
+| `DockedKeyboardLayout` | `string` | `""` | Overrides the auto layout (`money`, `decimal`, `numpad`, `qwerty`). Empty = resolve from `T`. |
 
 ---
 

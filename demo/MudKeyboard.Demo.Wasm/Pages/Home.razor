@@ -21,13 +21,38 @@
         <MudText Typo="Typo.h6" GutterBottom="true">Global docked keyboard · focus any field</MudText>
         <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
             These fields have no inline keyboard. Tap one and the keyboard slides up from the bottom of
-            the screen; the layout is inferred from the field (text → QWERTY, number → numpad,
-            <c>data-mudkeyboard-layout="decimal"</c> → decimal numpad). Powered by a small optional JS shim.
+            the screen; the layout is inferred from the field (text → QWERTY, number → numpad, and
+            <c>data-mudkeyboard-layout="money"</c> forces the pence-first money keypad). For fields bound
+            to a numeric type, <c>MudKeyboardNumericField</c> picks the keypad automatically — see below.
+            Powered by a small optional JS shim.
         </MudText>
         <MudStack Spacing="3">
             <MudTextField @bind-Value="_dockText" Label="Text (QWERTY)" Variant="Variant.Outlined" Immediate="true" />
             <MudTextField @bind-Value="_dockNumber" Label="Number (numpad)" Variant="Variant.Outlined" Immediate="true" InputMode="InputMode.numeric" />
             <MudTextField @bind-Value="_dockMoney" Label="Money (pence-first, type 5·2·3 → 5.23)" Variant="Variant.Outlined" Immediate="true" data-mudkeyboard-layout="money" />
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Type-aware numeric fields · the keypad follows the bound type</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
+            <c>MudKeyboardNumericField&lt;T&gt;</c> chooses the docked keypad straight from the bound CLR
+            type — no data attribute required: <c>decimal</c> → money (pence-first), <c>double</c>/<c>float</c>
+            → numeric keypad <em>with</em> a "." key, integer types → numeric keypad <em>without</em> one.
+            A raw <c>MudNumericField</c> also auto-detects integer vs. floating-point; only
+            <c>decimal</c> → money needs the bound type, which is why the wrapper exists.
+        </MudText>
+        <MudStack Spacing="3">
+            <MudKeyboardNumericField @bind-Value="_dockPrice" T="decimal" Format="N2"
+                                     Label="Price (T=decimal → money £, pence-first)"
+                                     Variant="Variant.Outlined" Immediate="true" Min="0"
+                                     Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound" />
+            <MudKeyboardNumericField @bind-Value="_dockMeasure" T="double"
+                                     Label="Measurement (T=double → numeric keypad with .)"
+                                     Variant="Variant.Outlined" Immediate="true" />
+            <MudKeyboardNumericField @bind-Value="_dockQuantity" T="int"
+                                     Label="Quantity (T=int → numeric keypad, no .)"
+                                     Variant="Variant.Outlined" Immediate="true" />
         </MudStack>
     </MudPaper>
 
@@ -85,6 +110,9 @@
     private string _dockText = string.Empty;
     private string _dockNumber = string.Empty;
     private string _dockMoney = string.Empty;
+    private decimal _dockPrice;
+    private double _dockMeasure;
+    private int _dockQuantity;
     private int _enterCount;
     private string _lastEnter = "(none yet)";
 
