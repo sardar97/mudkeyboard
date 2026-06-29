@@ -23,6 +23,17 @@ internal static class KeyboardEngine
     public static string Backspace(string? current) =>
         string.IsNullOrEmpty(current) ? string.Empty : current[..^1];
 
+    /// <summary>
+    /// Toggles a leading minus sign on a numeric string: prepends <c>-</c> when absent, strips it when
+    /// present (so <c>"5"</c> ↔ <c>"-5"</c>, and an empty value becomes <c>"-"</c> to allow sign-first
+    /// entry). Null is treated as empty.
+    /// </summary>
+    public static string ToggleSign(string? current)
+    {
+        current ??= string.Empty;
+        return current.StartsWith('-') ? current[1..] : "-" + current;
+    }
+
     /// <summary>True when the token is a single ASCII letter (a–z or A–Z).</summary>
     public static bool IsLetterToken(string token) =>
         token is [(>= 'a' and <= 'z') or (>= 'A' and <= 'Z')];

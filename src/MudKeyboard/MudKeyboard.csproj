@@ -23,13 +23,15 @@
   <PropertyGroup>
     <PackageId>MudKeyboard</PackageId>
     <Title>MudKeyboard — Blazor on-screen virtual keyboard for MudBlazor</Title>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>Sardar Qaslany</Authors>
     <Product>MudKeyboard</Product>
     <Description>Free, open-source on-screen virtual keyboard for Blazor and MudBlazor apps. The keyboard core is JavaScript-free (pure C#/Blazor); an optional, tiny JS shim adds a global docked keyboard that pops up when any input is focused. Includes a full QWERTY keyboard, numpad, pence-first pricepad and custom layouts, themed automatically by MudBlazor (dark/light follows your theme). AOT and trim-friendly. Targets .NET 8, 9 and 10.</Description>
     <PackageTags>blazor;mudblazor;virtual-keyboard;onscreen-keyboard;on-screen-keyboard;touch-keyboard;touchscreen;numpad;keypad;kiosk;blazor-component;blazor-webassembly;dotnet;csharp</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/sardar97/mudkeyboard</PackageProjectUrl>
+    <!-- Project URL points to the documentation site (the package's primary landing page).
+         The source repository is declared separately via RepositoryUrl below. -->
+    <PackageProjectUrl>https://mudkeyboard.pages.dev</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/sardar97/mudkeyboard</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -51,6 +53,19 @@
   <ItemGroup>
     <None Include="logo.png" Pack="true" PackagePath="" Visible="false" />
     <None Include="..\..\README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+
+  <!--
+    Machine-readable docs for AI coding agents, shipped inside the package so an assistant working
+    against the restored package can read how to use MudKeyboard offline. The canonical copies live in
+    the docs site (src/MudKeyboard.Docs/wwwroot/) so they are also served at the site origin
+    (e.g. https://mudkeyboard.pages.dev/skill.md); we pack the same files under docs/ to avoid drift.
+      - skill.md       : task-focused integration guide with agent-skill frontmatter
+      - llms-full.txt  : the full documentation as a single Markdown file
+  -->
+  <ItemGroup>
+    <None Include="..\MudKeyboard.Docs\wwwroot\skill.md" Pack="true" PackagePath="docs\" Visible="false" />
+    <None Include="..\MudKeyboard.Docs\wwwroot\llms-full.txt" Pack="true" PackagePath="docs\" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>

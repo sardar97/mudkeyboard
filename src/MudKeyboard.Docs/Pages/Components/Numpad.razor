@@ -31,6 +31,23 @@
     </div>
 </ExampleCard>
 
+<MudText id="negative" Typo="Typo.h5" Class="docs-section-title">Allow negative numbers</MudText>
+<div class="docs-prose">
+    <p>
+        Set <code class="docs-inline-code">AllowNegative="true"</code> to show a
+        <code class="docs-inline-code">±</code> key that toggles a leading minus sign, so the value can be
+        made negative. Off by default. It combines with
+        <code class="docs-inline-code">AllowDecimal</code>.
+    </p>
+</div>
+<ExampleCard Title="AllowNegative"
+             Code="@NegativeCode">
+    <MudTextField @bind-Value="_neg" Label="Offset" Variant="Variant.Outlined" Immediate="true" />
+    <div style="max-width:320px;">
+        <MudNumpad @bind-Value="_neg" AllowNegative="true" AllowDecimal="true" />
+    </div>
+</ExampleCard>
+
 <MudText id="maxlength" Typo="Typo.h5" Class="docs-section-title">Max length, enter & disabled</MudText>
 <div class="docs-prose">
     <p>
@@ -65,6 +82,7 @@
 
     private string _int = string.Empty;
     private string _dec = string.Empty;
+    private string _neg = string.Empty;
     private string _pin = string.Empty;
 
     private const string BasicCode = """
@@ -76,6 +94,13 @@
 
     private const string DecimalCode = """
 <MudNumpad @bind-Value="_value" AllowDecimal="true" />
+
+@code { private string _value = string.Empty; }
+""";
+
+    private const string NegativeCode = """
+@* ± toggles a leading minus; combines with AllowDecimal *@
+<MudNumpad @bind-Value="_value" AllowNegative="true" AllowDecimal="true" />
 
 @code { private string _value = string.Empty; }
 """;
@@ -93,9 +118,11 @@
     [
         new("Value / ValueChanged", "string", "\"\"", "Two-way bindable value (@bind-Value)."),
         new("AllowDecimal", "bool", "false", "Shows a '.' key and allows a single decimal point."),
+        new("AllowNegative", "bool", "false", "Shows a ± key that toggles a leading minus sign."),
         new("MaxLength", "int?", "null", "Optional cap on value length."),
         new("Disabled", "bool", "false", "Disables every key."),
         new("Palette", "KeyboardPalette?", "null", "Per-numpad colour overrides; unset slots follow the theme."),
+        new("AriaLabel", "string?", "\"Numeric keypad\"", "Accessible name for the root role=\"group\"."),
         new("Class / Style", "string?", "null", "Passthrough CSS for the root surface."),
         new("OnEnter", "EventCallback", "—", "Fires when the Enter (⏎) key is pressed."),
     ];

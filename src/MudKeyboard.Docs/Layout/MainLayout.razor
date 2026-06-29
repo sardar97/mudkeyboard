@@ -1,5 +1,8 @@
 @namespace MudKeyboard.Docs.Layout
 @inherits LayoutComponentBase
+@implements IDisposable
+@using MudKeyboard.Docs.Services
+@inject DocsKeyboardToolbarState ToolbarState
 
 <MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -7,8 +10,15 @@
 <MudSnackbarProvider />
 
 @* The global docked keyboard. Registered in OptIn mode (see Program.cs), so it only appears for
-   fields that carry data-mudkeyboard — i.e. the examples on the "Docked keyboard" page. *@
-<MudKeyboardHost />
+   fields that carry data-mudkeyboard — i.e. the examples on the "Docked keyboard" page. Its toolbar
+   parameters are driven by DocsKeyboardToolbarState so the live "Toolbar buttons" example on that page
+   can show/hide/disable buttons on this one global host. *@
+<MudKeyboardHost VisibleActions="@ToolbarState.VisibleActions"
+                 DisabledActions="@ToolbarState.DisabledActions" />
+
+@* Keyboard users can skip the app bar and navigation and jump straight to the page content.
+   Hidden off-screen until focused (see .docs-skip-link in docs.css). *@
+<a class="docs-skip-link" href="#main-content">Skip to main content</a>
 
 <MudLayout>
     <MudAppBar Elevation="1">
@@ -50,16 +60,49 @@
 
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.Large" Class="my-6">
-            <div class="docs-page">
+            <div id="main-content" class="docs-page" tabindex="-1">
                 @Body
             </div>
         </MudContainer>
+
+        @* Site-wide footer: shows the documented package version and this site's own version. *@
+        <footer class="docs-footer">
+            <MudContainer MaxWidth="MaxWidth.Large">
+                <div class="docs-footer__inner">
+                    <div class="docs-footer__brand">
+                        <MudImage Src="_content/MudKeyboard/mudkeyboard_logo.svg" Alt="MudKeyboard" Height="24" />
+                        <MudText Typo="Typo.caption" Class="docs-footer__copy">Open-source · MIT licensed</MudText>
+                    </div>
+                    <div class="docs-footer__versions">
+                        <MudLink Href="releases" Underline="Underline.None" Class="docs-footer__chip" title="MudKeyboard package version — view releases">
+                            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
+                            <span>MudKeyboard @("v"+BuildInfo.PackageVersion)</span>
+                        </MudLink>
+                        <MudLink Href="releases" Underline="Underline.None" Class="docs-footer__chip" title="Documentation site version">
+                            <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Small" />
+                            <span>Docs @("v"+BuildInfo.DocsVersion)</span>
+                        </MudLink>
+                    </div>
+                    <div class="docs-footer__links">
+                        <MudLink Href="releases" Color="Color.Inherit" Typo="Typo.body2">Releases</MudLink>
+                        <MudLink Href="https://github.com/sardar97/mudkeyboard" Target="_blank" Color="Color.Inherit" Typo="Typo.body2">GitHub</MudLink>
+                        <MudLink Href="https://www.nuget.org/packages/MudKeyboard" Target="_blank" Color="Color.Inherit" Typo="Typo.body2">NuGet</MudLink>
+                    </div>
+                </div>
+            </MudContainer>
+        </footer>
     </MudMainContent>
 </MudLayout>
 
 @code {
     private bool _drawerOpen = true;
     private bool _isDarkMode;
+
+    protected override void OnInitialized() => ToolbarState.Changed += OnToolbarStateChanged;
+
+    private void OnToolbarStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ToolbarState.Changed -= OnToolbarStateChanged;
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 

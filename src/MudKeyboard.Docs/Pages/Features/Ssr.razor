@@ -1,0 +1,156 @@
+@page "/features/ssr"
+
+<PageTitle>Static SSR · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Features &amp; guides"
+            Title="Static SSR support"
+            Lead="MudKeyboard's global docked keyboard works on Blazor static Server-Side Rendering pages (the static SSR introduced in .NET 8) — no per-page interactivity required." />
+
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-6" Dense="true">
+    This documentation site runs on WebAssembly, so it can't host a live static-SSR page. The Server demo
+    (<code class="docs-inline-code">demo/MudKeyboard.Demo.Server</code>) ships a runnable example at
+    <code class="docs-inline-code">/components/ssr-login-demo</code>.
+</MudAlert>
+
+<MudText id="how" Typo="Typo.h5" Class="docs-section-title">How it works</MudText>
+<div class="docs-prose">
+    <p>
+        A static-SSR page has no Blazor circuit or WebAssembly runtime of its own, so the <em>inline</em>
+        keyboards (<code class="docs-inline-code">MudKeyboard</code>,
+        <code class="docs-inline-code">MudNumpad</code>, <code class="docs-inline-code">MudPricepad</code>) —
+        which rely on Blazor event handlers — still need an interactive render mode.
+    </p>
+    <p>
+        The <strong>global docked keyboard</strong> is different: it edits the focused
+        <code class="docs-inline-code">&lt;input&gt;</code> through JavaScript on
+        <code class="docs-inline-code">document.activeElement</code> and dispatches native
+        <code class="docs-inline-code">input</code> and <code class="docs-inline-code">change</code> events.
+        The typed text lands in the field's value and is carried by an ordinary form POST — so it works on a
+        statically rendered page with no per-page Blazor interactivity.
+    </p>
+</div>
+
+<MudText id="host" Typo="Typo.h5" Class="docs-section-title">1. Host the keyboard outside &lt;Routes&gt;</MudText>
+<div class="docs-prose">
+    <p>
+        Put <code class="docs-inline-code">&lt;MudKeyboardHost&gt;</code> in
+        <code class="docs-inline-code">App.razor</code>, <strong>outside <code class="docs-inline-code">&lt;Routes&gt;</code></strong>,
+        with its own interactive render mode. That gives the keyboard its own circuit, which stays live
+        regardless of the render mode of whichever page is on screen — including statically rendered ones.
+        Leave the global <code class="docs-inline-code">@@rendermode</code> off
+        <code class="docs-inline-code">&lt;Routes&gt;</code> so each page can pick its own.
+    </p>
+</div>
+<CodeBlock Language="razor" Code="@HostCode" />
+<MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="my-3" Dense="true">
+    Placing the host <em>inside</em> a layout that a static-SSR page uses would make the host static too — it
+    would never run its JavaScript. Keep it outside <code class="docs-inline-code">&lt;Routes&gt;</code> so it
+    has its own interactive island.
+</MudAlert>
+
+<MudText id="fields" Typo="Typo.h5" Class="docs-section-title">2. Opt fields in with MudKeyboardTextField</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">&lt;MudKeyboardTextField&gt;</code> is a thin generic wrapper over
+        <code class="docs-inline-code">MudTextField&lt;T&gt;</code> that adds the
+        <code class="docs-inline-code">data-mudkeyboard</code> marker for you when
+        <code class="docs-inline-code">DockedKeyboard="true"</code>. The page itself needs <strong>no</strong>
+        <code class="docs-inline-code">@@rendermode</code> directive — it renders with static SSR:
+    </p>
+</div>
+<CodeBlock Language="razor" Code="@FieldCode" />
+<ParamTable Members="TextFieldParameters" />
+<div class="docs-prose mt-3">
+    <p>
+        For numeric inputs there's a matching <code class="docs-inline-code">&lt;MudKeyboardNumericField&lt;T&gt;&gt;</code>
+        over <code class="docs-inline-code">MudNumericField&lt;T&gt;</code>. It opts the field in the same way
+        and, on top of that, picks the keypad from the bound type — <code class="docs-inline-code">decimal</code>
+        → money, <code class="docs-inline-code">double</code>/<code class="docs-inline-code">float</code> →
+        decimal keypad, integers → plain numpad (see
+        <MudLink Href="components/docked-keyboard#numeric">Type-aware numeric fields</MudLink>):
+    </p>
+</div>
+<CodeBlock Language="razor" Code="@NumericFieldCode" />
+
+<MudText id="alternative" Typo="Typo.h5" Class="docs-section-title">Alternative: a plain MudTextField</MudText>
+<div class="docs-prose">
+    <p>
+        You don't have to use the wrapper. Any input marked with the
+        <code class="docs-inline-code">data-mudkeyboard</code> attribute works the same way, which is handy in
+        <code class="docs-inline-code">AllInputs</code> mode or when you already have a
+        <code class="docs-inline-code">MudTextField</code>:
+    </p>
+</div>
+<CodeBlock Language="razor" Code="@AltCode" />
+
+<MudText id="notes" Typo="Typo.h5" Class="docs-section-title">Notes</MudText>
+<div class="docs-prose">
+    <ul>
+        <li>Give each field a <code class="docs-inline-code">name</code> so its value is carried by the form POST and bound on the server.</li>
+        <li>The inline keyboards aren't part of this — they render on a static page but their keys won't respond without an interactive render mode.</li>
+        <li>Everything else about the docked keyboard (attach modes, forced layouts, the clear/copy/paste tools) works exactly as on the <MudLink Href="components/docked-keyboard">Docked keyboard</MudLink> page.</li>
+    </ul>
+</div>
+
+<div class="docs-nav-footer">
+    <MudButton Href="features/aot" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">AOT &amp; trimming</MudButton>
+    <MudButton Href="features/accessibility" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Accessibility</MudButton>
+</div>
+
+@code {
+    private const string HostCode = """
+<body>
+    @* No global @rendermode on <Routes> → each page picks its own; pages with no
+       @rendermode directive render with static SSR. *@
+    <Routes />
+
+    @* The docked keyboard host lives here, OUTSIDE <Routes>, with its own circuit,
+       so it stays interactive even when the page on screen is statically rendered. *@
+    <MudKeyboardHost @rendermode="InteractiveServer" />
+
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+</body>
+""";
+
+    private const string FieldCode = """
+@page "/login"
+@* No @rendermode → this page is static SSR. *@
+
+<EditForm Model="Input" method="post" OnValidSubmit="SignIn" FormName="login">
+    <MudKeyboardTextField @bind-Value="Input.Username" Label="Username"
+                          DockedKeyboard="true" name="Input.Username" />
+
+    <MudKeyboardTextField @bind-Value="Input.Password" Label="Password"
+                          InputType="InputType.Password"
+                          DockedKeyboard="true" DockedKeyboardLayout="qwerty"
+                          name="Input.Password" />
+
+    <MudButton ButtonType="ButtonType.Submit">Sign in</MudButton>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm] private LoginModel Input { get; set; } = new();
+    private void SignIn() { /* Input.Username / Input.Password are bound from the POST */ }
+    private sealed class LoginModel { public string? Username { get; set; } public string? Password { get; set; } }
+}
+""";
+
+    private const string NumericFieldCode = """
+<MudKeyboardNumericField @bind-Value="Input.Price" T="decimal" Format="N2"
+                         DockedKeyboard="true" name="Input.Price" />   @* decimal → money keypad *@
+
+<MudKeyboardNumericField @bind-Value="Input.Quantity" T="int"
+                         DockedKeyboard="true" name="Input.Quantity" /> @* int → plain numpad *@
+""";
+
+    private const string AltCode = """
+<MudTextField @bind-Value="Input.Email" Label="Email"
+              data-mudkeyboard="true" name="Input.Email" />
+""";
+
+    private static readonly IReadOnlyList<ApiMember> TextFieldParameters =
+    [
+        new("DockedKeyboard", "bool", "false", "Adds data-mudkeyboard=\"true\" so the docked keyboard attaches to this field."),
+        new("DockedKeyboardLayout", "string", "\"\"", "Forces the layout via data-mudkeyboard-layout (qwerty, numpad, decimal, money). Empty = infer from the field."),
+    ];
+}

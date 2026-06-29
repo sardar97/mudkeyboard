@@ -13,6 +13,37 @@ html, body {
     scroll-behavior: smooth;
 }
 
+/* ---------- Skip-to-content link ----------
+   Visually hidden until focused, so keyboard/screen-reader users can jump straight past the app bar
+   and navigation to the page content. Sits above the app bar's z-index when shown. */
+.docs-skip-link {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -120%);
+    z-index: 2000;
+    padding: 0.6rem 1.1rem;
+    border-radius: 0 0 8px 8px;
+    background: var(--mud-palette-primary, var(--docs-brand));
+    color: var(--mud-palette-primary-text, #fff);
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s ease;
+}
+
+.docs-skip-link:focus,
+.docs-skip-link:focus-visible {
+    transform: translate(-50%, 0);
+    outline: 3px solid var(--mud-palette-primary-text, #fff);
+    outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .docs-skip-link {
+        transition: none;
+    }
+}
+
 /* ---------- Loading splash ---------- */
 .app-loading {
     position: absolute;
@@ -276,4 +307,151 @@ a.docs-anchor {
 a.docs-anchor:hover::after {
     content: " #";
     color: var(--docs-brand);
+}
+
+/* ---------- Releases page: current-version callout ---------- */
+.docs-versions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.25rem;
+    border-radius: 14px;
+}
+
+.docs-versions__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.docs-versions__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.docs-versions__value {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.docs-versions__divider {
+    height: 2.5rem;
+}
+
+.docs-versions__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* ---------- Releases page: per-version cards ---------- */
+.docs-release {
+    border-radius: 14px;
+    scroll-margin-top: 90px;
+}
+
+.docs-release__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.docs-release__title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.docs-release__summary {
+    margin-top: 0.75rem;
+}
+
+.docs-release__group {
+    margin-top: 1.25rem;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mud-palette-primary);
+    font-weight: 700;
+}
+
+.docs-release__list {
+    margin: 0;
+    padding-left: 1.25rem;
+    line-height: 1.6;
+}
+
+.docs-release__list li {
+    margin-bottom: 0.6rem;
+}
+
+.docs-release__item-title {
+    font-weight: 600;
+}
+
+.docs-release__item-detail {
+    color: var(--mud-palette-text-secondary);
+}
+
+/* ---------- Site-wide footer ---------- */
+.docs-footer {
+    margin-top: 2rem;
+    padding: 1.5rem 0 2rem;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.docs-footer__inner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+}
+
+.docs-footer__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.docs-footer__copy {
+    color: var(--mud-palette-text-secondary);
+}
+
+.docs-footer__versions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.docs-footer__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-action-default-hover);
+    color: var(--mud-palette-text-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.docs-footer__chip:hover {
+    border-color: var(--mud-palette-primary);
+    color: var(--mud-palette-primary);
+}
+
+.docs-footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-left: auto;
 }

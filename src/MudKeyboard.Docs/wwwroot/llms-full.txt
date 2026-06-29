@@ -1,0 +1,481 @@
+# MudKeyboard — full documentation for LLMs
+
+> MudKeyboard is a free, open-source on-screen virtual keyboard library for Blazor and MudBlazor apps.
+> The keyboard core is 100% C#/Blazor (no JavaScript); a single optional JS shim powers one feature — a
+> global docked keyboard that pops up when any input is focused. It is themed automatically by MudBlazor
+> (dark/light follows your theme) and is AOT- and trim-friendly. Targets .NET 8, 9 and 10.
+
+This file is the complete documentation in plain Markdown, provided because the documentation site
+(<https://mudkeyboard.pages.dev>) is a Blazor WebAssembly single-page app and therefore returns an empty
+shell to a plain HTTP fetch. Everything an LLM or coding agent needs is below. A task-focused, condensed
+"how to integrate" guide for agents lives at <https://mudkeyboard.pages.dev/skill.md>.
+
+- Package: `MudKeyboard` on NuGet — <https://www.nuget.org/packages/MudKeyboard>
+- Source (MIT): <https://github.com/sardar97/mudkeyboard>
+- Current version documented here: **1.1.0** (.NET 8/9/10, MudBlazor 9.x)
+- MudBlazor (required peer dependency): <https://mudblazor.com>
+
+---
+
+## Overview
+
+MudKeyboard is built for touchscreens, kiosks, point-of-sale terminals, and any interface where a
+hardware keyboard is unavailable or impractical. It provides:
+
+- **Inline keyboards** rendered in the page and two-way bound to a string:
+  - `MudKeyboard` — a full QWERTY keyboard with shift/caps and a `123`/`ABC` toggle to a numbers/symbols face.
+  - `MudNumpad` — a calculator-style numeric pad, with an optional decimal point.
+  - `MudPricepad` — pence-first money entry (typing `5`, `2`, `3` yields `£5.23`).
+- A **global docked keyboard** (`MudKeyboardHost`) that slides up from the bottom when any input is
+  focused and types at that field's caret. This is the only feature that uses JavaScript.
+- A **custom-layout engine** — a layout is just rows of key tokens (data, no code).
+
+Key properties:
+
+- **JavaScript-free core.** Rendering, the text engine, shift/caps and the symbol toggle are pure C#/Blazor.
+- **Themed by MudBlazor.** Every colour comes from MudBlazor CSS variables, so dark/light mode and your
+  theme cascade automatically.
+- **AOT and trim friendly.** No reflection, no dynamic code. The library sets `<IsAotCompatible>true</IsAotCompatible>`.
+- **Accessible by default.** Labelled `role="group"`, real `<button>` keys with `aria-label`, `aria-pressed`
+  toggle state, `inert` while hidden, reduced-motion and safe-area support.
+- **Multi-targeted.** .NET 8, 9 and 10. Inline keyboards run under Interactive Server or WebAssembly; the
+  docked keyboard additionally works on static SSR pages.
+
+---
+
+## Requirements and hard rules
+
+1. **MudBlazor is a required peer dependency.** MudKeyboard renders keys with MudBlazor components and
+   reads MudBlazor CSS variables for colours. The app must reference `MudBlazor`, call `AddMudServices()`,
+   and mount a `<MudThemeProvider />`. There is no MudBlazor-free mode. "Using MudKeyboard without MudBlazor
+   components" only means binding to plain inputs/POCOs instead of MudBlazor input fields — MudBlazor is
+   still required.
+2. **Inline keyboards** (`MudKeyboard`, `MudNumpad`, `MudPricepad`) need an interactive render mode and do
+   not require `AddMudKeyboard()`.
+3. **The docked keyboard** (`MudKeyboardHost`) requires `AddMudKeyboard()` and one `<MudKeyboardHost />`.
+
+---
+
+## Installation
+
+```bash
+dotnet add package MudKeyboard
+```
+
+```xml
+<PackageReference Include="MudBlazor"   Version="9.*" />
+<PackageReference Include="MudKeyboard" Version="1.*" />
+```
+
+Add namespaces to `_Imports.razor`:
+
+```razor
+@using MudKeyboard.Components
+@using MudKeyboard.Models
+```
+
+Make sure MudBlazor is set up (services + providers):
+
+```csharp
+// Program.cs
+builder.Services.AddMudServices();
+```
+
+```razor
+<MudThemeProvider @bind-IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+```
+
+The docked keyboard ships two static web assets, `_content/MudKeyboard/mudKeyboard.js` and
+`_content/MudKeyboard/MudKeyboard.css`; the consuming app just needs to serve static web assets normally
+(`app.MapStaticAssets()` / `UseStaticFiles()` on a server, automatic for WASM standalone). Inline keyboards
+need no static assets.
+
+---
+
+## Quickstart
+
+### Inline full keyboard — two-way binding
+
+```razor
+<MudTextField @bind-Value="_text" Label="Name" Variant="Variant.Outlined" />
+<MudKeyboard @bind-Value="_text" OnEnter="Submit" MaxLength="40" />
+
+@code {
+    private string _text = string.Empty;
+    private void Submit() { /* Enter was pressed */ }
+}
+```
+
+### Numpad
+
+```razor
+<MudNumpad @bind-Value="_number" AllowDecimal="true" />
+@code { private string _number = string.Empty; }
+```
+
+### Pricepad (pence-first currency entry)
+
+```razor
+<MudPricepad @bind-Value="_price" CurrencySymbol="£" DecimalPlaces="2" />
+@code { private string _price = string.Empty; }
+```
+
+### Custom layout
+
+```razor
+<MudKeyboard @bind-Value="_value" Variant="KeyboardVariant.Custom" Layout="MyLayout" />
+
+@code {
+    private string _value = string.Empty;
+
+    private static readonly KeyboardLayout MyLayout = new()
+    {
+        Rows = new string[][]
+        {
+            ["m", "u", "d"],
+            ["k", "e", "y"],
+            [KeyTokens.Space, KeyTokens.Backspace, KeyTokens.Enter],
+        },
+    };
+}
+```
+
+---
+
+## Components and parameters
+
+### `<MudKeyboard>`
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `Value` / `ValueChanged` | `string` | `""` | Two-way bindable value (`@bind-Value`). |
+| `Layout` | `KeyboardLayout?` | `null` | Explicit layout; overrides `Variant`. |
+| `Variant` | `KeyboardVariant` | `Full` | `Full`, `Numpad`, `Pricepad`, `Custom`. |
+| `SymbolLayout` | `KeyboardLayout?` | `null` | Numbers/symbols face for the `{sym}` toggle. |
+| `MaxLength` | `int?` | `null` | Optional cap on value length. |
+| `Disabled` | `bool` | `false` | Disables every key. |
+| `DropShadow` | `bool` | `true` | Flat keys when `false`. |
+| `Palette` | `KeyboardPalette?` | `null` | Per-keyboard colour overrides. |
+| `AriaLabel` | `string?` | `"On-screen keyboard"` | Accessible name for the root `role="group"`. |
+| `Class` / `Style` | `string?` | `null` | Passthrough CSS. |
+| `OnEnter` | `EventCallback` | — | Fires on the Enter key. |
+| `OnEscape` | `EventCallback` | — | Fires on an `{esc}` key. |
+| `OnInput` | `EventCallback<KeyboardInput>` | — | Emit mode: route each press elsewhere instead of editing `Value`. |
+
+### `<MudNumpad>`
+
+`Value`/`ValueChanged`, `AllowDecimal` (bool), `MaxLength`, `Disabled`, `OnEnter`, `Palette`, `AriaLabel`
+(default `"Numeric keypad"`), `Class`, `Style`.
+
+### `<MudPricepad>`
+
+`Value`/`ValueChanged`, `CurrencySymbol` (default `"£"`), `DecimalPlaces` (default `2`), `MaxLength`,
+`Disabled`, `OnEnter`, `Palette`, `AriaLabel` (default `"Price entry keypad"`), `Class`, `Style`.
+
+### `<MudKeyboardHost>`
+
+`Palette` (`KeyboardPalette?`), `Elevation` (`int`, default `8`), `MinZIndex` (`int`, default `1400`),
+`Style` (`string?`).
+
+### `<MudKeyboardTextField>` (`@typeparam T`)
+
+A wrapper over `MudTextField<T>` that opts a field into the docked keyboard. Forwards common text-field
+parameters (`Value`/`ValueChanged`/`ValueExpression`, `Label`, `Placeholder`, `HelperText`, `InputType`,
+`Immediate`, `Disabled`, `ReadOnly`, `Variant`, `Adornment`, `AdornmentIcon`, `Lines`, `Class`, `Style`)
+plus any extra attributes (such as `name`).
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `DockedKeyboard` | `bool` | `false` | Adds `data-mudkeyboard="true"`. |
+| `DockedKeyboardLayout` | `string` | `""` | Forces the layout (`qwerty`, `numpad`, `decimal`, `money`). Empty = infer. |
+
+### `<MudKeyboardNumericField>` (`@typeparam T`)
+
+A wrapper over `MudNumericField<T>` that makes the docked keyboard show the right keypad for the field's
+numeric type (`decimal` → money, `double`/`float` → decimal keypad, integers → plain numpad). Forwards
+common numeric parameters (`Value`/`ValueChanged`, `For`, `Label`, `Placeholder`, `HelperText`, `Variant`,
+`Margin`, `Adornment`, `AdornmentIcon`, `Immediate`, `Disabled`, `ReadOnly`, `ShrinkLabel`, `Format`,
+`Min`, `Max`, `Step`, `Class`, `Style`) plus any extra attributes.
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `DockedKeyboard` | `bool` | `false` | Adds `data-mudkeyboard="true"` (required in `OptIn` mode). |
+| `DockedKeyboardLayout` | `string` | `""` | Overrides the auto layout (`money`, `decimal`, `numpad`, `qwerty`). Empty = resolve from `T`. |
+
+---
+
+## Custom layouts and key tokens
+
+A `KeyboardLayout` is just data:
+
+```csharp
+public sealed record KeyboardLayout
+{
+    public required IReadOnlyList<IReadOnlyList<string>> Rows { get; init; }
+}
+```
+
+Each token is either a literal character (typed verbatim) or a brace-wrapped command. Well-known tokens
+are constants on `KeyTokens`:
+
+| Token | Constant | Action |
+| --- | --- | --- |
+| `{bksp}` | `KeyTokens.Backspace` | Delete the character before the caret |
+| `{enter}` | `KeyTokens.Enter` | Commit / submit (raises `OnEnter`) |
+| `{space}` | `KeyTokens.Space` | Insert a space |
+| `{shift}` | `KeyTokens.Shift` | One-shot shift (double-tap = caps lock) |
+| `{caps}` | `KeyTokens.Caps` | Caps lock |
+| `{sym}` | `KeyTokens.SymbolToggle` | Flip between letters and numbers/symbols |
+| `{esc}` | `KeyTokens.Escape` | Dismiss (raises `OnEscape`) |
+
+Built-in layouts on `LayoutLibrary`: `Qwerty`, `Symbols`, `Numeric`, `Numpad`, `NumpadWithDecimal`,
+`Price`. Helpers: `LayoutLibrary.ForVariant(variant)` (throws for `Custom`) and
+`LayoutLibrary.SymbolsForVariant(variant)` (non-null only for `Full`).
+
+---
+
+## Theming
+
+The keyboard reads the ambient MudBlazor theme — toggle `MudThemeProvider`'s dark mode and every key
+follows. To recolour a single keyboard, pass a `KeyboardPalette`; any slot left unset still follows the
+theme.
+
+```razor
+<MudKeyboard @bind-Value="_value" Palette="Brand" />
+
+@code {
+    private static readonly KeyboardPalette Brand = new()
+    {
+        AccentColor = "#00897b",
+        AccentTextColor = "#ffffff",
+    };
+}
+```
+
+| Slot | Recolours |
+| --- | --- |
+| `Surface` | Keyboard background |
+| `KeyColor` | Literal-key background |
+| `KeyTextColor` | Literal-key label |
+| `AccentColor` | Accent-key (Enter / active shift) background |
+| `AccentTextColor` | Accent-key label |
+
+Values are any CSS colour — hex, `rgb()`/`hsl()`, or `var(--…)`.
+
+---
+
+## Emit mode (`OnInput`)
+
+Set `OnInput` to route each press somewhere other than the keyboard's own `Value`:
+
+```razor
+<MudKeyboard OnInput="Handle" />
+
+@code {
+    private void Handle(KeyboardInput input)
+    {
+        switch (input.Kind)
+        {
+            case KeyboardInputKind.Text:      /* insert input.Text */ break;
+            case KeyboardInputKind.Backspace: /* delete one char  */ break;
+            case KeyboardInputKind.Enter:     /* commit           */ break;
+            case KeyboardInputKind.Escape:    /* dismiss          */ break;
+        }
+    }
+}
+```
+
+`KeyboardInput` is `readonly record struct (KeyboardInputKind Kind, string Text = "")` with factories
+`KeyboardInput.Char(text)`, `.Backspace`, `.Enter`, `.Escape`. `KeyboardInputKind` is `Text`, `Backspace`,
+`Enter`, `Escape`.
+
+---
+
+## Global docked keyboard
+
+Register services and place one host.
+
+```csharp
+// Program.cs
+builder.Services.AddMudServices();
+builder.Services.AddMudKeyboard();
+```
+
+```razor
+<MudThemeProvider @bind-IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudKeyboardHost />
+```
+
+Every editable text/number field now raises the keyboard on focus. The layout is inferred per field from
+the rendered HTML: text → QWERTY, integer fields → plain numpad, floating-point fields → numpad with a
+decimal point. The panel includes clear/copy/paste/cursor controls and docks one layer above the top-most
+element on the page.
+
+### Controlling which fields attach
+
+Default is `KeyboardAttachMode.AllInputs`. Switch to opt-in:
+
+```csharp
+builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
+```
+
+| Attribute | Effect |
+| --- | --- |
+| `data-mudkeyboard-ignore` | Never raise the keyboard for this field (AllInputs mode). |
+| `data-mudkeyboard` | Opt this field in (required in OptIn mode). |
+| `data-mudkeyboard-layout="qwerty\|numpad\|decimal\|money"` | Force a layout (`price` aliases `money`). |
+
+Set `Immediate="true"` on MudBlazor inputs so the bound value updates as keys are tapped.
+
+### Type-aware numeric fields
+
+`decimal`, `double` and `float` all render `inputmode="decimal"`, so the focus-capture shim cannot tell
+currency from a plain decimal. `MudKeyboardNumericField<T>` resolves the keypad from the bound CLR type:
+
+| Bound type | Docked keypad |
+| --- | --- |
+| `decimal` | Money — pence-first (`5·2·3 → 5.23`), like `MudPricepad`. |
+| `double` / `float` | Numeric keypad with a `.` key. |
+| `int`, `long`, `short`, … | Numeric keypad without a `.` key. |
+
+```razor
+<MudKeyboardNumericField @bind-Value="Model.Price" T="decimal" Format="N2"
+                         Adornment="Adornment.Start"
+                         AdornmentIcon="@Icons.Material.Filled.CurrencyPound" />
+<MudKeyboardNumericField @bind-Value="_measure"  T="double" />
+<MudKeyboardNumericField @bind-Value="_quantity" T="int" />
+```
+
+You can also force money on any field with `data-mudkeyboard-layout="money"`.
+
+---
+
+## Render modes
+
+| Render mode | Inline keyboards | Docked keyboard | Place `<MudKeyboardHost>` |
+| --- | --- | --- | --- |
+| Interactive Server | works | works | MainLayout (global mode) or App.razor outside `<Routes>` |
+| Interactive WebAssembly | works | works | MainLayout |
+| Interactive Auto | works | works | App.razor outside `<Routes>` with `@rendermode="InteractiveAuto"` |
+| Static SSR (no circuit) | does NOT work (needs interactivity) | works | App.razor outside `<Routes>`, own render mode |
+| Prerendering (any interactive mode) | safe | safe | unchanged |
+
+### Prerendering
+
+Safe with or without prerendering — no special handling required. The docked host only calls JavaScript in
+`OnAfterRenderAsync(firstRender)`, which never runs during a server prerender pass, and it guards the call
+with try/catch. Inline keyboards prerender as static HTML and wire up handlers once interactive. You do not
+need `prerender: false`.
+
+### Static SSR
+
+Inline keyboards do not work on a static-SSR page (no circuit), but the docked keyboard does: it edits the
+focused `<input>` through JavaScript on `document.activeElement`, dispatching native `input`/`change`
+events so the value rides a normal form POST. Give the host its own interactive island in `App.razor`,
+outside `<Routes>`:
+
+```razor
+<body>
+    <Routes />
+    <MudKeyboardHost @rendermode="InteractiveServer" />
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+</body>
+```
+
+Then opt fields in (page needs no `@rendermode`):
+
+```razor
+@page "/login"
+
+<EditForm Model="Input" method="post" OnValidSubmit="SignIn" FormName="login">
+    <MudKeyboardTextField @bind-Value="Input.Username" Label="Username"
+                          DockedKeyboard="true" name="Input.Username" />
+    <MudKeyboardTextField @bind-Value="Input.Password" Label="Password"
+                          InputType="InputType.Password"
+                          DockedKeyboard="true" DockedKeyboardLayout="qwerty"
+                          name="Input.Password" />
+    <MudButton ButtonType="ButtonType.Submit">Sign in</MudButton>
+</EditForm>
+```
+
+A plain `MudTextField` with `data-mudkeyboard="true"` works the same way.
+
+### Interactive Auto / WASM-rendered host
+
+Call `AddMudKeyboard()` in both the server and the WASM client `Program.cs`.
+
+### Mobile viewport
+
+Add `viewport-fit=cover` to the viewport meta tag so the docked panel pads past device safe-area insets.
+
+---
+
+## With vs without MudBlazor input components
+
+MudBlazor is always required. Optional is whether the fields you bind are MudBlazor inputs.
+
+```razor
+@* Inline keyboard driving a POCO string shown in a native element. *@
+<input value="@_text" readonly />
+<MudKeyboard @bind-Value="_text" />
+
+@* Docked keyboard on a native input (AllInputs attaches automatically; OptIn needs the attribute). *@
+<input type="text" data-mudkeyboard="true" />
+
+@code { private string _text = string.Empty; }
+```
+
+A `<MudThemeProvider />` must still be present (the keyboard surface is rendered by MudBlazor). Missing
+theme provider is the usual cause of unstyled colours.
+
+---
+
+## Accessibility
+
+Each keyboard surface is a labelled `role="group"`; every key is a real `<button>` with a spoken
+`aria-label` (`⌫` → "Backspace", blank space bar → "Space", `123`/`ABC` → "Numbers and symbols"/"Letters").
+Shift/caps and the symbol toggle expose `aria-pressed`. The docked host is `inert` and `aria-hidden` while
+hidden, its action bar is a labelled `role="toolbar"`, and focus is never stolen from the edited field. Set
+the `AriaLabel` parameter (`MudKeyboard`, `MudNumpad`, `MudPricepad`) to name each keyboard. The panel
+clamps to the viewport, pads safe-area insets, keeps comfortable touch targets and honours
+`prefers-reduced-motion` and forced-contrast modes.
+
+---
+
+## AOT and trimming
+
+The library targets `net8.0;net9.0;net10.0` and sets `<IsAotCompatible>true</IsAotCompatible>`, enabling
+the trim, AOT and single-file analyzers on every build. There is no reflection or dynamic code; only
+primitive strings cross the JS interop boundary, so the focus-capture shim is AOT/trim-safe too.
+
+---
+
+## Troubleshooting
+
+- Inline keyboard does nothing on a static-SSR page → it needs an interactive render mode; or use the
+  docked keyboard.
+- Docked keyboard never appears → missing `AddMudKeyboard()`; host placed in a static-SSR layout instead of
+  its own island in `App.razor`; OptIn mode without `data-mudkeyboard`; static web assets not served.
+- Typed text doesn't update the bound value → add `Immediate="true"`.
+- A `decimal` money field shows the plain decimal keypad → use `MudKeyboardNumericField<decimal>` or
+  `data-mudkeyboard-layout="money"`.
+- More than one `<MudKeyboardHost>` → place it exactly once.
+- Unstyled colours → no `<MudThemeProvider />` in the tree.
+
+---
+
+## Links
+
+- Docs site (WebAssembly SPA): <https://mudkeyboard.pages.dev>
+- Agent skill: <https://mudkeyboard.pages.dev/skill.md>
+- AI index: <https://mudkeyboard.pages.dev/llms.txt>
+- NuGet: <https://www.nuget.org/packages/MudKeyboard>
+- Source (MIT): <https://github.com/sardar97/mudkeyboard>
+- MudBlazor: <https://mudblazor.com>

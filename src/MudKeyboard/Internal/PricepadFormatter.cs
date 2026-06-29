@@ -67,6 +67,42 @@ internal static class PricepadFormatter
         return currencySymbol + integerPart + "." + fractionalPart;
     }
 
+    /// <summary>
+    /// Formats <paramref name="digits"/> like <see cref="Format(string?, string?, int)"/>, prefixing a
+    /// minus sign (before the currency symbol, e.g. <c>-£1.23</c>) when <paramref name="negative"/> is
+    /// set. The sign is suppressed for a zero amount, so there is never a <c>-£0.00</c>.
+    /// </summary>
+    public static string Format(string? digits, string? currencySymbol, int decimalPlaces, bool negative)
+    {
+        var formatted = Format(digits, currencySymbol, decimalPlaces);
+        return negative && HasNonZeroDigit(digits) ? "-" + formatted : formatted;
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="value"/> is a negative amount — i.e. its first
+    /// non-whitespace character is a minus sign (as produced by <see cref="Format(string?, string?, int, bool)"/>).
+    /// </summary>
+    public static bool IsNegative(string? value) =>
+        value is not null && value.AsSpan().TrimStart().StartsWith("-");
+
+    private static bool HasNonZeroDigit(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
+        foreach (var ch in value)
+        {
+            if (ch is >= '1' and <= '9')
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static string TrimLeadingZeros(string s)
     {
         if (s.Length == 0)

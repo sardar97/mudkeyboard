@@ -36,3 +36,9 @@ User-agent: CCBot
 Allow: /
 
 Sitemap: https://mudkeyboard.pages.dev/sitemap.xml
+
+# Machine-readable docs for AI agents / LLMs (this site is a WebAssembly SPA, so fetch these
+# plain-text resources instead of the page URLs):
+#   AI index:        https://mudkeyboard.pages.dev/llms.txt
+#   Full docs:       https://mudkeyboard.pages.dev/llms-full.txt
+#   Agent skill:     https://mudkeyboard.pages.dev/skill.md

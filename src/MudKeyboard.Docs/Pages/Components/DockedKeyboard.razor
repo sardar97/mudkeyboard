@@ -1,4 +1,6 @@
 @page "/components/docked-keyboard"
+@implements IDisposable
+@inject DocsKeyboardToolbarState Toolbar
 
 <PageTitle>Docked keyboard · Components</PageTitle>
 
@@ -9,7 +11,9 @@
 <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-6">
     <strong>Try it now.</strong> Tap any field in the live demo below — the docked keyboard slides up
     from the bottom of <em>this</em> page. The layout is chosen per field (text → QWERTY,
-    number → numpad, money → pence-first).
+    number → numpad, money → pence-first). For fields bound to a numeric type, use
+    <code>MudKeyboardNumericField&lt;T&gt;</code> and the keypad follows the type — see
+    <MudLink Href="components/docked-keyboard#numeric">Type-aware numeric fields</MudLink> below.
 </MudAlert>
 
 <ExampleCard Title="Focus any field"
@@ -59,6 +63,77 @@
     docked keyboard — the inline-keyboard examples elsewhere on the site are left untouched.
 </MudAlert>
 
+<MudText id="numeric" Typo="Typo.h5" Class="docs-section-title">Type-aware numeric fields</MudText>
+<div class="docs-prose">
+    <p>
+        The focus-capture shim only sees the rendered HTML, and a <code class="docs-inline-code">decimal</code>,
+        a <code class="docs-inline-code">double</code> and a <code class="docs-inline-code">float</code> all
+        render the same <code class="docs-inline-code">inputmode="decimal"</code> — so JavaScript alone can't
+        tell a currency field from a plain decimal. <code class="docs-inline-code">MudKeyboardNumericField&lt;T&gt;</code>
+        wraps <code class="docs-inline-code">MudNumericField&lt;T&gt;</code> and resolves the keypad from the
+        bound CLR type, with no data attribute to remember:
+    </p>
+    <ul>
+        <li><code class="docs-inline-code">decimal</code> → the <strong>money</strong> keypad (pence-first, like <MudLink Href="components/pricepad">MudPricepad</MudLink>).</li>
+        <li><code class="docs-inline-code">double</code> / <code class="docs-inline-code">float</code> → the numeric keypad <strong>with</strong> a "." key.</li>
+        <li><code class="docs-inline-code">int</code>, <code class="docs-inline-code">long</code>, <code class="docs-inline-code">short</code>, … → the numeric keypad <strong>without</strong> a "." key.</li>
+    </ul>
+    <p>
+        It forwards the common <code class="docs-inline-code">MudNumericField</code> parameters
+        (<code class="docs-inline-code">For</code>, <code class="docs-inline-code">Format</code>,
+        <code class="docs-inline-code">Min</code>/<code class="docs-inline-code">Max</code>/<code class="docs-inline-code">Step</code>,
+        <code class="docs-inline-code">Adornment</code>, …) and any extra attributes. Set
+        <code class="docs-inline-code">DockedKeyboardLayout</code> to override the auto choice for a field.
+    </p>
+</div>
+<ExampleCard Title="Keypad follows the bound type"
+             Description="Bound to decimal, double and int respectively. The site runs in OptIn mode, so each field is opted in with DockedKeyboard."
+             Code="@NumericCode">
+    <MudKeyboardNumericField @bind-Value="_price" T="decimal" Format="N2" Label="Price (decimal → money £)"
+                             Variant="Variant.Outlined" Immediate="true" Min="0m" DockedKeyboard="true"
+                             Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound" />
+    <MudKeyboardNumericField @bind-Value="_measure" T="double" Label="Measurement (double → numeric with .)"
+                             Variant="Variant.Outlined" Immediate="true" DockedKeyboard="true" />
+    <MudKeyboardNumericField @bind-Value="_quantity" T="int" Label="Quantity (int → numeric, no .)"
+                             Variant="Variant.Outlined" Immediate="true" DockedKeyboard="true" />
+</ExampleCard>
+<MudText id="numeric-parameters" Typo="Typo.subtitle1" Class="mt-4 mb-1"><b>MudKeyboardNumericField parameters</b></MudText>
+<ParamTable Members="NumericFieldParameters" />
+<div class="docs-prose mt-2">
+    <p>
+        A raw <code class="docs-inline-code">MudNumericField</code> still auto-detects integer
+        (<code class="docs-inline-code">inputmode="numeric"</code> → plain numpad) vs. floating-point
+        (<code class="docs-inline-code">inputmode="decimal"</code> → decimal keypad) on its own. Only the
+        <code class="docs-inline-code">decimal</code> → money choice needs the bound type — which is exactly
+        what the wrapper supplies. You can always force <code class="docs-inline-code">money</code> on a raw
+        field with <code class="docs-inline-code">data-mudkeyboard-layout="money"</code>.
+    </p>
+</div>
+
+<MudText id="negative" Typo="Typo.h5" Class="docs-section-title">Negative numbers (the ± key)</MudText>
+<div class="docs-prose">
+    <p>
+        The numeric keypads (number, decimal and money) are positive-only by default. Set
+        <code class="docs-inline-code">AllowNegative="true"</code> to add a <code class="docs-inline-code">±</code>
+        sign-toggle key so a value can be made negative. On <code class="docs-inline-code">MudKeyboardNumericField</code>
+        it is per field (it emits <code class="docs-inline-code">data-mudkeyboard-allow-negative</code>); on a
+        raw field set that attribute yourself; or set <code class="docs-inline-code">AllowNegative</code> on the
+        <code class="docs-inline-code">MudKeyboardHost</code> as a global default for every numeric keypad. The
+        same option exists on the inline <MudLink Href="components/numpad">MudNumpad</MudLink> and
+        <MudLink Href="components/pricepad">MudPricepad</MudLink>.
+    </p>
+</div>
+<ExampleCard Title="± on the docked keypads"
+             Description="Focus a field and tap ± to flip the sign. Works for plain numbers, decimals and pence-first money."
+             Code="@NegativeCode">
+    <MudKeyboardNumericField @bind-Value="_negInt" T="int" AllowNegative="true" DockedKeyboard="true"
+                             Label="Temperature (int → numpad with ±)" Variant="Variant.Outlined" />
+    <MudKeyboardNumericField @bind-Value="_negPrice" T="decimal" Format="N2" AllowNegative="true" DockedKeyboard="true"
+                             Label="Adjustment (decimal → money with ±)" Variant="Variant.Outlined"
+                             Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound" />
+    <MudText Typo="Typo.body2" Class="mt-2">Bound: <b>@_negInt</b> · <b>@_negPrice.ToString("N2")</b></MudText>
+</ExampleCard>
+
 <MudText id="behaviour" Typo="Typo.h5" Class="docs-section-title">Built-in behaviour</MudText>
 <div class="docs-prose">
     <ul>
@@ -66,8 +141,82 @@
         <li>It automatically docks <strong>one layer above the top-most element on the page</strong>, so it floats over dialogs and overlays. <code class="docs-inline-code">MinZIndex</code> sets the floor.</li>
         <li>Pressing <strong>⏎</strong> commits the value and closes the keyboard; the ⌄ button hides it.</li>
         <li>The money layout reuses the same pence-first logic as <MudLink Href="components/pricepad">MudPricepad</MudLink>.</li>
+        <li>It works on <strong>static-SSR pages</strong> too (it types via JavaScript, not Blazor binding) — see the <MudLink Href="features/ssr">Static SSR guide</MudLink>.</li>
+        <li>While hidden it is <code class="docs-inline-code">inert</code> and <code class="docs-inline-code">aria-hidden</code> (out of the tab order); the toolbar and keys are fully labelled. See <MudLink Href="features/accessibility">Accessibility</MudLink>.</li>
     </ul>
 </div>
+
+<MudText id="validation" Typo="Typo.h5" Class="docs-section-title">Validation &amp; commit on close</MudText>
+<div class="docs-prose">
+    <p>
+        The docked keyboard edits the field through the browser's native value setter, then mirrors a
+        hardware keyboard's <code class="docs-inline-code">change</code> → <code class="docs-inline-code">blur</code>
+        order: it commits the field the instant you press outside it — <strong>before</strong> the field
+        blurs — and when <strong>⏎</strong> or the <strong>⌄</strong> button closes the panel. So the value
+        flows into your binding and the field's own validation runs on close, exactly as if you'd typed on a
+        physical keyboard and clicked away. The field below is bound to an <code class="docs-inline-code">int</code>
+        with <code class="docs-inline-code">Min="-10"</code>/<code class="docs-inline-code">Max="10"</code> and
+        is <em>not</em> <code class="docs-inline-code">Immediate</code> — type something out of range (say
+        <code class="docs-inline-code">100</code>) and tap away: it commits and clamps to
+        <code class="docs-inline-code">10</code>.
+    </p>
+</div>
+<ExampleCard Title="Commit + clamp when the keyboard closes"
+             Description="Non-immediate field with Min/Max. Type an out-of-range value, then tap elsewhere — the value commits and is clamped, just like a hardware-keyboard blur."
+             Code="@ValidationCode">
+    <MudKeyboardNumericField @bind-Value="_rating" T="int" Min="-10" Max="10"
+                             Label="Rating (Min -10 / Max 10, non-immediate)"
+                             Variant="Variant.Outlined" DockedKeyboard="true" />
+    <MudText Typo="Typo.body2" Class="mt-2">Bound value: <b>@_rating</b></MudText>
+</ExampleCard>
+
+<MudText id="toolbar" Typo="Typo.h5" Class="docs-section-title">Toolbar buttons (show, hide &amp; disable)</MudText>
+<div class="docs-prose">
+    <p>
+        The panel's action buttons — <strong>Clear</strong>, <strong>Copy</strong>, <strong>Paste</strong>,
+        the <strong>cursor arrows</strong> and <strong>Hide</strong> — are controlled by two
+        <code class="docs-inline-code">MudKeyboardHost</code> parameters:
+        <code class="docs-inline-code">VisibleActions</code> (which render) and
+        <code class="docs-inline-code">DisabledActions</code> (which render greyed-out). Both take the
+        <code class="docs-inline-code">[Flags]</code> enum <code class="docs-inline-code">KeyboardAction</code>,
+        so you can hide or disable any button — globally or one at a time. Toggle the switches below, then
+        focus a field above to see this page's own docked keyboard update live; the code shows the exact
+        parameters for your selection.
+    </p>
+</div>
+<MudPaper Class="pa-4 mb-3" Outlined="true">
+    <div class="d-flex justify-space-between align-center mb-2 flex-wrap" style="gap:.5rem">
+        <MudText Typo="Typo.subtitle2">Toolbar buttons</MudText>
+        <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Restore"
+                   OnClick="@(() => Toolbar.Reset())">Reset</MudButton>
+    </div>
+    <MudSimpleTable Dense="true" Hover="false" Bordered="false" Elevation="0" Style="background:transparent">
+        <thead>
+            <tr><th>Button</th><th style="width:8rem">Visible</th><th style="width:8rem">Disabled</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var (action, label) in ToolbarButtons)
+            {
+                <tr>
+                    <td>@label</td>
+                    <td>
+                        <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.IsVisible(action)"
+                                   ValueChanged="@(v => Toolbar.SetVisible(action, v))"
+                                   aria-label="@($"Show {label} button")" />
+                    </td>
+                    <td>
+                        <MudSwitch T="bool" Color="Color.Secondary" Value="@Toolbar.IsDisabled(action)"
+                                   ValueChanged="@(v => Toolbar.SetDisabled(action, v))"
+                                   Disabled="@(!Toolbar.IsVisible(action))"
+                                   aria-label="@($"Disable {label} button")" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+    <MudText Typo="Typo.caption" Class="mt-1">Hiding wins over disabling — a hidden button isn't rendered at all. The cursor arrows never appear on the money keypad regardless.</MudText>
+</MudPaper>
+<CodeBlock Language="razor" Code="@ToolbarCode" />
 
 <MudText id="parameters" Typo="Typo.h5" Class="docs-section-title">MudKeyboardHost parameters</MudText>
 <ParamTable Members="HostParameters" />
@@ -92,6 +241,95 @@
     private string _text = string.Empty;
     private string _number = string.Empty;
     private string _money = string.Empty;
+    private decimal _price;
+    private double _measure;
+    private int _quantity;
+    private int _rating;
+
+    // Restore the toolbar to defaults (all buttons visible) when leaving the page, so the live demo's
+    // changes don't leak onto the rest of the site (the host is global, in MainLayout).
+    public void Dispose() => Toolbar.Reset();
+
+    // The toggleable toolbar buttons, in render order. CursorControl is the left+right arrow pair.
+    private static readonly (KeyboardAction Action, string Label)[] ToolbarButtons =
+    [
+        (KeyboardAction.Clear, "Clear"),
+        (KeyboardAction.Copy, "Copy"),
+        (KeyboardAction.Paste, "Paste"),
+        (KeyboardAction.CursorControl, "Cursor arrows"),
+        (KeyboardAction.Hide, "Hide"),
+    ];
+
+    // Live <MudKeyboardHost …/> markup for the current toolbar selection.
+    private string ToolbarCode
+    {
+        get
+        {
+            var sb = new System.Text.StringBuilder("<MudKeyboardHost");
+            if (Toolbar.VisibleActions != KeyboardAction.All)
+            {
+                sb.Append("\n                 VisibleActions=\"").Append(FormatActions(Toolbar.VisibleActions)).Append('"');
+            }
+            if (Toolbar.DisabledActions != KeyboardAction.None)
+            {
+                sb.Append("\n                 DisabledActions=\"").Append(FormatActions(Toolbar.DisabledActions)).Append('"');
+            }
+            return sb.Append(" />").ToString();
+        }
+    }
+
+    private static string FormatActions(KeyboardAction actions)
+    {
+        if (actions == KeyboardAction.None)
+        {
+            return "KeyboardAction.None";
+        }
+
+        if (actions == KeyboardAction.All)
+        {
+            return "KeyboardAction.All";
+        }
+
+        var parts = ToolbarButtons
+            .Where(b => (actions & b.Action) == b.Action)
+            .Select(b => "KeyboardAction." + b.Action);
+        return string.Join(" | ", parts);
+    }
+
+    private int _negInt;
+    private decimal _negPrice;
+
+    private const string NegativeCode = """
+@* AllowNegative adds the ± sign-toggle key. Per field on the wrapper, or globally on MudKeyboardHost. *@
+<MudKeyboardNumericField @bind-Value="_negInt" T="int" AllowNegative="true" DockedKeyboard="true" />
+
+<MudKeyboardNumericField @bind-Value="_negPrice" T="decimal" Format="N2" AllowNegative="true"
+                         Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound"
+                         DockedKeyboard="true" />
+
+@* …or enable ± for every numeric docked field at once: *@
+<MudKeyboardHost AllowNegative="true" />
+""";
+
+    private const string ValidationCode = """
+@* Non-immediate (the default) + Min/Max. The docked keyboard commits and validates on close, so an
+   out-of-range value is clamped when you tap away — exactly like a hardware-keyboard blur. *@
+<MudKeyboardNumericField @bind-Value="_rating" T="int" Min="-10" Max="10"
+                         Label="Rating" DockedKeyboard="true" />
+<MudText>Bound value: <b>@_rating</b></MudText>
+""";
+
+    private const string NumericCode = """
+@* The keypad is chosen from T — no data attribute needed. (DockedKeyboard="true" because
+   this site runs in OptIn mode; in the default AllInputs mode you can omit it.) *@
+<MudKeyboardNumericField @bind-Value="Model.Price" T="decimal" Format="N2"
+                         Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound"
+                         DockedKeyboard="true" />   @* decimal → money keypad *@
+
+<MudKeyboardNumericField @bind-Value="_measure" T="double" DockedKeyboard="true" /> @* double → numeric with . *@
+
+<MudKeyboardNumericField @bind-Value="_quantity" T="int" DockedKeyboard="true" />   @* int → numeric, no . *@
+""";
 
     private const string DemoCode = """
 @* The site runs the host in OptIn mode, so fields are marked with data-mudkeyboard. *@
@@ -147,7 +385,19 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
     [
         new("data-mudkeyboard-ignore", "—", "—", "Never raise the keyboard for this field (AllInputs mode)."),
         new("data-mudkeyboard", "—", "—", "Opt this field in when using KeyboardAttachMode.OptIn."),
-        new("data-mudkeyboard-layout=\"…\"", "—", "—", "Force a layout: qwerty, numpad, decimal, or money / price."),
+        new("data-mudkeyboard-layout=\"…\"", "—", "—", "Force a layout: qwerty, numpad, decimal, or money / price. For numeric fields, MudKeyboardNumericField sets this from the bound type."),
+        new("data-mudkeyboard-allow-negative=\"…\"", "—", "—", "\"true\"/\"false\" to show or hide the ± sign-toggle key on the numeric keypads, overriding the host's AllowNegative default. MudKeyboardNumericField sets this from AllowNegative."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> NumericFieldParameters =
+    [
+        new("Value / ValueChanged", "T", "default", "Two-way bindable numeric value (@bind-Value)."),
+        new("For", "Expression<Func<T>>?", "null", "Validation expression, e.g. @(() => Model.Price)."),
+        new("Format", "string?", "null", "Numeric format string applied to the value (e.g. \"N2\")."),
+        new("Min / Max / Step", "T?", "null", "Forwarded to MudNumericField."),
+        new("DockedKeyboard", "bool", "false", "Adds data-mudkeyboard=\"true\" (needed in OptIn mode)."),
+        new("DockedKeyboardLayout", "string", "\"\"", "Overrides the auto layout (money, decimal, numpad, qwerty). Empty = resolve from T."),
+        new("AllowNegative", "bool", "false", "Shows a ± sign-toggle key on the docked keypad so negative values can be entered. Overrides the host's global default for this field."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> HostParameters =
@@ -156,5 +406,8 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Elevation", "int", "8", "Drop-shadow elevation of the docked panel."),
         new("MinZIndex", "int", "1400", "Floor for the panel's z-index; it docks one above the top-most layer otherwise."),
         new("Style", "string?", "null", "Extra inline styles appended to the docked panel."),
+        new("VisibleActions", "KeyboardAction", "All", "Which toolbar buttons render (Clear, Copy, Paste, the cursor arrows, Hide). A [Flags] set: remove buttons with & ~, or use None to drop the whole toolbar."),
+        new("DisabledActions", "KeyboardAction", "None", "Which toolbar buttons render greyed-out and non-interactive. A [Flags] set; hiding via VisibleActions wins over disabling."),
+        new("AllowNegative", "bool", "false", "Global default for whether numeric keypads show the ± sign-toggle key. A field's data-mudkeyboard-allow-negative (or MudKeyboardNumericField.AllowNegative) overrides it."),
     ];
 }

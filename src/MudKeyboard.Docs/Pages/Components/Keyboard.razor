@@ -91,6 +91,7 @@
         <li>Use <code class="docs-inline-code">Immediate="true"</code> on the bound MudBlazor input so it updates as keys are tapped.</li>
         <li><code class="docs-inline-code">OnEscape</code> only fires if the layout contains an <code class="docs-inline-code">{esc}</code> token — it isn't in the built-in layouts.</li>
         <li>To route presses somewhere other than <code class="docs-inline-code">Value</code> (e.g. an external field), use <MudLink Href="features/emit-mode">emit mode</MudLink> via <code class="docs-inline-code">OnInput</code>.</li>
+        <li>Every key is a real <code class="docs-inline-code">&lt;button&gt;</code> with a spoken <code class="docs-inline-code">aria-label</code> and toggle keys expose <code class="docs-inline-code">aria-pressed</code> — see <MudLink Href="features/accessibility">Accessibility</MudLink>.</li>
     </ul>
 </div>
 
@@ -152,6 +153,7 @@
         new("Disabled", "bool", "false", "Disables every key."),
         new("DropShadow", "bool", "true", "Flat keys when false."),
         new("Palette", "KeyboardPalette?", "null", "Per-keyboard colour overrides; unset slots follow the theme."),
+        new("AriaLabel", "string?", "\"On-screen keyboard\"", "Accessible name for the root role=\"group\" (screen-reader announcement)."),
         new("Class / Style", "string?", "null", "Passthrough CSS for the root surface."),
         new("OnEnter", "EventCallback", "—", "Fires when the Enter (⏎) key is pressed."),
         new("OnEscape", "EventCallback", "—", "Fires when an {esc} key is pressed."),

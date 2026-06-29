@@ -40,3 +40,14 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build --configuration Release --verbosity normal
+
+      # The docked-keyboard focus-capture shim is the library's only JavaScript; cover it with Node's
+      # built-in test runner so its native-setter / event-dispatch behaviour can't silently regress.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Test JavaScript shim
+        run: node --test
+        working-directory: tests/js

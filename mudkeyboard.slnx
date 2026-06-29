@@ -7,11 +7,12 @@
   
   <Folder Name="/src/">
     <Project Path="src/MudKeyboard/MudKeyboard.csproj" />
+    <Project Path="src/MudKeyboard.Docs/MudKeyboard.Docs.csproj" />
   </Folder>
   
   <Folder Name="/tests/">
     <Project Path="tests/MudKeyboard.Tests/MudKeyboard.Tests.csproj" />
   </Folder>
-  <Project Path="src/MudKeyboard.Docs/MudKeyboard.Docs.csproj" />
+  
   
 </Solution>

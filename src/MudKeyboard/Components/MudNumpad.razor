@@ -1,6 +1,7 @@
 @namespace MudKeyboard.Components
 
-<MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0">
+<MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0"
+          role="group" aria-label="@EffectiveAriaLabel">
     <KeyGrid Keys="_keys" Disabled="Disabled" OnKeyPress="@HandleKeyPressAsync" />
 </MudPaper>
 
@@ -15,6 +16,12 @@
 
     /// <summary>When <see langword="true"/>, shows a decimal-point key and allows a single '.' in the value.</summary>
     [Parameter] public bool AllowDecimal { get; set; }
+
+    /// <summary>
+    /// When <see langword="true"/>, shows a <c>±</c> sign-toggle key so the value can be made negative.
+    /// Default <see langword="false"/>.
+    /// </summary>
+    [Parameter] public bool AllowNegative { get; set; }
 
     /// <summary>Optional maximum length of <see cref="Value"/>.</summary>
     [Parameter] public int? MaxLength { get; set; }
@@ -32,13 +39,29 @@
     [Parameter] public string? Style { get; set; }
 
     /// <summary>
+    /// Accessible name for the numpad, applied to the root <c>role="group"</c> as its
+    /// <c>aria-label</c>. Default <c>"Numeric keypad"</c>.
+    /// </summary>
+    [Parameter] public string? AriaLabel { get; set; }
+
+    private string EffectiveAriaLabel => string.IsNullOrWhiteSpace(AriaLabel) ? "Numeric keypad" : AriaLabel;
+
+    /// <summary>
     /// Optional colour overrides for this numpad. Unset slots inherit the ambient MudBlazor
     /// theme, so dark/light mode still applies automatically. See <see cref="KeyboardPalette"/>.
     /// </summary>
     [Parameter] public KeyboardPalette? Palette { get; set; }
 
     protected override void OnParametersSet() =>
-        _keys = KeyboardKey.FromRows((AllowDecimal ? LayoutLibrary.NumpadWithDecimal : LayoutLibrary.Numpad).Rows);
+        _keys = KeyboardKey.FromRows(ResolveLayout().Rows);
+
+    private KeyboardLayout ResolveLayout() => (AllowDecimal, AllowNegative) switch
+    {
+        (true, true) => LayoutLibrary.NumpadWithDecimalSigned,
+        (true, false) => LayoutLibrary.NumpadWithDecimal,
+        (false, true) => LayoutLibrary.NumpadSigned,
+        (false, false) => LayoutLibrary.Numpad,
+    };
 
     private async Task HandleKeyPressAsync(KeyboardKey key)
     {
@@ -46,6 +69,9 @@
         {
             case KeyTokens.Enter:
                 await OnEnter.InvokeAsync();
+                break;
+            case KeyTokens.Sign:
+                await SetValueAsync(KeyboardEngine.ToggleSign(Value));
                 break;
             case KeyTokens.Backspace:
                 await SetValueAsync(KeyboardEngine.Backspace(Value));

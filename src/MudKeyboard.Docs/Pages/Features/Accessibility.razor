@@ -1,0 +1,112 @@
+@page "/features/accessibility"
+
+<PageTitle>Accessibility · MudKeyboard</PageTitle>
+
+<PageHeader Overline="Features &amp; guides"
+            Title="Accessibility"
+            Lead="MudKeyboard ships accessible by default: real buttons, screen-reader labels, toggle state, keyboard focus, reduced-motion and safe-area support — across phones, tablets and desktops." />
+
+<MudText id="semantics" Typo="Typo.h5" Class="docs-section-title">Roles &amp; structure</MudText>
+<div class="docs-prose">
+    <p>
+        Every keyboard surface (<code class="docs-inline-code">MudKeyboard</code>,
+        <code class="docs-inline-code">MudNumpad</code>, <code class="docs-inline-code">MudPricepad</code>)
+        renders as a labelled <code class="docs-inline-code">role="group"</code>, and each key is a genuine
+        <code class="docs-inline-code">&lt;button&gt;</code> — so the whole control works with keyboard,
+        switch and screen-reader navigation without any extra wiring.
+    </p>
+    <p>
+        Set the group's accessible name with the <code class="docs-inline-code">AriaLabel</code> parameter.
+        It defaults to <code class="docs-inline-code">"On-screen keyboard"</code>,
+        <code class="docs-inline-code">"Numeric keypad"</code> and
+        <code class="docs-inline-code">"Price entry keypad"</code> respectively.
+    </p>
+</div>
+<CodeBlock Language="razor" Code="@AriaLabelCode" />
+
+<MudText id="labels" Typo="Typo.h5" Class="docs-section-title">Spoken key names</MudText>
+<div class="docs-prose">
+    <p>
+        Keys whose face is a bare glyph would be announced as raw symbols — or, like the blank space bar,
+        as nothing at all. Each key therefore carries a readable <code class="docs-inline-code">aria-label</code>
+        derived from <code class="docs-inline-code">KeyboardKey.AccessibleLabel</code>:
+    </p>
+    <ul>
+        <li><code class="docs-inline-code">⌫</code> → "Backspace", <code class="docs-inline-code">⏎</code> → "Enter", the space bar → "Space"</li>
+        <li><code class="docs-inline-code">⇧</code> → "Shift" (or "Caps lock" once locked), <code class="docs-inline-code">123 / ABC</code> → "Numbers and symbols" / "Letters"</li>
+        <li><code class="docs-inline-code">00</code> → "Double zero", <code class="docs-inline-code">.</code> → "Decimal point"; literal keys read as their character</li>
+    </ul>
+</div>
+
+<MudText id="state" Typo="Typo.h5" Class="docs-section-title">Toggle state</MudText>
+<div class="docs-prose">
+    <p>
+        The shift / caps lock and the <code class="docs-inline-code">123 / ABC</code> keys are toggles, so they
+        expose <code class="docs-inline-code">aria-pressed="true"|"false"</code> — a screen reader announces
+        whether shift is armed or the symbol face is showing. Ordinary keys carry no
+        <code class="docs-inline-code">aria-pressed</code> at all.
+    </p>
+</div>
+
+<MudText id="docked" Typo="Typo.h5" Class="docs-section-title">The docked keyboard</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">MudKeyboardHost</code> stays in the DOM at all times so it can slide
+        in and out, so while it is <strong>closed</strong> it sets <code class="docs-inline-code">inert</code>
+        and <code class="docs-inline-code">aria-hidden="true"</code> — its keys and tools are removed from the
+        tab order and the accessibility tree until a field is focused. Opening clears both automatically.
+    </p>
+    <ul>
+        <li>The action bar is a labelled <code class="docs-inline-code">role="toolbar"</code>; every clear / copy / paste / cursor / hide button has an <code class="docs-inline-code">aria-label</code> and a native <code class="docs-inline-code">title</code> tooltip.</li>
+        <li>Focus is never stolen from the field being edited, so the caret stays put and the value updates live as keys are tapped.</li>
+        <li>A clear, theme-coloured focus ring marks the focused key for keyboard and switch users.</li>
+    </ul>
+</div>
+
+<MudText id="devices" Typo="Typo.h5" Class="docs-section-title">Every device</MudText>
+<div class="docs-prose">
+    <ul>
+        <li><strong>Touch targets.</strong> Keys stay comfortably large (≈ 52–64px tall) — above the WCAG 2.5.5 minimum — and shrink gracefully on small phones so a full QWERTY row still fits.</li>
+        <li><strong>No overflow.</strong> The docked panel clamps to <code class="docs-inline-code">100vw</code>, so it never forces horizontal scrolling on a phone, and scrolls its own keys on short / landscape screens.</li>
+        <li><strong>Safe areas.</strong> The panel pads past device insets (the iOS home indicator, notches). Add <code class="docs-inline-code">viewport-fit=cover</code> to your <code class="docs-inline-code">&lt;meta name="viewport"&gt;</code> to enable it.</li>
+        <li><strong>Reduced motion.</strong> The slide-up animation is dropped under <code class="docs-inline-code">prefers-reduced-motion: reduce</code>.</li>
+        <li><strong>High / forced contrast.</strong> Keys gain a visible edge under <code class="docs-inline-code">prefers-contrast: more</code> and Windows forced-colors mode.</li>
+    </ul>
+</div>
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-3" Dense="true">
+    Add <code class="docs-inline-code">viewport-fit=cover</code> to your host page's viewport meta tag to opt
+    the docked keyboard into safe-area padding:
+    <code class="docs-inline-code">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"&gt;</code>
+</MudAlert>
+
+<MudText id="contrast" Typo="Typo.h5" Class="docs-section-title">Colour &amp; contrast</MudText>
+<div class="docs-prose">
+    <p>
+        All colours come from the active MudBlazor theme via its CSS variables, so the keyboard inherits
+        your palette and follows dark / light mode automatically — pick theme colours that meet your contrast
+        target and the keyboard matches. Per-keyboard overrides go through
+        <MudLink Href="features/theming">KeyboardPalette</MudLink>, again as theme variables (no hardcoded hex).
+    </p>
+</div>
+
+<MudText id="checklist" Typo="Typo.h5" Class="docs-section-title">Consumer checklist</MudText>
+<div class="docs-prose">
+    <ul>
+        <li>Label the bound input itself (e.g. <code class="docs-inline-code">MudTextField Label="…"</code>) — the keyboard edits a field, it does not replace the field's own label.</li>
+        <li>Override <code class="docs-inline-code">AriaLabel</code> when a page has several keyboards, so each is announced distinctly.</li>
+        <li>Add <code class="docs-inline-code">viewport-fit=cover</code> to your viewport meta tag for safe-area support on notched phones.</li>
+        <li>Verify your chosen theme colours meet contrast guidelines — MudKeyboard renders with them verbatim.</li>
+    </ul>
+</div>
+
+<div class="docs-nav-footer">
+    <MudButton Href="features/ssr" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">Static SSR</MudButton>
+    <MudButton Href="playground" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">Playground</MudButton>
+</div>
+
+@code {
+    private const string AriaLabelCode = """
+@* Give a screen reader a distinct name for this keyboard. *@
+<MudKeyboard @bind-Value="_pin" Variant="KeyboardVariant.Numpad" AriaLabel="PIN entry" />
+""";
+}

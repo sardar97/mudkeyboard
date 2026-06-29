@@ -36,6 +36,10 @@
         <ApiHeading Id="keyboardvariant" Title="KeyboardVariant" Namespace="MudKeyboard.Models — enum" />
         <ParamTable Members="VariantMembers" NameHeader="Value" ShowDefault="false" />
 
+        <ApiHeading Id="keyboardaction" Title="KeyboardAction" Namespace="MudKeyboard.Models — [Flags] enum" />
+        <div class="docs-prose"><p>The docked keyboard's toolbar buttons, as a <code class="docs-inline-code">[Flags]</code> set. Drives <code class="docs-inline-code">MudKeyboardHost.VisibleActions</code> and <code class="docs-inline-code">DisabledActions</code>. Combine with <code class="docs-inline-code">|</code>; remove with <code class="docs-inline-code">&amp; ~</code>.</p></div>
+        <ParamTable Members="ActionMembers" NameHeader="Value" ShowDefault="false" />
+
         <ApiHeading Id="keyboardpalette" Title="KeyboardPalette" Namespace="MudKeyboard.Models — sealed record" />
         <ParamTable Members="PaletteMembers" NameHeader="Member" />
 
@@ -99,6 +103,7 @@
         ("keyboardlayout", "KeyboardLayout", 0.75),
         ("keyboardkey", "KeyboardKey", 0.75),
         ("keyboardvariant", "KeyboardVariant", 0.75),
+        ("keyboardaction", "KeyboardAction", 0.75),
         ("keyboardpalette", "KeyboardPalette", 0.75),
         ("keyboardinput", "KeyboardInput", 0.75),
         ("keytokens", "KeyTokens", 0.75),
@@ -129,6 +134,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Disabled", "bool", "false", "Disables every key."),
         new("DropShadow", "bool", "true", "Flat keys when false."),
         new("Palette", "KeyboardPalette?", "null", "Per-keyboard colour overrides."),
+        new("AriaLabel", "string?", "\"On-screen keyboard\"", "Accessible name for the root role=\"group\"."),
         new("Class / Style", "string?", "null", "Passthrough CSS."),
         new("OnEnter", "EventCallback", "—", "Fires on the Enter key."),
         new("OnEscape", "EventCallback", "—", "Fires on an {esc} key."),
@@ -139,9 +145,11 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
     [
         new("Value / ValueChanged", "string", "\"\"", "Two-way bindable value."),
         new("AllowDecimal", "bool", "false", "Shows a '.' key; allows one decimal point."),
+        new("AllowNegative", "bool", "false", "Shows a ± key that toggles a leading minus sign."),
         new("MaxLength", "int?", "null", "Optional cap on value length."),
         new("Disabled", "bool", "false", "Disables every key."),
         new("Palette", "KeyboardPalette?", "null", "Per-numpad colour overrides."),
+        new("AriaLabel", "string?", "\"Numeric keypad\"", "Accessible name for the root role=\"group\"."),
         new("Class / Style", "string?", "null", "Passthrough CSS."),
         new("OnEnter", "EventCallback", "—", "Fires on the Enter key."),
     ];
@@ -151,9 +159,11 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Value / ValueChanged", "string", "\"\"", "Two-way bindable formatted currency string."),
         new("CurrencySymbol", "string", "\"£\"", "Symbol prefix."),
         new("DecimalPlaces", "int", "2", "Fractional digits."),
+        new("AllowNegative", "bool", "false", "Shows a ± key that flips the amount's sign (-£1.23)."),
         new("MaxLength", "int?", "null", "Cap on entered digits."),
         new("Disabled", "bool", "false", "Disables every key."),
         new("Palette", "KeyboardPalette?", "null", "Per-pricepad colour overrides."),
+        new("AriaLabel", "string?", "\"Price entry keypad\"", "Accessible name for the root role=\"group\"."),
         new("Class / Style", "string?", "null", "Passthrough CSS."),
         new("OnEnter", "EventCallback", "—", "Fires on the Enter key."),
     ];
@@ -164,6 +174,9 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Elevation", "int", "8", "Drop-shadow elevation of the docked panel."),
         new("MinZIndex", "int", "1400", "Floor for the panel's z-index."),
         new("Style", "string?", "null", "Extra inline styles for the panel."),
+        new("VisibleActions", "KeyboardAction", "All", "[Flags] set of toolbar buttons to render. Remove buttons with & ~, or use None to drop the toolbar."),
+        new("DisabledActions", "KeyboardAction", "None", "[Flags] set of toolbar buttons to render greyed-out. Hiding via VisibleActions wins over disabling."),
+        new("AllowNegative", "bool", "false", "Global default for showing the ± sign-toggle key on numeric keypads; a field's data-mudkeyboard-allow-negative overrides it."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> LayoutMembers =
@@ -178,6 +191,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("WidthMultiplier", "double", "1.0", "Width relative to a standard key."),
         new("Highlighted", "bool", "false", "Renders with the primary accent."),
         new("Bold", "bool", "false", "Renders the label bold."),
+        new("AccessibleLabel", "string", "—", "Spoken-friendly name used as the key's aria-label."),
         new("IsCommand", "bool", "—", "True when the token is a command (braced)."),
         new("IsEnter", "bool", "—", "True when the token is {enter}."),
         new("FromToken(token)", "static KeyboardKey", "—", "Resolves a token to a key with sensible label/width."),
@@ -192,6 +206,19 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Custom", "KeyboardVariant", "—", "Use a caller-supplied Layout."),
     ];
 
+    private static readonly IReadOnlyList<ApiMember> ActionMembers =
+    [
+        new("None", "KeyboardAction", "—", "No buttons. Use as VisibleActions to hide the whole toolbar."),
+        new("Clear", "KeyboardAction", "—", "The Clear (trash) button."),
+        new("Copy", "KeyboardAction", "—", "The Copy button."),
+        new("Paste", "KeyboardAction", "—", "The Paste button."),
+        new("CursorLeft", "KeyboardAction", "—", "The move-cursor-left arrow (never shown on the money keypad)."),
+        new("CursorRight", "KeyboardAction", "—", "The move-cursor-right arrow (never shown on the money keypad)."),
+        new("Hide", "KeyboardAction", "—", "The Hide (chevron-down) button."),
+        new("CursorControl", "KeyboardAction", "—", "Both cursor arrows (CursorLeft | CursorRight)."),
+        new("All", "KeyboardAction", "—", "Every toolbar button. The default for VisibleActions."),
+    ];
+
     private static readonly IReadOnlyList<ApiMember> PaletteMembers =
     [
         new("Surface", "string?", "null", "Keyboard background."),
@@ -204,11 +231,11 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
 
     private static readonly IReadOnlyList<ApiMember> InputMembers =
     [
-        new("KeyboardInputKind", "enum", "—", "Text, Backspace, Enter, Escape."),
+        new("KeyboardInputKind", "enum", "—", "Text, Backspace, Enter, Escape, Sign."),
         new("KeyboardInput.Kind", "KeyboardInputKind", "—", "What the press represents."),
         new("KeyboardInput.Text", "string", "\"\"", "Literal text when Kind is Text."),
         new("KeyboardInput.Char(text)", "static KeyboardInput", "—", "Creates a literal-text input."),
-        new("KeyboardInput.Backspace / Enter / Escape", "static KeyboardInput", "—", "The command inputs."),
+        new("KeyboardInput.Backspace / Enter / Escape / Sign", "static KeyboardInput", "—", "The command inputs (Sign = ± toggle)."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> TokenMembers =
@@ -219,6 +246,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Shift", "const \"{shift}\"", "One-shot shift / caps lock."),
         new("Caps", "const \"{caps}\"", "Caps lock."),
         new("SymbolToggle", "const \"{sym}\"", "Flip letters ⇄ numbers/symbols."),
+        new("Sign", "const \"{sign}\"", "Toggle a numeric value's sign (±)."),
         new("Escape", "const \"{esc}\"", "Dismiss (raises OnEscape)."),
         new("IsCommand(token)", "static bool", "True when the token is a braced command."),
         new("IsEnter(token)", "static bool", "True when the token is {enter}."),

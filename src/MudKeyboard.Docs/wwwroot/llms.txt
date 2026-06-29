@@ -1,14 +1,18 @@
 # MudKeyboard
 
-> MudKeyboard is a free, open-source on-screen virtual keyboard library for Blazor and MudBlazor apps. The keyboard core is 100% C#/Blazor (no JavaScript); a single optional JS shim powers one feature — a global docked keyboard that pops up when any input is focused. It is themed automatically by MudBlazor (dark/light follows your theme), and is AOT- and trim-friendly. Targets .NET 8, 9 and 10 (interactive Server and WebAssembly; no static SSR).
+> MudKeyboard is a free, open-source on-screen virtual keyboard library for Blazor and MudBlazor apps. The keyboard core is 100% C#/Blazor (no JavaScript); a single optional JS shim powers one feature — a global docked keyboard that pops up when any input is focused. It is themed automatically by MudBlazor (dark/light follows your theme), and is AOT- and trim-friendly. Targets .NET 8, 9 and 10. Inline keyboards run under interactive Server or WebAssembly; the global docked keyboard additionally works on static SSR pages.
 
-Install from NuGet as `MudKeyboard` (MudBlazor is a peer dependency). Replace https://mudkeyboard.pages.dev with this site's deployed origin.
+Install from NuGet as `MudKeyboard` (MudBlazor is a required peer dependency). The documentation site is a Blazor WebAssembly single-page app, so a plain HTTP fetch of a page URL returns an empty shell — use the AI-readable resources below instead. Replace https://mudkeyboard.pages.dev with this site's deployed origin.
+
+## AI / agent resources (read these — they are plain text, not the SPA)
+- Full documentation, single Markdown file: https://mudkeyboard.pages.dev/llms-full.txt
+- Agent skill (task-focused "how to integrate in any render mode", with frontmatter for Claude Code and similar tools): https://mudkeyboard.pages.dev/skill.md
 
 ## Components
 - MudKeyboard: full QWERTY keyboard with shift/caps and a 123 toggle to a numbers/symbols face; two-way `@bind-Value`, `OnEnter`, `MaxLength`, `DropShadow`, `Palette`. [Docs](https://mudkeyboard.pages.dev/components/keyboard)
 - MudNumpad: calculator-style numeric pad with optional `AllowDecimal`. [Docs](https://mudkeyboard.pages.dev/components/numpad)
 - MudPricepad: pence-first money entry (type 5·2·3 → £5.23) with `CurrencySymbol` and `DecimalPlaces`. [Docs](https://mudkeyboard.pages.dev/components/pricepad)
-- MudKeyboardHost: global docked keyboard that slides up on input focus and types at the caret; register with `AddMudKeyboard()`. [Docs](https://mudkeyboard.pages.dev/components/docked-keyboard)
+- MudKeyboardHost: global docked keyboard that slides up on input focus and types at the caret; register with `AddMudKeyboard()`. Works on Interactive Server, WebAssembly and static SSR. [Docs](https://mudkeyboard.pages.dev/components/docked-keyboard)
 
 ## Guides
 - Getting started (install, MudBlazor setup, render modes): [Docs](https://mudkeyboard.pages.dev/getting-started)
@@ -17,10 +21,13 @@ Install from NuGet as `MudKeyboard` (MudBlazor is a peer dependency). Replace ht
 - Theming & palette (inherit the MudBlazor theme or override with `KeyboardPalette`): [Docs](https://mudkeyboard.pages.dev/features/theming)
 - Emit mode (`OnInput` routes each press elsewhere instead of editing `Value`): [Docs](https://mudkeyboard.pages.dev/features/emit-mode)
 - AOT & trimming (`IsAotCompatible`, reflection-free, primitive-only interop): [Docs](https://mudkeyboard.pages.dev/features/aot)
+- Static SSR (the docked keyboard works on Blazor static Server-Side Rendering pages): [Docs](https://mudkeyboard.pages.dev/features/ssr)
+- Accessibility (real buttons, `role="group"`, per-key `aria-label`, `aria-pressed` toggle state, `inert` docked keyboard, reduced-motion, safe-area and touch-target support across devices): [Docs](https://mudkeyboard.pages.dev/features/accessibility)
 
 ## Tools
 - Playground (tweak parameters live and copy the generated markup): [Docs](https://mudkeyboard.pages.dev/playground)
 - API reference (every public type: components, models, services, layouts): [Docs](https://mudkeyboard.pages.dev/api)
+- Releases & changelog (version history plus the current package and documentation-site versions): [Docs](https://mudkeyboard.pages.dev/releases)
 
 ## Package & source
 - NuGet package: https://www.nuget.org/packages/MudKeyboard

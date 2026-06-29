@@ -1,6 +1,7 @@
 @namespace MudKeyboard.Components
 
-<MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0">
+<MudPaper Class="@Class" Style="@KeyboardPalette.Compose(Palette, Style)" Elevation="0"
+          role="group" aria-label="@EffectiveAriaLabel">
     <KeyGrid Keys="@_displayKeys" Disabled="Disabled" DropShadow="@DropShadow" OnKeyPress="@HandleKeyPressAsync" OnKeyDoublePress="@HandleDoublePress" />
 </MudPaper>
 
@@ -45,6 +46,15 @@
 
     /// <summary>Extra inline styles for the root element.</summary>
     [Parameter] public string? Style { get; set; }
+
+    /// <summary>
+    /// Accessible name for the keyboard, applied to the root <c>role="group"</c> as its
+    /// <c>aria-label</c> so assistive technology can announce the control. Default
+    /// <c>"On-screen keyboard"</c>.
+    /// </summary>
+    [Parameter] public string? AriaLabel { get; set; }
+
+    private string EffectiveAriaLabel => string.IsNullOrWhiteSpace(AriaLabel) ? "On-screen keyboard" : AriaLabel;
 
     /// <summary>
     /// Optional colour overrides for this keyboard. Unset slots inherit the ambient MudBlazor
@@ -147,6 +157,17 @@
                 else
                 {
                     await SetValueAsync(KeyboardEngine.Append(Value, " ", MaxLength));
+                }
+
+                break;
+            case KeyTokens.Sign:
+                if (EmitMode)
+                {
+                    await OnInput.InvokeAsync(KeyboardInput.Sign);
+                }
+                else
+                {
+                    await SetValueAsync(KeyboardEngine.ToggleSign(Value));
                 }
 
                 break;

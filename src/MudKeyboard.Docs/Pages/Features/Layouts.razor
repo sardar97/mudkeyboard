@@ -96,6 +96,7 @@
         new("{shift}", "KeyTokens.Shift", "One-shot shift (double-tap = caps lock)"),
         new("{caps}", "KeyTokens.Caps", "Caps lock"),
         new("{sym}", "KeyTokens.SymbolToggle", "Flip between letters and numbers/symbols (shows 123 / ABC)"),
+        new("{sign}", "KeyTokens.Sign", "Toggle the sign of a numeric value (shows ±) — on the signed keypads"),
         new("{esc}", "KeyTokens.Escape", "Dismiss (raises OnEscape)"),
     ];
 
@@ -107,6 +108,7 @@
         new("Numpad", "KeyboardLayout", "—", "Calculator-style pad: 7-8-9 / 4-5-6 / 1-2-3 / 0-00-·-⌫ / ⏎."),
         new("NumpadWithDecimal", "KeyboardLayout", "—", "Numpad including a decimal-point key."),
         new("Price", "KeyboardLayout", "—", "Money pad — digits + 00, no decimal key (the decimal is placed automatically)."),
+        new("NumpadSigned / NumpadWithDecimalSigned / PriceSigned", "KeyboardLayout", "—", "The three keypads above with an extra ± sign-toggle key (used when AllowNegative is on)."),
         new("ForVariant(variant)", "KeyboardLayout", "—", "Returns the default layout for a KeyboardVariant."),
         new("SymbolsForVariant(variant)", "KeyboardLayout?", "—", "Returns the symbol face for a variant (only Full has one)."),
     ];

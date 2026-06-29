@@ -1,67 +1,110 @@
 @namespace MudKeyboard.Components
+@using Microsoft.JSInterop
 @implements IDisposable
 @inject KeyboardInteropService Interop
+
+@* The dock's styles ship as a plain static asset (wwwroot/MudKeyboard.css), not Blazor scoped CSS,
+   so the library never forces the consuming app to build its "{AppName}.styles.css" bundle. The host
+   pulls the sheet in itself via this <link>, so callers need no extra setup. A stylesheet <link> in
+   the body is valid HTML5 ("body-ok") and applies the same as one in <head>; it renders once because
+   the host is placed once. *@
+<link rel="stylesheet" href="_content/MudKeyboard/MudKeyboard.css" />
 
 @* Place ONCE in your layout. The container is always present (off-screen) so the slide-up
    transition animates whenever the --open class is toggled; the keyboard inside it renders once a
    field is focused. mousedown:preventDefault keeps the focused field focused while keys are tapped,
    so the caret stays put and the panel does not close on key presses. *@
+@* While closed the panel sits off-screen but is still in the DOM, so its keys/toolbar would otherwise
+   stay in the tab order and accessibility tree. `inert` removes them from focus and pointer interaction,
+   and `aria-hidden` hides them from screen readers, until a field is focused and the dock opens. Both
+   clear automatically when open. *@
 <div class="mudkeyboard-dock @(Interop.IsOpen ? "mudkeyboard-dock--open" : null) @DockSizeClass"
      style="z-index:@DockZIndex"
      @onmousedown:preventDefault="true"
      role="group"
-     aria-label="On-screen keyboard">
+     aria-label="On-screen keyboard"
+     aria-hidden="@(Interop.IsOpen ? null : "true")"
+     inert="@(!Interop.IsOpen)">
     @if (Interop.CurrentLayout is not null)
     {
         <MudPaper Elevation="@Elevation"
                   Class="pa-2"
                   Style="@PanelStyle">
-            <div class="mudkeyboard-dock__bar">
-                <div class="mudkeyboard-dock__tools">
-                    <MudTooltip Text="Clear">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       Size="Size.Medium"
-                                       OnClick="@ClearAsync"
-                                       aria-label="Clear field" />
-                    </MudTooltip>
-                    <MudTooltip Text="Copy">
-                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                       Size="Size.Medium"
-                                       OnClick="@CopyAsync"
-                                       aria-label="Copy" />
-                    </MudTooltip>
-                    <MudTooltip Text="Paste">
-                        <MudIconButton Icon="@Icons.Material.Filled.ContentPaste"
-                                       Size="Size.Medium"
-                                       OnClick="@PasteAsync"
-                                       aria-label="Paste" />
-                    </MudTooltip>
-                    @* Cursor arrows are meaningless for pence-first money entry (always appends at the end). *@
-                    @if (!IsMoney)
-                    {
-                        <MudTooltip Text="Move cursor left">
+            @* Toolbar labels use the native title attribute rather than MudTooltip. MudTooltip needs a
+               MudPopoverProvider in scope, but this host is designed to be placed in its own interactive
+               island (in App.razor, outside <Routes>) so the docked keyboard works on static-SSR pages —
+               where no MudBlazor providers are ancestors. A native title keeps the host self-contained and
+               dependency-free; every button still carries an aria-label for assistive tech. *@
+            @* The toolbar renders only the buttons the consumer left in VisibleActions; any in
+               DisabledActions render greyed-out. When VisibleActions is None the whole bar is dropped so
+               no empty role="toolbar" lingers in the accessibility tree. *@
+            @if (VisibleActions != KeyboardAction.None)
+            {
+                <div class="mudkeyboard-dock__bar" role="toolbar" aria-label="Keyboard actions">
+                    <div class="mudkeyboard-dock__tools">
+                        @if (IsActionVisible(KeyboardAction.Clear))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Size="Size.Medium"
+                                           Disabled="@IsActionDisabled(KeyboardAction.Clear)"
+                                           OnClick="@ClearAsync"
+                                           title="Clear"
+                                           aria-label="Clear field" />
+                        }
+                        @if (IsActionVisible(KeyboardAction.Copy))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                           Size="Size.Medium"
+                                           Disabled="@IsActionDisabled(KeyboardAction.Copy)"
+                                           OnClick="@CopyAsync"
+                                           title="Copy"
+                                           aria-label="Copy" />
+                        }
+                        @if (IsActionVisible(KeyboardAction.Paste))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentPaste"
+                                           Size="Size.Medium"
+                                           Disabled="@IsActionDisabled(KeyboardAction.Paste)"
+                                           OnClick="@PasteAsync"
+                                           title="Paste"
+                                           aria-label="Paste" />
+                        }
+                        @* Cursor arrows are meaningless for pence-first money entry (always appends at the end). *@
+                        @if (!IsMoney && IsActionVisible(KeyboardAction.CursorLeft))
+                        {
                             <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
                                            Size="Size.Medium"
+                                           Disabled="@IsActionDisabled(KeyboardAction.CursorLeft)"
                                            OnClick="@(() => MoveCaretAsync(-1))"
+                                           title="Move cursor left"
                                            aria-label="Move cursor left" />
-                        </MudTooltip>
-                        <MudTooltip Text="Move cursor right">
+                        }
+                        @if (!IsMoney && IsActionVisible(KeyboardAction.CursorRight))
+                        {
                             <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
                                            Size="Size.Medium"
+                                           Disabled="@IsActionDisabled(KeyboardAction.CursorRight)"
                                            OnClick="@(() => MoveCaretAsync(1))"
+                                           title="Move cursor right"
                                            aria-label="Move cursor right" />
-                        </MudTooltip>
+                        }
+                    </div>
+                    @if (IsActionVisible(KeyboardAction.Hide))
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown"
+                                       Size="Size.Medium"
+                                       Disabled="@IsActionDisabled(KeyboardAction.Hide)"
+                                       OnClick="@HideAsync"
+                                       title="Hide keyboard"
+                                       aria-label="Hide keyboard" />
                     }
                 </div>
-                <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown"
-                               Size="Size.Medium"
-                               OnClick="@HideAsync"
-                               aria-label="Hide keyboard" />
-            </div>
+            }
             <MudKeyboard Layout="Interop.CurrentLayout"
                          SymbolLayout="Interop.CurrentSymbolLayout"
                          Palette="Palette"
                          DropShadow="false"
+                         AriaLabel="Keyboard keys"
                          OnInput="@HandleInputAsync" />
         </MudPaper>
     }
@@ -86,31 +129,85 @@
     /// <summary>Extra inline styles appended to the docked panel.</summary>
     [Parameter] public string? Style { get; set; }
 
+    /// <summary>
+    /// Which toolbar action buttons the docked keyboard renders (Clear, Copy, Paste, the cursor arrows and
+    /// Hide). A <see cref="FlagsAttribute"/> set: combine members with <c>|</c> and remove them with
+    /// <c>&amp; ~</c>. Default <see cref="KeyboardAction.All"/>; set to <see cref="KeyboardAction.None"/> to
+    /// drop the whole toolbar. The cursor arrows never show on the money keypad regardless of this value,
+    /// because pence-first entry always appends at the end.
+    /// </summary>
+    [Parameter] public KeyboardAction VisibleActions { get; set; } = KeyboardAction.All;
+
+    /// <summary>
+    /// Which toolbar action buttons render greyed-out and non-interactive. A <see cref="FlagsAttribute"/>
+    /// set. Default <see cref="KeyboardAction.None"/>. Hiding wins over disabling: a button absent from
+    /// <see cref="VisibleActions"/> is not rendered at all, whether or not it appears here.
+    /// </summary>
+    [Parameter] public KeyboardAction DisabledActions { get; set; } = KeyboardAction.None;
+
+    /// <summary>
+    /// Default for whether numeric keypads (number, decimal and money) show a <c>±</c> sign-toggle key so
+    /// negative values can be entered. Default <see langword="false"/>. A field can override this per field
+    /// with a <c>data-mudkeyboard-allow-negative</c> attribute (which <c>MudKeyboardNumericField.AllowNegative</c>
+    /// emits).
+    /// </summary>
+    [Parameter] public bool AllowNegative { get; set; }
+
     private string PanelStyle => $"border-radius:16px 16px 0 0;{Style}";
+
+    private bool IsActionVisible(KeyboardAction action) => (VisibleActions & action) != 0;
+
+    private bool IsActionDisabled(KeyboardAction action) => (DisabledActions & action) != 0;
 
     // Sit one above the highest layer on the page when opened (e.g. a dialog), but never below the floor.
     private int DockZIndex => Math.Max(Interop.PageMaxZIndex + 1, MinZIndex);
 
-    // The numeric/money keypads are the built-in numpad layouts; everything else (QWERTY, custom) is text.
-    private bool IsKeypad =>
-        ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.Numpad)
-        || ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.NumpadWithDecimal)
-        || ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.Price);
+    // The numeric/money keypads are the built-in numpad layouts (signed or not); everything else is text.
+    private bool IsKeypad => LayoutLibrary.IsKeypad(Interop.CurrentLayout);
 
     // The money keypad enters digits pence-first (no decimal-point key) like MudPricepad.
-    private bool IsMoney => ReferenceEquals(Interop.CurrentLayout, LayoutLibrary.Price);
+    private bool IsMoney => LayoutLibrary.IsMoney(Interop.CurrentLayout);
 
     // Drives the dock width: a roomier panel for the full keyboard, a narrower one for keypads.
     private string DockSizeClass => IsKeypad ? "mudkeyboard-dock--keypad" : "mudkeyboard-dock--text";
 
     protected override void OnInitialized() => Interop.StateChanged += OnStateChanged;
 
+    // Propagate the global AllowNegative default to the interop service so it applies to focused fields
+    // that don't carry a data-mudkeyboard-allow-negative attribute of their own.
+    protected override void OnParametersSet() => Interop.AllowNegativeDefault = AllowNegative;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // JS interop is only available once the component is interactive.
+        // JS interop is only available once the component is interactive. During static SSR
+        // prerendering OnAfterRenderAsync does not run on the server at all, so the focus-capture
+        // module is never imported until the host hydrates in the browser. That is exactly what lets
+        // the docked keyboard work on static-SSR pages: place this host in its own interactive island
+        // (e.g. in App.razor, OUTSIDE <Routes>) and it stays live regardless of any page's render mode.
+        //
+        // The try/catch is a belt-and-braces guard. If the JS runtime is not yet available (a stray
+        // prerender pass throws InvalidOperationException) or the circuit has already gone
+        // (JSDisconnectedException, a subtype of JSException), the host silently does nothing instead
+        // of throwing.
+        //
+        // Note: we intentionally do NOT detect prerendering via a [CascadingParameter] HttpContext.
+        // HttpContext lives in the ASP.NET Core shared framework; depending on it would break this
+        // WebAssembly-friendly, AOT/trim-safe library for WASM consumers. Guarding the interop call is
+        // render-mode- and framework-agnostic and works identically on net8.0, net9.0 and net10.0.
         if (firstRender)
         {
-            await Interop.InitializeAsync();
+            try
+            {
+                await Interop.InitializeAsync();
+            }
+            catch (JSException)
+            {
+                // JS runtime unavailable / module failed to load (e.g. prerender, disconnected circuit).
+            }
+            catch (InvalidOperationException)
+            {
+                // "JavaScript interop calls cannot be issued at this time" — still statically rendering.
+            }
         }
     }
 
@@ -137,6 +234,17 @@
                 else
                 {
                     await Interop.BackspaceAsync();
+                }
+
+                break;
+            case KeyboardInputKind.Sign:
+                if (IsMoney)
+                {
+                    await Interop.ToggleMoneySignAsync();
+                }
+                else
+                {
+                    await Interop.ToggleSignAsync();
                 }
 
                 break;
