@@ -1,4 +1,4 @@
-@page "/"
+﻿@page "/"
 
 <PageTitle>MudKeyboard Demo (WASM)</PageTitle>
 
@@ -66,6 +66,27 @@
     </MudPaper>
 
     <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.h6" GutterBottom="true">Raw MudNumericField · Min/Max clamp + spin buttons (GitHub #8, #9)</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3" Color="Color.Secondary">
+            Plain <c>MudNumericField</c>s (non-immediate) driven by the docked keyboard. Type <b>300</b> and press
+            ⏎ — the field shows the clamped <b>30</b> every time, not just the first (#8). Press a ▲/▼ spin
+            button first: it steps the value <em>without</em> opening the keyboard. Then tap the field — the
+            keyboard opens showing the stepped value, and the next digit you tap appends to it instead of
+            wiping it (#9). With a host that has no backdrop (the default), the spin buttons stay usable while
+            the keyboard is open and the value-preview bar follows every step; this demo's host dims the page
+            behind the keyboard, so press the spin buttons before opening it.
+        </MudText>
+        <MudStack Spacing="3">
+            <MudNumericField @bind-Value="_issue8Value" T="double" Min="0" Max="30"
+                             Label="Max 30 (type 300 + Enter → shows 30, every time)" Variant="Variant.Outlined" />
+            <MudText Typo="Typo.caption">Bound value: <b>@_issue8Value</b></MudText>
+            <MudNumericField @bind-Value="_issue9Value" T="double" HideSpinButtons="false"
+                             Label="Spin buttons (never open the keyboard; the value carries into it)" Variant="Variant.Outlined" />
+            <MudText Typo="Typo.caption">Bound value: <b>@_issue9Value</b></MudText>
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Outlined="true">
         <MudText Typo="Typo.h6" GutterBottom="true">Full QWERTY · two-way binding + OnEnter + Sound</MudText>
         <MudTextField @bind-Value="_text" Label="Bound value" Variant="Variant.Outlined" Class="mb-3" Immediate="true" data-mudkeyboard-ignore="true" />
         <MudKeyboard @bind-Value="_text" OnEnter="@OnEnterPressed" MaxLength="40" Sound="true" />
@@ -123,6 +144,8 @@
     private double _dockMeasure;
     private int _dockQuantity;
     private int _dockRating;
+    private double _issue8Value;
+    private double _issue9Value;
     private int _enterCount;
     private string _lastEnter = "(none yet)";
 

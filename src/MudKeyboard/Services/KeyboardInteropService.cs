@@ -75,11 +75,14 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     public bool DefaultCapsLock => _options.DefaultCapsLock;
 
     /// <summary>
-    /// Whether the focused field's value should be reported back from JS on every change, so the docked
-    /// keyboard can show a live value-preview bar. Set by <see cref="MudKeyboard.Components.MudKeyboardHost"/>
-    /// from its <c>ShowValuePreview</c> parameter; passed to the JS shim at <see cref="InitializeAsync"/>,
-    /// and pushed to it again whenever it changes after the module has loaded (so toggling the preview at
-    /// runtime starts/stops the live reporting).
+    /// Whether the keyboard's own edits and caret moves on the focused field should be reported back
+    /// from JS, so the docked keyboard can show a live value-preview bar with a cursor. Changes made from
+    /// outside the keyboard (hardware typing, a numeric field's spin buttons, app code setting the bound
+    /// value) are always reported regardless of this flag, because the keypad state depends on them.
+    /// Set by <see cref="MudKeyboard.Components.MudKeyboardHost"/> from its <c>ShowValuePreview</c>
+    /// parameter; passed to the JS shim at <see cref="InitializeAsync"/>, and pushed to it again whenever
+    /// it changes after the module has loaded (so toggling the preview at runtime starts/stops the
+    /// reporting of the keyboard's own edits).
     /// </summary>
     public bool ReportValueChanges
     {
@@ -106,8 +109,10 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     public string OriginalValue { get; private set; } = string.Empty;
 
     /// <summary>
-    /// The focused field's current value, kept in sync from JS while <see cref="ReportValueChanges"/> is
-    /// set. Drives the docked keyboard's value-preview bar. Empty before the first focus.
+    /// The focused field's current value. Seeded at focus-in and kept in sync from JS on every change
+    /// made from outside the keyboard (hardware typing, a numeric field's spin buttons, app code); the
+    /// keyboard's own edits are mirrored into it while <see cref="ReportValueChanges"/> is set. Drives the
+    /// docked keyboard's value-preview bar. Empty before the first focus.
     /// </summary>
     public string CurrentValue { get; private set; } = string.Empty;
 
@@ -202,27 +207,48 @@ public sealed class KeyboardInteropService : IAsyncDisposable
     }
 
     /// <summary>
-    /// Called from JS whenever the focused field's value changes (after a keystroke, paste, or the user
-    /// typing on a hardware keyboard) while value reporting is enabled. Keeps <see cref="CurrentValue"/>
-    /// in sync so the docked keyboard's value-preview bar shows the live value.
+    /// Called from JS whenever the focused field's value (or caret) changes. Keeps <see cref="CurrentValue"/>
+    /// and <see cref="CurrentCaret"/> in sync so the docked keyboard's value-preview bar shows the live
+    /// value, and — for changes made from outside the keyboard — keeps the keypad state honest: a pending
+    /// "first digit replaces the value" lapses, and the pence-first money accumulator is re-seeded from
+    /// the field, so the next digit continues from what is really in the field.
     /// </summary>
     /// <param name="value">The focused field's new value.</param>
     /// <param name="caret">
     /// The field's caret offset into <paramref name="value"/>, used to position the preview cursor. A
     /// negative value (the default, e.g. when invoked from tests) means "place the caret at the end".
     /// </param>
+    /// <param name="external">
+    /// <see langword="true"/> when the change was not made by the on-screen keys — the user typing on a
+    /// hardware keyboard, a <c>MudNumericField</c> spin button / ArrowUp / ArrowDown, or app code setting
+    /// the bound value. The JS shim always reports those, regardless of <see cref="ReportValueChanges"/>.
+    /// <see langword="false"/> (the default) for the keyboard's own edits and pure caret moves, which are
+    /// reported only while <see cref="ReportValueChanges"/> is set.
+    /// </param>
     [JSInvokable]
-    public void OnValueChanged(string value, int caret = -1)
+    public void OnValueChanged(string value, int caret = -1, bool external = false)
     {
         if (caret < 0 || caret > value.Length)
         {
             caret = value.Length;
         }
 
-        // The user is now editing directly (on-screen key or hardware), so any pending value-replace lapses.
-        _replacePending = false;
+        var valueChanged = !string.Equals(value, CurrentValue, StringComparison.Ordinal);
 
-        if (string.Equals(value, CurrentValue, StringComparison.Ordinal) && caret == CurrentCaret)
+        if (external && valueChanged)
+        {
+            // Something other than the on-screen keys changed the value under us (spin button, hardware
+            // typing, app code): the user is editing the existing value, so the pending value-replace
+            // lapses, and the money accumulator follows the field so the next digit appends to it.
+            // A pure caret report (same value) leaves the replace armed — tapping into a field and then
+            // pressing the first digit must still replace it. The keyboard's own writes are already
+            // accounted for by the methods that made them.
+            _replacePending = false;
+            _moneyDigits = PricepadFormatter.ExtractDigits(value).TrimStart('0');
+            _moneyNegative = PricepadFormatter.IsNegative(value);
+        }
+
+        if (!valueChanged && caret == CurrentCaret)
         {
             return;
         }

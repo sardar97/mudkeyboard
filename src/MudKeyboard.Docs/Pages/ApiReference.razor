@@ -38,6 +38,10 @@
         <ApiHeading Id="keyboardvariant" Title="KeyboardVariant" Namespace="MudKeyboard.Models — enum" />
         <ParamTable Members="VariantMembers" NameHeader="Value" ShowDefault="false" />
 
+        <ApiHeading Id="keyboardposition" Title="KeyboardPosition" Namespace="MudKeyboard.Models — enum" />
+        <div class="docs-prose"><p>Where the global docked keyboard sits on screen. Drives <code class="docs-inline-code">MudKeyboardHost.Position</code>.</p></div>
+        <ParamTable Members="PositionMembers" NameHeader="Value" ShowDefault="false" />
+
         <ApiHeading Id="keyboardaction" Title="KeyboardAction" Namespace="MudKeyboard.Models — [Flags] enum" />
         <div class="docs-prose"><p>The docked keyboard's toolbar buttons, as a <code class="docs-inline-code">[Flags]</code> set. Drives <code class="docs-inline-code">MudKeyboardHost.VisibleActions</code> and <code class="docs-inline-code">DisabledActions</code>. Combine with <code class="docs-inline-code">|</code>; remove with <code class="docs-inline-code">&amp; ~</code>.</p></div>
         <ParamTable Members="ActionMembers" NameHeader="Value" ShowDefault="false" />
@@ -158,6 +162,7 @@
         ("keyboardlayout", "KeyboardLayout", 0.75),
         ("keyboardkey", "KeyboardKey", 0.75),
         ("keyboardvariant", "KeyboardVariant", 0.75),
+        ("keyboardposition", "KeyboardPosition", 0.75),
         ("keyboardaction", "KeyboardAction", 0.75),
         ("keyboardpalette", "KeyboardPalette", 0.75),
         ("keyboardinput", "KeyboardInput", 0.75),
@@ -238,6 +243,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Elevation", "int", "8", "Drop-shadow elevation of the docked panel."),
         new("MinZIndex", "int", "1400", "Floor for the panel's z-index."),
         new("Style", "string?", "null", "Extra inline styles for the panel."),
+        new("Position", "KeyboardPosition", "Bottom", "Where the docked keyboard appears: Bottom (default), Top or Center. Pure CSS; the panel's rounded corners follow the chosen edge."),
         new("VisibleActions", "KeyboardAction", "All", "[Flags] set of toolbar buttons to render. Remove buttons with & ~, or use None to drop the toolbar."),
         new("DisabledActions", "KeyboardAction", "None", "[Flags] set of toolbar buttons to render greyed-out. Hiding via VisibleActions wins over disabling."),
         new("AllowNegative", "bool", "false", "Global default for showing the ± sign-toggle key on numeric keypads; a field's data-mudkeyboard-allow-negative overrides it."),
@@ -276,6 +282,13 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Numpad", "KeyboardVariant", "—", "Calculator-style numeric pad."),
         new("Pricepad", "KeyboardVariant", "—", "Numeric pad formatted as currency (via MudPricepad)."),
         new("Custom", "KeyboardVariant", "—", "Use a caller-supplied Layout."),
+    ];
+
+    private static readonly IReadOnlyList<ApiMember> PositionMembers =
+    [
+        new("Bottom", "KeyboardPosition", "—", "Docked to the bottom edge, sliding up into view. The default."),
+        new("Top", "KeyboardPosition", "—", "Docked to the top edge, sliding down into view."),
+        new("Center", "KeyboardPosition", "—", "Floating, centred in the viewport, fading and scaling into view."),
     ];
 
     private static readonly IReadOnlyList<ApiMember> ActionMembers =

@@ -31,7 +31,7 @@ that has only this file can integrate MudKeyboard correctly without browsing the
 WebAssembly SPA and therefore not readable by a plain HTTP fetch). For prose docs, see the companion
 [`llms-full.txt`](https://mudkeyboard.pages.dev/llms-full.txt).
 
-> **Latest verified facts** (package **1.1.0**, .NET 8/9/10, MudBlazor 9.x). If the project's installed
+> **Latest verified facts** (package **1.3.0**, .NET 8/9/10, MudBlazor 9.9+). If the project's installed
 > version differs, prefer the API as documented here unless the code says otherwise.
 
 ---
@@ -347,7 +347,11 @@ toolbar with `VisibleActions="KeyboardAction.None"`, or grey one out with
   global `MudKeyboardOptions.DefaultCapsLock` (set via `AddMudKeyboard(o => o.DefaultCapsLock = true)`).
 - The **number and money keypads replace** the field's existing value on the first digit pressed after
   focus (a pre-filled `6.00` becomes the typed amount, not `6.005`); backspace / sign / a caret move resume
-  editing the existing value.
+  editing the existing value, and so does any change made from outside the keyboard (a `MudNumericField`
+  spin button, ArrowUp/ArrowDown, hardware typing, app code) — the value-preview bar follows those too.
+- A numeric field's ▲/▼ **spin buttons never open the keyboard**; tap the field itself to open it. When
+  the keyboard closes a `MudNumericField`, the on-screen text is kept in step with the text the field
+  settles on (Min/Max clamping, formatting).
 - `ShowBackdrop` (`bool`, default `false`) — dim the page behind the keyboard. A backdrop click
   **cancels** the edit, reverting the field to the value it had at focus-in, and closes.
 - `DisableBackdropClick` (`bool`, default `false`) — stop the backdrop dismissing, requiring an explicit

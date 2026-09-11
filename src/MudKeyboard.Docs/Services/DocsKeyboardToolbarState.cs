@@ -20,6 +20,7 @@ public sealed class DocsKeyboardToolbarState
     private bool _disableBackdropClick;
     private bool _sound;
     private string _cancelLabel = "Cancel";
+    private KeyboardPosition _position = KeyboardPosition.Bottom;
 
     /// <summary>Raised whenever the toolbar settings change, so the layout host re-renders.</summary>
     public event Action? Changed;
@@ -80,6 +81,13 @@ public sealed class DocsKeyboardToolbarState
         set => Set(ref _sound, value);
     }
 
+    /// <summary>Where the docked keyboard sits on screen. Bound to <c>MudKeyboardHost.Position</c>.</summary>
+    public KeyboardPosition Position
+    {
+        get => _position;
+        set => Set(ref _position, value);
+    }
+
     /// <summary>Which toolbar buttons the docked keyboard renders. Bound to <c>MudKeyboardHost.VisibleActions</c>.</summary>
     public KeyboardAction VisibleActions
     {
@@ -120,6 +128,7 @@ public sealed class DocsKeyboardToolbarState
         _disableBackdropClick = false;
         _sound = false;
         _cancelLabel = "Cancel";
+        _position = KeyboardPosition.Bottom;
         VisibleActions = KeyboardAction.All; // raises Changed
     }
 
@@ -135,6 +144,17 @@ public sealed class DocsKeyboardToolbarState
     }
 
     private void Set(ref bool field, bool value)
+    {
+        if (field == value)
+        {
+            return;
+        }
+
+        field = value;
+        Changed?.Invoke();
+    }
+
+    private void Set(ref KeyboardPosition field, KeyboardPosition value)
     {
         if (field == value)
         {

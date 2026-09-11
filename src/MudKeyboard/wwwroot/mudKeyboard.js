@@ -7,8 +7,10 @@
 //
 // Contract:
 //   initialize(dotnetRef, attachMode, reportValue) — start listening; calls back .NET OnFocusIn /
-//       OnFocusOut, and (when reportValue is set) OnValueChanged on every edit so the host can show a
-//       live value-preview bar
+//       OnFocusOut, and OnValueChanged whenever the focused field's value changes (always for changes
+//       made outside the on-screen keys — hardware typing, a spin button, app code — and, when
+//       reportValue is set, for the keyboard's own edits and caret moves too, so the host can show a
+//       live value-preview bar with a cursor)
 //   insertText(text), backspace(), enter(), setValue(text), blurActive() — edit the active field
 //   dispose() — stop listening
 //
@@ -18,9 +20,18 @@ let dotnet = null;
 let attachMode = 'AllInputs'; // 'AllInputs' (opt-out) | 'OptIn'
 let activeEl = null;
 let closing = 0;
-// When true, the focused field's value is pushed back to .NET (OnValueChanged) on every change so the
-// docked keyboard can show a live value-preview bar. Off unless MudKeyboardHost.ShowValuePreview is set.
+// When true, the keyboard's own edits and pure caret moves are pushed back to .NET (OnValueChanged) as
+// well, so the docked keyboard can show a live value-preview bar with a cursor. Off unless
+// MudKeyboardHost.ShowValuePreview is set. Changes made from outside the keyboard are always reported.
 let reportValue = false;
+// True while the shim itself is writing the focused field (insertText/backspace/setValue…), so the
+// 'input' event it dispatches can be told apart from the user typing on a hardware keyboard.
+let selfEditing = false;
+// The field a numeric spin button (▲/▼) is about to focus — see onPointerDownCapture / onFocusIn.
+let spinTarget = null;
+let spinTimer = 0;
+// The element whose `value` setter is currently intercepted — see hookValue.
+let hookedEl = null;
 
 // Input types we treat as free-text editable. Pickers (date/color/checkbox/file/range…) are
 // excluded — an on-screen text keyboard cannot meaningfully drive them.
@@ -28,6 +39,15 @@ const TEXT_TYPES = new Set(['text', 'search', 'email', 'url', 'tel', 'password',
 
 const DOCK_SELECTOR = '.mudkeyboard-dock';
 const BACKDROP_SELECTOR = '.mudkeyboard-backdrop';
+// MudBlazor's numeric field wraps its ▲/▼ spin buttons in this element, inside the field's .mud-input.
+const SPIN_SELECTOR = '.mud-input-numeric-spin';
+const INPUT_WRAPPER_SELECTOR = '.mud-input';
+// How long a spin-button press keeps the field it focuses from opening the keyboard (Blazor Server
+// focuses the input after a round trip, so this needs some slack).
+const SPIN_FOCUS_WINDOW_MS = 2000;
+// How long, after the keyboard closes a numeric field, its displayed text is kept in step with the
+// text the field settles on — see watchSpinButtonSettle.
+const SETTLE_WINDOW_MS = 2000;
 
 function isEditable(el) {
     if (!el || el.nodeType !== 1) return false;
@@ -68,6 +88,31 @@ function insideBackdrop(el) {
     return !!(el && el.closest && el.closest(BACKDROP_SELECTOR));
 }
 
+// The <input> a numeric field's spin button belongs to, or null when the press target is not a spin button.
+function spinButtonInput(target) {
+    if (!target || !target.closest) return null;
+    const spin = target.closest(SPIN_SELECTOR);
+    if (!spin || !spin.closest) return null;
+    const wrapper = spin.closest(INPUT_WRAPPER_SELECTOR) || spin.parentElement;
+    const input = wrapper && wrapper.querySelector ? wrapper.querySelector('input') : null;
+    return input || null;
+}
+
+function setSpinTarget(input) {
+    clearSpinTarget();
+    if (!input) return;
+    spinTarget = input;
+    spinTimer = setTimeout(clearSpinTarget, SPIN_FOCUS_WINDOW_MS);
+}
+
+function clearSpinTarget() {
+    spinTarget = null;
+    if (spinTimer) {
+        clearTimeout(spinTimer);
+        spinTimer = 0;
+    }
+}
+
 // The caret offset of a field, or the end of its value when selection is unavailable (number/email
 // inputs disallow selectionStart). Used to position the preview bar's cursor.
 function caretOf(el) {
@@ -76,12 +121,61 @@ function caretOf(el) {
     return typeof pos === 'number' ? pos : len;
 }
 
-// Push the focused field's current value AND caret position to .NET so the value-preview bar can mirror
-// the value and show a cursor where the caret is. One-way and display-only — it never writes back to the
-// field, so it cannot race the field's own re-render.
-function reportValueChanged(el) {
-    if (!reportValue || !dotnet || !el) return;
-    dotnet.invokeMethodAsync('OnValueChanged', el.value ?? '', caretOf(el));
+// Push the focused field's current value AND caret position to .NET. One-way and display-only — it never
+// writes back to the field, so it cannot race the field's own re-render.
+//
+// `external` marks a change the keyboard did not make itself: the user typing on a hardware keyboard, a
+// MudNumericField spin button / ArrowUp / ArrowDown, or app code setting the bound value. Those are always
+// reported, because the host needs them to keep its state honest (the "first digit replaces the value"
+// rule and the pence-first money accumulator must follow what is really in the field), not just to draw
+// the preview. The keyboard's own edits and pure caret moves are only reported while the value-preview
+// bar is on (reportValue) — nothing else consumes them.
+function reportValueChanged(el, external = false) {
+    if (!dotnet || !el) return;
+    if (!external && !reportValue) return;
+    dotnet.invokeMethodAsync('OnValueChanged', el.value ?? '', caretOf(el), external);
+}
+
+// The native value accessor for an input/textarea, from its prototype.
+function nativeValueDescriptor(el) {
+    const proto = el.tagName === 'TEXTAREA'
+        ? window.HTMLTextAreaElement.prototype
+        : window.HTMLInputElement.prototype;
+    return proto ? Object.getOwnPropertyDescriptor(proto, 'value') : undefined;
+}
+
+// Intercept programmatic writes to the focused field's value. Blazor updates an <input> by assigning
+// element.value — a MudNumericField spin button or ArrowUp/ArrowDown, app code changing the bound value,
+// a re-render after Min/Max clamping — which fires no 'input' event, so the docked keyboard never heard
+// about it: the value-preview bar kept showing the old value and the "first digit replaces the value"
+// rule stayed armed, so the next digit wiped what the spin button had just produced (GitHub #9).
+// Shadowing `value` on the element *instance* with an accessor that forwards to the native prototype
+// setter and then reports the new value catches every such write. The shim's own edits go straight to
+// the prototype setter (setNativeValue) and never land here. Removed again by unhookValue when the
+// field is no longer being edited, so nothing lingers on the element.
+function hookValue(el) {
+    unhookValue();
+    if (!el || Object.prototype.hasOwnProperty.call(el, 'value')) return; // already shadowed by someone else — leave it
+    const desc = nativeValueDescriptor(el);
+    if (!desc || typeof desc.get !== 'function' || typeof desc.set !== 'function') return;
+    try {
+        Object.defineProperty(el, 'value', {
+            configurable: true,
+            enumerable: desc.enumerable,
+            get() { return desc.get.call(this); },
+            set(v) {
+                desc.set.call(this, v);
+                if (this === activeEl) reportValueChanged(this, true);
+            },
+        });
+        hookedEl = el;
+    } catch { /* non-extensible element — live without programmatic-change tracking */ }
+}
+
+function unhookValue() {
+    if (!hookedEl) return;
+    try { delete hookedEl.value; } catch { /* ignore */ }
+    hookedEl = null;
 }
 
 // Highest z-index currently used anywhere on the page, ignoring our own dock (which carries the
@@ -101,12 +195,10 @@ function highestZIndex() {
     return Math.min(max, 2000000000);
 }
 
-function onFocusIn(e) {
-    const el = e.target;
-    if (insideDock(el)) return; // focus moving onto the keyboard itself — ignore
-    if (!shouldAttach(el)) return;
-
+// Start editing `el`: open the keyboard for it and watch it for programmatic value changes.
+function attach(el) {
     activeEl = el;
+    hookValue(el);
     // Pass the field's current value so the docked keyboard can seed pence-first money entry from it
     // (and so it never has to read the value back across a second interop round trip mid-keystroke), plus
     // the per-field data-mudkeyboard-allow-negative opt-in (empty when absent → the host default applies).
@@ -117,6 +209,36 @@ function onFocusIn(e) {
     setTimeout(() => {
         try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch { /* ignore */ }
     }, 60);
+}
+
+// Stop editing: forget the field and close the keyboard.
+function detach() {
+    activeEl = null;
+    unhookValue();
+    if (dotnet) dotnet.invokeMethodAsync('OnFocusOut');
+}
+
+function onFocusIn(e) {
+    const el = e.target;
+    if (insideDock(el)) return; // focus moving onto the keyboard itself — ignore
+    if (!shouldAttach(el)) return;
+
+    if (el === spinTarget) {
+        // Focus handed to a numeric field by its own ▲/▼ spin button (MudBlazor focuses the input when a
+        // spin button is pressed). Pressing a spin button is not a request to type, so it never opens the
+        // keyboard; if the keyboard was open for a different field, that edit is over — close it. A later
+        // tap on the (already focused) field opens the keyboard from onPointerDownCapture.
+        clearSpinTarget();
+        if (activeEl && activeEl !== el) detach();
+        return;
+    }
+
+    // Focus returning to the field being edited (a blur/refocus bounce, e.g. around a spin button on
+    // older MudBlazor builds) is not a fresh start: keep the value at focus-in, the "first digit
+    // replaces" state and the preview exactly as they are.
+    if (el === activeEl) return;
+
+    attach(el);
 }
 
 function onFocusOut(e) {
@@ -139,8 +261,7 @@ function onFocusOut(e) {
             commitField(losing);
         }
         if (shouldAttach(act)) return;   // moved to another field — its focusin handles the switch
-        activeEl = null;
-        if (dotnet) dotnet.invokeMethodAsync('OnFocusOut');
+        if (activeEl) detach();
     }, 120);
 }
 
@@ -153,21 +274,36 @@ function onFocusOut(e) {
 // 'change' here syncs the Blazor text state first, so the field's own blur then validates and fixes the
 // display exactly as it does for a real keyboard. Key taps never reach this: the dock's mousedown
 // preventDefault keeps the field focused, and we ignore presses inside the dock (and on the field itself).
+//
+// Two more jobs live here because pointerdown is the earliest moment a press can be seen:
+//   - a press on a numeric field's ▲/▼ spin button is remembered (spinTarget) so the focus MudBlazor
+//     then gives the input does not open the keyboard (see onFocusIn);
+//   - a press on a field that is already focused but not being edited (typically after a spin button
+//     focused it) opens the keyboard for it — the browser fires no focusin in that case.
 function onPointerDownCapture(e) {
-    const el = activeEl;
-    if (!el) return;
     const target = e && e.target;
-    // The backdrop is part of the keyboard UI: pressing it cancels (handled in Blazor), so skip the
-    // commit here too — otherwise we would commit the edited value an instant before reverting it.
-    if (target === el || insideDock(target) || insideBackdrop(target)) return;
+    // The keyboard UI (keys, toolbar, backdrop) never commits: taps there are part of the edit, and a
+    // backdrop press cancels (handled in Blazor) — committing first would commit the edit an instant
+    // before reverting it.
+    if (insideDock(target) || insideBackdrop(target)) return;
+
+    const spinInput = spinButtonInput(target);
+    setSpinTarget(spinInput);
+
+    const el = activeEl;
+    if (!el) {
+        if (!spinInput && target === document.activeElement && shouldAttach(target)) attach(target);
+        return;
+    }
+    if (target === el) return;
     commitField(el);
 }
 
-// Mirror hardware-keyboard typing into the value-preview bar: when the user types into the focused
-// field directly (not via the on-screen keys), report the new value too.
+// Mirror typing that did not come from the on-screen keys (a hardware keyboard, paste, autofill) into
+// the host — and, when the preview bar is on, the keyboard's own edits too.
 function onInputCapture(e) {
-    if (reportValue && activeEl && e && e.target === activeEl) {
-        reportValueChanged(activeEl);
+    if (activeEl && e && e.target === activeEl) {
+        reportValueChanged(activeEl, !selfEditing);
     }
 }
 
@@ -326,10 +462,13 @@ export function moveCaret(delta) {
 export function blurActive() {
     const el = activeEl;
     activeEl = null;
+    unhookValue();
     if (el) {
         // Commit + validate the value, like a hardware-keyboard blur, then drop focus. commitField fires a
         // single settled 'change' (for spinbuttons too — unlike the per-keystroke path, one change once
-        // editing has stopped commits/clamps the value without snapping back).
+        // editing has stopped commits/clamps the value without snapping back). Then keep the text on
+        // screen in step with whatever the numeric field settles on.
+        watchSpinButtonSettle(el);
         commitField(el);
         try { el.blur(); } catch { /* ignore */ }
     }
@@ -341,6 +480,8 @@ export function dispose() {
     document.removeEventListener('pointerdown', onPointerDownCapture, true);
     document.removeEventListener('pointerup', onPointerUpCapture, true);
     document.removeEventListener('input', onInputCapture, true);
+    clearSpinTarget();
+    unhookValue();
     dotnet = null;
     activeEl = null;
 }
@@ -353,12 +494,11 @@ function setCaret(el, pos) {
 // Frameworks that track inputs by patching the value setter (React et al.) — and, crucially, Blazor's
 // static-SSR/EditForm machinery and any plain HTML form — only observe the new value when it is set via
 // the prototype descriptor. Without this, text typed by the on-screen keyboard would not be picked up
-// by an SSR form POST. Textarea and input expose the setter on different prototypes.
+// by an SSR form POST. Textarea and input expose the setter on different prototypes. It also bypasses
+// the shim's own instance-level accessor (hookValue), so the keyboard's edits are never mistaken for
+// programmatic changes.
 function setNativeValue(el, value) {
-    const proto = el.tagName === 'TEXTAREA'
-        ? window.HTMLTextAreaElement.prototype
-        : window.HTMLInputElement.prototype;
-    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+    const setter = nativeValueDescriptor(el)?.set;
     if (setter) {
         setter.call(el, value);
     } else {
@@ -382,9 +522,14 @@ function isSpinButton(el) {
 // would otherwise revert. Its value still reaches an SSR POST (it is written to the DOM via the native
 // setter) and immediate bindings update live on 'input'.
 function dispatchInput(el) {
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    if (!isSpinButton(el)) {
-        el.dispatchEvent(new Event('change', { bubbles: true }));
+    selfEditing = true;
+    try {
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        if (!isSpinButton(el)) {
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    } finally {
+        selfEditing = false;
     }
 }
 
@@ -400,4 +545,27 @@ function commitField(el) {
     if (el && el.nodeType === 1 && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
         el.dispatchEvent(new Event('change', { bubbles: true }));
     }
+}
+
+// After the keyboard closes a MudBlazor numeric field (role="spinbutton"), make sure the text left on
+// screen is the text the field settles on. The field re-derives its text from the committed value (Min/Max
+// clamping, formatting) and Blazor only rewrites the DOM when that text differs from what it last
+// rendered — but the keyboard typed into the DOM directly, behind Blazor's back, so a field whose text
+// settles on the *same* string as before (typing 300 into a Max=30 field that already held 30) can be
+// left showing the raw typed text (GitHub #8). MudNumericField mirrors its settled text into
+// aria-valuetext (or, when the text is just the number, aria-valuenow), which Blazor does re-render, so
+// watch those for a moment after closing and copy the settled text into the field whenever they disagree.
+// Display-only: no events are fired, and nothing happens once the field is focused or being edited again.
+function watchSpinButtonSettle(el) {
+    if (!isSpinButton(el) || typeof MutationObserver === 'undefined') return;
+    const sync = () => {
+        if (el === activeEl || document.activeElement === el) return;
+        const settled = el.getAttribute('aria-valuetext') ?? el.getAttribute('aria-valuenow');
+        if (settled !== null && settled !== undefined && el.value !== settled) setNativeValue(el, settled);
+    };
+    const observer = new MutationObserver(sync);
+    try {
+        observer.observe(el, { attributes: true, attributeFilter: ['aria-valuenow', 'aria-valuetext'] });
+    } catch { return; }
+    setTimeout(() => { observer.disconnect(); sync(); }, SETTLE_WINDOW_MS);
 }

@@ -32,7 +32,7 @@
    stay in the tab order and accessibility tree. `inert` removes them from focus and pointer interaction,
    and `aria-hidden` hides them from screen readers, until a field is focused and the dock opens. Both
    clear automatically when open. *@
-<div class="mudkeyboard-dock @(Interop.IsOpen ? "mudkeyboard-dock--open" : null) @DockSizeClass"
+<div class="mudkeyboard-dock @(Interop.IsOpen ? "mudkeyboard-dock--open" : null) @DockSizeClass @DockPositionClass"
      style="z-index:@DockZIndex"
      @onmousedown:preventDefault="true"
      role="group"
@@ -168,6 +168,15 @@
     [Parameter] public string? Style { get; set; }
 
     /// <summary>
+    /// Where the docked keyboard sits on screen while open: <see cref="KeyboardPosition.Bottom"/> (the
+    /// default — slides up from the bottom edge), <see cref="KeyboardPosition.Top"/> (slides down from the
+    /// top edge) or <see cref="KeyboardPosition.Center"/> (floats centred in the viewport, fading into
+    /// view). The panel's rounded corners follow the chosen edge. Pure CSS — no extra JavaScript. Default
+    /// <see cref="KeyboardPosition.Bottom"/>.
+    /// </summary>
+    [Parameter] public KeyboardPosition Position { get; set; } = KeyboardPosition.Bottom;
+
+    /// <summary>
     /// Which toolbar action buttons the docked keyboard renders (Clear, Copy, Paste, the cursor arrows and
     /// Hide). A <see cref="FlagsAttribute"/> set: combine members with <c>|</c> and remove them with
     /// <c>&amp; ~</c>. Default <see cref="KeyboardAction.All"/>; set to <see cref="KeyboardAction.None"/> to
@@ -243,7 +252,16 @@
     /// </summary>
     [Parameter] public string? SoundSrc { get; set; }
 
-    private string PanelStyle => $"border-radius:16px 16px 0 0;{Style}";
+    private string PanelStyle => $"border-radius:{PanelBorderRadius};{Style}";
+
+    // Round only the corners that face into the screen: the top corners when docked at the bottom edge,
+    // the bottom corners when docked at the top edge, and all four when floating centred.
+    private string PanelBorderRadius => Position switch
+    {
+        KeyboardPosition.Top => "0 0 16px 16px",
+        KeyboardPosition.Center => "16px",
+        _ => "16px 16px 0 0",
+    };
 
     // The focused field's value split at the caret, so the preview bar can render a cursor between the two
     // halves. The caret is clamped to the value's bounds (CurrentCaret is already clamped, but guard anyway).
@@ -306,6 +324,14 @@
 
     // Drives the dock width: a roomier panel for the full keyboard, a narrower one for keypads.
     private string DockSizeClass => IsKeypad ? "mudkeyboard-dock--keypad" : "mudkeyboard-dock--text";
+
+    // Anchors the dock to the bottom edge (default), the top edge, or floating-centred — see KeyboardPosition.
+    private string DockPositionClass => Position switch
+    {
+        KeyboardPosition.Top => "mudkeyboard-dock--top",
+        KeyboardPosition.Center => "mudkeyboard-dock--center",
+        _ => "mudkeyboard-dock--bottom",
+    };
 
     protected override void OnInitialized() => Interop.StateChanged += OnStateChanged;
 

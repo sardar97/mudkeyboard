@@ -12,7 +12,7 @@ shell to a plain HTTP fetch. Everything an LLM or coding agent needs is below. A
 
 - Package: `MudKeyboard` on NuGet — <https://www.nuget.org/packages/MudKeyboard>
 - Source (MIT): <https://github.com/sardar97/mudkeyboard>
-- Current version documented here: **1.2.0** (.NET 8/9/10, MudBlazor 9.x)
+- Current version documented here: **1.3.0** (.NET 8/9/10, MudBlazor 9.9+)
 - MudBlazor (required peer dependency): <https://mudblazor.com>
 
 ---
@@ -199,7 +199,11 @@ New in 1.2.0 (all opt-in, default off):
 
 The number and money keypads **replace** the field's existing value on the first digit pressed after
 focus (a pre-filled `6.00` becomes the typed amount, not `6.005`); backspace, sign or a caret move resumes
-editing the existing value.
+editing the existing value, and so does any change made from outside the keyboard (a `MudNumericField`
+spin button, ArrowUp/ArrowDown, hardware typing or app code setting the bound value) — the value-preview
+bar follows those too. A numeric field's ▲/▼ **spin buttons never open the keyboard**: pressing one just
+steps the value; tap the field itself to open it. When the keyboard closes a `MudNumericField`, the text
+on screen is kept in step with the text the field settles on (Min/Max clamping, formatting).
 
 ### `<MudKeyboardTextField>` (`@typeparam T`)
 

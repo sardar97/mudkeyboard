@@ -18,5 +18,5 @@ public enum BadgeKind
 public static class WhatsNew
 {
     /// <summary>The release the current crop of <c>New</c>/<c>Updated</c> badges advertises.</summary>
-    public const string Version = "1.2.0";
+    public const string Version = "1.3.0";
 }

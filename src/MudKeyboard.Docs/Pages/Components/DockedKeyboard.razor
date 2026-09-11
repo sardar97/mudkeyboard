@@ -134,13 +134,15 @@
     <MudText Typo="Typo.body2" Class="mt-2">Bound: <b>@_negInt</b> · <b>@_negPrice.ToString("N2")</b></MudText>
 </ExampleCard>
 
-<MudText id="behaviour" Typo="Typo.h5" Class="docs-section-title">Built-in behaviour</MudText>
+<MudText id="behaviour" Typo="Typo.h5" Class="docs-section-title">Built-in behaviour <FeatureBadge Kind="BadgeKind.Updated" /></MudText>
 <div class="docs-prose">
     <ul>
         <li>The docked panel includes <strong>clear, copy, paste</strong> and <strong>cursor</strong> controls (cursor arrows are hidden for pence-first money entry, which always appends).</li>
         <li>It automatically docks <strong>one layer above the top-most element on the page</strong>, so it floats over dialogs and overlays. <code class="docs-inline-code">MinZIndex</code> sets the floor.</li>
         <li>Pressing <strong>⏎</strong> commits the value and closes the keyboard; the <strong>Cancel</strong> key (next to Enter, shown by default) reverts and closes. The chevron-down ⌄ Hide button appears only when the Cancel key is turned off.</li>
-        <li>On the <strong>number and money keypads</strong>, the first digit pressed replaces the field's existing value (so a pre-filled <code class="docs-inline-code">6.00</code> becomes the typed amount, not <code class="docs-inline-code">6.005</code>); backspace, sign or a caret move resumes editing the existing value.</li>
+        <li>On the <strong>number and money keypads</strong>, the first digit pressed replaces the field's existing value (so a pre-filled <code class="docs-inline-code">6.00</code> becomes the typed amount, not <code class="docs-inline-code">6.005</code>); backspace, sign or a caret move resumes editing the existing value — and so does any change made from outside the keyboard (a spin button, ArrowUp/ArrowDown, hardware typing or app code setting the bound value), which the value-preview bar follows too.</li>
+        <li>A numeric field's <strong>▲/▼ spin buttons never open the keyboard</strong>: pressing one just steps the value (MudBlazor focuses the field, but that is not a request to type). Tap the field itself to open the keyboard. While the keyboard is open, the spin buttons keep working and the preview follows every step.</li>
+        <li>When the keyboard closes a <code class="docs-inline-code">MudNumericField</code>, the text on screen is kept in step with the text the field settles on (Min/Max clamping, formatting) — so typing <code class="docs-inline-code">300</code> into a <code class="docs-inline-code">Max="30"</code> field shows <code class="docs-inline-code">30</code> every time, not just the first.</li>
         <li>The money layout reuses the same pence-first logic as <MudLink Href="components/pricepad">MudPricepad</MudLink>.</li>
         <li>It works on <strong>static-SSR pages</strong> too (it types via JavaScript, not Blazor binding) — see the <MudLink Href="features/ssr">Static SSR guide</MudLink>.</li>
         <li>While hidden it is <code class="docs-inline-code">inert</code> and <code class="docs-inline-code">aria-hidden</code> (out of the tab order); the toolbar and keys are fully labelled. See <MudLink Href="features/accessibility">Accessibility</MudLink>.</li>
@@ -224,7 +226,7 @@
 
 @* Each option below is self-contained: its own switch(es), its own focusable field and its own code —
    so you can try it and read the result without scrolling back up to the fields at the top. *@
-<MudText id="preview" Typo="Typo.h5" Class="docs-section-title">Live value preview <FeatureBadge Kind="BadgeKind.New" /></MudText>
+<MudText id="preview" Typo="Typo.h5" Class="docs-section-title">Live value preview</MudText>
 <div class="docs-prose">
     <p>
         <code class="docs-inline-code">ShowValuePreview</code> (on by default) shows a bar at the top of the
@@ -243,7 +245,7 @@
                   UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
 </ExampleCard>
 
-<MudText id="edit-cancel" Typo="Typo.h5" Class="docs-section-title">Cancel key &amp; backdrop <FeatureBadge Kind="BadgeKind.New" /></MudText>
+<MudText id="edit-cancel" Typo="Typo.h5" Class="docs-section-title">Cancel key &amp; backdrop</MudText>
 <div class="docs-prose">
     <p>
         <code class="docs-inline-code">ShowCancel</code> (on by default) renders a <strong>Cancel</strong> key
@@ -296,7 +298,7 @@
                   UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
 </ExampleCard>
 
-<MudText id="sound" Typo="Typo.h5" Class="docs-section-title">Key click sound <FeatureBadge Kind="BadgeKind.New" /></MudText>
+<MudText id="sound" Typo="Typo.h5" Class="docs-section-title">Key click sound</MudText>
 <div class="docs-prose">
     <p>
         <code class="docs-inline-code">Sound="true"</code> plays a short click on every key press. It is a
@@ -316,6 +318,30 @@
     <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.Sound"
                ValueChanged="@(v => Toolbar.Sound = v)" Label="Key click sound" />
     <MudTextField @bind-Value="_soundField" Label="Tap a key to hear the click" Variant="Variant.Outlined" Immediate="true"
+                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+</ExampleCard>
+
+<MudText id="position" Typo="Typo.h5" Class="docs-section-title">Position (top, centre or bottom)</MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">Position</code> chooses where the docked keyboard appears while open:
+        <code class="docs-inline-code">Bottom</code> (the default — slides up from the bottom edge),
+        <code class="docs-inline-code">Top</code> (slides down from the top edge) or
+        <code class="docs-inline-code">Center</code> (floats centred in the viewport, fading into view). The
+        panel's rounded corners follow the chosen edge, and it's pure CSS — the keyboard core stays
+        JavaScript-free. Pick a position below, then focus the field to see this page's docked keyboard move.
+    </p>
+</div>
+<ExampleCard Title="Top, centre or bottom"
+             Description="Choose a position, then focus the field — the docked keyboard appears there."
+             Code="@PositionCode">
+    <MudSelect T="KeyboardPosition" Value="@Toolbar.Position" ValueChanged="@(v => Toolbar.Position = v)"
+               Label="Position" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:16rem;">
+        <MudSelectItem Value="KeyboardPosition.Bottom">Bottom (default)</MudSelectItem>
+        <MudSelectItem Value="KeyboardPosition.Top">Top</MudSelectItem>
+        <MudSelectItem Value="KeyboardPosition.Center">Center</MudSelectItem>
+    </MudSelect>
+    <MudTextField @bind-Value="_positionField" Label="Focus me — the keyboard appears at the chosen position" Variant="Variant.Outlined" Immediate="true"
                   UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
 </ExampleCard>
 
@@ -354,6 +380,7 @@
     private string _cancelField = "edit me";
     private string _capsField = string.Empty;
     private string _soundField = string.Empty;
+    private string _positionField = string.Empty;
 
     // Restore the toolbar to defaults (all buttons visible) when leaving the page, so the live demo's
     // changes don't leak onto the rest of the site (the host is global, in MainLayout).
@@ -443,6 +470,11 @@
 @* Start the keyboard with caps lock on — per host, or globally in Program.cs. *@
 <MudKeyboardHost DefaultCapsLock="true" />
 @* builder.Services.AddMudKeyboard(o => o.DefaultCapsLock = true); *@
+""";
+
+    private const string PositionCode = """
+@* Bottom (default), Top or Center — pure CSS, the keyboard core stays JavaScript-free. *@
+<MudKeyboardHost Position="KeyboardPosition.Center" />
 """;
 
     private const string SoundCode = """
@@ -549,6 +581,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Elevation", "int", "8", "Drop-shadow elevation of the docked panel."),
         new("MinZIndex", "int", "1400", "Floor for the panel's z-index; it docks one above the top-most layer otherwise."),
         new("Style", "string?", "null", "Extra inline styles appended to the docked panel."),
+        new("Position", "KeyboardPosition", "Bottom", "Where the docked keyboard appears: Bottom (default, slides up from the bottom edge), Top (slides down from the top edge) or Center (floats centred, fading in). Pure CSS; the panel's rounded corners follow the chosen edge.", BadgeKind.New),
         new("VisibleActions", "KeyboardAction", "All", "Which toolbar buttons render (Clear, Copy, Paste, the cursor arrows, Hide). A [Flags] set: remove buttons with & ~, or use None to drop the whole toolbar."),
         new("DisabledActions", "KeyboardAction", "None", "Which toolbar buttons render greyed-out and non-interactive. A [Flags] set; hiding via VisibleActions wins over disabling."),
         new("AllowNegative", "bool", "false", "Global default for whether numeric keypads show the ± sign-toggle key. A field's data-mudkeyboard-allow-negative (or MudKeyboardNumericField.AllowNegative) overrides it."),

@@ -364,4 +364,39 @@ public class MudKeyboardHostTests : MudComponentTestContext, IAsyncLifetime
             Assert.Equal("dar", caret.NextSibling?.TextContent);
         });
     }
+
+    [Fact]
+    public void Position_DefaultsToBottom()
+    {
+        var cut = Render<MudKeyboardHost>();
+
+        Assert.Contains("mudkeyboard-dock--bottom", cut.Markup);
+        Assert.DoesNotContain("mudkeyboard-dock--top", cut.Markup);
+        Assert.DoesNotContain("mudkeyboard-dock--center", cut.Markup);
+    }
+
+    [Theory]
+    [InlineData(KeyboardPosition.Bottom, "mudkeyboard-dock--bottom")]
+    [InlineData(KeyboardPosition.Top, "mudkeyboard-dock--top")]
+    [InlineData(KeyboardPosition.Center, "mudkeyboard-dock--center")]
+    public void Position_EmitsTheMatchingDockClass(KeyboardPosition position, string expectedClass)
+    {
+        var (cut, _) = RenderHost(p => p.Add(c => c.Position, position));
+
+        Assert.Contains(expectedClass, cut.Markup);
+    }
+
+    [Theory]
+    [InlineData(KeyboardPosition.Bottom, "border-radius:16px 16px 0 0")]
+    [InlineData(KeyboardPosition.Top, "border-radius:0 0 16px 16px")]
+    [InlineData(KeyboardPosition.Center, "border-radius:16px;")]
+    public void Position_RoundsThePanelCornersToFaceTheScreen(KeyboardPosition position, string expectedRadius)
+    {
+        var (cut, interop) = RenderHost(p => p.Add(c => c.Position, position));
+
+        // The panel (with its border-radius) only renders once a field is focused.
+        cut.InvokeAsync(() => interop.OnFocusIn("qwerty", 1000));
+
+        cut.WaitForAssertion(() => Assert.Contains(expectedRadius, cut.Markup));
+    }
 }

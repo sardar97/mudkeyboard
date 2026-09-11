@@ -11,19 +11,49 @@
 .mudkeyboard-dock {
     position: fixed;
     left: 50%;
-    bottom: 0;
     width: min(720px, 100vw);
     max-width: 100vw; /* never wider than the viewport — avoids horizontal scroll on phones */
     box-sizing: border-box;
-    transform: translateX(-50%) translateY(110%);
-    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    /* The placement and the open/closed transforms are set per position (--bottom / --top / --center). */
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1);
     z-index: 1400; /* fallback only — the host sets an inline z-index of (highest-on-page + 1) at open time */
-    pointer-events: none; /* off-screen panel must not swallow clicks */
+    pointer-events: none; /* off-screen / hidden panel must not swallow clicks */
 }
 
 .mudkeyboard-dock--open {
-    transform: translateX(-50%) translateY(0);
     pointer-events: auto;
+}
+
+/* Position (MudKeyboardHost.Position). Each variant pins the dock to an edge (or the centre) and defines
+   the closed (off-screen / faded) and open transforms; the --open class toggles between them. Bottom is
+   the default. */
+.mudkeyboard-dock--bottom {
+    bottom: 0;
+    transform: translateX(-50%) translateY(110%); /* parked just below the bottom edge */
+}
+
+.mudkeyboard-dock--bottom.mudkeyboard-dock--open {
+    transform: translateX(-50%) translateY(0);
+}
+
+.mudkeyboard-dock--top {
+    top: 0;
+    transform: translateX(-50%) translateY(-110%); /* parked just above the top edge */
+}
+
+.mudkeyboard-dock--top.mudkeyboard-dock--open {
+    transform: translateX(-50%) translateY(0);
+}
+
+.mudkeyboard-dock--center {
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%) scale(0.96); /* centred; faded + slightly shrunk while closed */
+    opacity: 0;
+}
+
+.mudkeyboard-dock--center.mudkeyboard-dock--open {
+    transform: translateX(-50%) translateY(-50%) scale(1);
+    opacity: 1;
 }
 
 /* Per-layout sizing: the full keyboard gets a wider panel; the numeric/money keypads are narrower.
