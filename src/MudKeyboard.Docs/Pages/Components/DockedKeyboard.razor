@@ -319,6 +319,30 @@
                   UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
 </ExampleCard>
 
+<MudText id="position" Typo="Typo.h5" Class="docs-section-title">Position (top, centre or bottom) <FeatureBadge Kind="BadgeKind.New" /></MudText>
+<div class="docs-prose">
+    <p>
+        <code class="docs-inline-code">Position</code> chooses where the docked keyboard appears while open:
+        <code class="docs-inline-code">Bottom</code> (the default — slides up from the bottom edge),
+        <code class="docs-inline-code">Top</code> (slides down from the top edge) or
+        <code class="docs-inline-code">Center</code> (floats centred in the viewport, fading into view). The
+        panel's rounded corners follow the chosen edge, and it's pure CSS — the keyboard core stays
+        JavaScript-free. Pick a position below, then focus the field to see this page's docked keyboard move.
+    </p>
+</div>
+<ExampleCard Title="Top, centre or bottom"
+             Description="Choose a position, then focus the field — the docked keyboard appears there."
+             Code="@PositionCode">
+    <MudSelect T="KeyboardPosition" Value="@Toolbar.Position" ValueChanged="@(v => Toolbar.Position = v)"
+               Label="Position" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:16rem;">
+        <MudSelectItem Value="KeyboardPosition.Bottom">Bottom (default)</MudSelectItem>
+        <MudSelectItem Value="KeyboardPosition.Top">Top</MudSelectItem>
+        <MudSelectItem Value="KeyboardPosition.Center">Center</MudSelectItem>
+    </MudSelect>
+    <MudTextField @bind-Value="_positionField" Label="Focus me — the keyboard appears at the chosen position" Variant="Variant.Outlined" Immediate="true"
+                  UserAttributes="@(new() { ["data-mudkeyboard"] = "true" })" />
+</ExampleCard>
+
 <MudText id="parameters" Typo="Typo.h5" Class="docs-section-title">MudKeyboardHost parameters</MudText>
 <ParamTable Members="HostParameters" />
 
@@ -354,6 +378,7 @@
     private string _cancelField = "edit me";
     private string _capsField = string.Empty;
     private string _soundField = string.Empty;
+    private string _positionField = string.Empty;
 
     // Restore the toolbar to defaults (all buttons visible) when leaving the page, so the live demo's
     // changes don't leak onto the rest of the site (the host is global, in MainLayout).
@@ -443,6 +468,11 @@
 @* Start the keyboard with caps lock on — per host, or globally in Program.cs. *@
 <MudKeyboardHost DefaultCapsLock="true" />
 @* builder.Services.AddMudKeyboard(o => o.DefaultCapsLock = true); *@
+""";
+
+    private const string PositionCode = """
+@* Bottom (default), Top or Center — pure CSS, the keyboard core stays JavaScript-free. *@
+<MudKeyboardHost Position="KeyboardPosition.Center" />
 """;
 
     private const string SoundCode = """
@@ -549,6 +579,7 @@ builder.Services.AddMudKeyboard(o => o.AttachMode = KeyboardAttachMode.OptIn);
         new("Elevation", "int", "8", "Drop-shadow elevation of the docked panel."),
         new("MinZIndex", "int", "1400", "Floor for the panel's z-index; it docks one above the top-most layer otherwise."),
         new("Style", "string?", "null", "Extra inline styles appended to the docked panel."),
+        new("Position", "KeyboardPosition", "Bottom", "Where the docked keyboard appears: Bottom (default, slides up from the bottom edge), Top (slides down from the top edge) or Center (floats centred, fading in). Pure CSS; the panel's rounded corners follow the chosen edge.", BadgeKind.New),
         new("VisibleActions", "KeyboardAction", "All", "Which toolbar buttons render (Clear, Copy, Paste, the cursor arrows, Hide). A [Flags] set: remove buttons with & ~, or use None to drop the whole toolbar."),
         new("DisabledActions", "KeyboardAction", "None", "Which toolbar buttons render greyed-out and non-interactive. A [Flags] set; hiding via VisibleActions wins over disabling."),
         new("AllowNegative", "bool", "false", "Global default for whether numeric keypads show the ± sign-toggle key. A field's data-mudkeyboard-allow-negative (or MudKeyboardNumericField.AllowNegative) overrides it."),

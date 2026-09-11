@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] — 2026-06-29
 
 ### Added
+- **Choose where the docked keyboard appears — top, centre or bottom.** A new
+  **`MudKeyboardHost.Position`** parameter (enum `KeyboardPosition`) places the global docked keyboard at the
+  `Bottom` (the default — slides up from the bottom edge, unchanged), `Top` (slides down from the top edge)
+  or `Center` (floats centred in the viewport, fading into view). It's pure CSS — the keyboard core stays
+  100% JavaScript-free — and the panel's rounded corners adapt to the chosen edge. Documented on the
+  *Docked keyboard* page with a live example, selectable in the *Playground*, and listed (with the new
+  `KeyboardPosition` enum) on the *API reference* page.
 - **Live value preview with edit & cancel on the docked keyboard.** Set
   **`MudKeyboardHost.ShowValuePreview="true"`** to show a bar at the top of the docked keyboard with the
   focused field's *live* value — so the user always sees what they're editing, even when the field sits

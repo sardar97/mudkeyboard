@@ -148,6 +148,13 @@
                     <MudSwitch T="bool" Color="Color.Primary" Value="@Toolbar.Sound"
                                ValueChanged="@(v => Toolbar.Sound = v)" Class="mb-1" Label="Key click sound" />
 
+                    <MudSelect T="KeyboardPosition" Value="@Toolbar.Position" ValueChanged="@(v => Toolbar.Position = v)"
+                               Label="Position" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2 mb-1">
+                        <MudSelectItem Value="KeyboardPosition.Bottom">Bottom (default)</MudSelectItem>
+                        <MudSelectItem Value="KeyboardPosition.Top">Top</MudSelectItem>
+                        <MudSelectItem Value="KeyboardPosition.Center">Center</MudSelectItem>
+                    </MudSelect>
+
                     @if (Toolbar.ShowCancel)
                     {
                         <MudTextField Value="@Toolbar.CancelLabel" ValueChanged="@((string v) => Toolbar.CancelLabel = v)"
@@ -422,6 +429,11 @@
             if (Toolbar.Sound)
             {
                 attrs.Add("Sound=\"true\"");
+            }
+            // Position defaults to Bottom, so only emit it when changed.
+            if (Toolbar.Position != KeyboardPosition.Bottom)
+            {
+                attrs.Add($"Position=\"KeyboardPosition.{Toolbar.Position}\"");
             }
 
             return attrs.Count == 0

@@ -68,6 +68,8 @@ public static class ReleaseNotes
             [
                 new ChangeGroup("Added",
                 [
+                    new ChangeItem("Choose where the docked keyboard appears — top, centre or bottom",
+                        "A new MudKeyboardHost.Position parameter (enum KeyboardPosition) places the global docked keyboard at the Bottom (the default — slides up from the bottom edge, unchanged), Top (slides down from the top edge) or Center (floats centred in the viewport, fading into view). It's pure CSS, so the keyboard core stays 100% JavaScript-free, and the panel's rounded corners adapt to the chosen edge."),
                     new ChangeItem("Live value preview with edit & cancel on the docked keyboard",
                         "Set MudKeyboardHost.ShowValuePreview=\"true\" to show a bar at the top of the docked keyboard with the focused field's live value — so the user always sees what they're editing, even when the field sits behind the panel. Focusing a field that already contains text (say \"sardar\") shows it immediately; the keys edit it live, preserving all existing binding, EditForm validation and SSR-form behaviour. Backed by a new OnValueChanged interop callback (the JS shim reports the value back on every change — on-screen and hardware typing — gated on the feature, so there's no overhead when it's off) and KeyboardInteropService.CurrentValue."),
                     new ChangeItem("Cancel / revert and an optional backdrop",
