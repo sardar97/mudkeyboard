@@ -60,6 +60,9 @@ _Documentation-site (`src/MudKeyboard.Docs`) and demo-app changes only — no fu
 - **Demo apps (Server + WASM).** New *Raw MudNumericField · Min/Max clamp + spin buttons (GitHub #8, #9)*
   section with the reporters' exact fields, for regression checks.
 - **README.** `ShowValuePreview` is documented with its real default (`true`).
+- **Theming page code samples moved to a code-behind** (`Theming.razor.cs`). The samples contain
+  `@code {` / `@* … *@` at the start of a line, which Rider's Razor parser mis-reads inside a C# raw
+  string literal and reports as dozens of phantom errors; the build was never affected. No visible change.
 
 ## [1.2.0] — 2026-06-29
 

@@ -109,52 +109,6 @@
 
     private KeyboardPalette LivePalette => new() { AccentColor = _chosen, AccentTextColor = "#ffffff" };
 
-    private string LiveCode =>
-        $$"""
-        <MudKeyboard @bind-Value="_value" Palette="Brand" />
-
-        @code {
-            private static readonly KeyboardPalette Brand = new()
-            {
-                AccentColor = "{{_chosen}}",
-                AccentTextColor = "#ffffff",
-            };
-        }
-        """;
-
-    private const string AmbientCode = """
-@* No palette — inherits the MudBlazor theme, dark/light and all *@
-<MudKeyboard @bind-Value="_value" Variant="KeyboardVariant.Numpad" />
-""";
-
-    private const string AccentCode = """
-<MudKeyboard @bind-Value="_value" Palette="Brand" />
-
-@code {
-    private static readonly KeyboardPalette Brand = new()
-    {
-        AccentColor = "#00897b",      // Enter / active-shift keys
-        AccentTextColor = "#ffffff",
-        // Surface, KeyColor, KeyTextColor unset → follow the theme
-    };
-}
-""";
-
-    private const string FullCode = """
-<MudKeyboard @bind-Value="_value" Variant="KeyboardVariant.Numpad" Palette="Custom" />
-
-@code {
-    private static readonly KeyboardPalette Custom = new()
-    {
-        Surface = "#1a1a2e",
-        KeyColor = "#16213e",
-        KeyTextColor = "#e7e7ff",
-        AccentColor = "#e94560",
-        AccentTextColor = "#ffffff",
-    };
-}
-""";
-
     private static readonly IReadOnlyList<ApiMember> Slots =
     [
         new("Surface", "string?", "—", "Keyboard background."),
