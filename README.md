@@ -337,7 +337,7 @@ It also supports an opt-in **live value preview with edit/cancel**, an optional 
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
-| `ShowValuePreview` | `bool` | `false` | Shows a bar at the top with the focused field's live value. Edits apply live; Cancel reverts to the value at focus-in. |
+| `ShowValuePreview` | `bool` | `true` | Shows a bar at the top with the focused field's live value (it follows spin buttons, hardware typing and app changes too). Edits apply live; Cancel reverts to the value at focus-in. |
 | `ShowBackdrop` | `bool` | `false` | Dims the page behind the keyboard; a backdrop click cancels (reverts) and closes — unless `DisableBackdropClick` is set. |
 | `DisableBackdropClick` | `bool` | `false` | Backdrop clicks no longer dismiss; a **Cancel** button is shown in the preview bar instead (requires `ShowValuePreview`). |
 | `CancelLabel` | `string` | `"Cancel"` | Text for the Cancel button. |

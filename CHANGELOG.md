@@ -5,6 +5,62 @@ All notable changes to **MudKeyboard** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] — 2026-09-11
+
+### Changed
+- **MudBlazor 9.9.0 is now the minimum.** The package's `MudBlazor` dependency floor moves from 9.5.0 to
+  9.9.0 (the framework floors move to `Microsoft.AspNetCore.Components.Web` 8.0.31 / 9.0.20 / 10.0.12
+  per target). The demos, docs site and tests build against the same versions (bunit 2.10.3,
+  Microsoft.NET.Test.Sdk 18.10.0, xunit.runner.visualstudio 4.0.0).
+- **A numeric field's spin buttons never open the docked keyboard.** Pressing a `MudNumericField`
+  ▲/▼ spin button makes MudBlazor focus the field, which used to pop the keyboard up for a field the
+  user never meant to type into. The focus-capture shim now recognises a press inside
+  `.mud-input-numeric-spin` and ignores the focus it causes: the spin button just steps the value. If the
+  keyboard was open for a *different* field, that edit is committed and the keyboard closes. Tapping the
+  (already focused) field itself opens the keyboard — the shim opens on the tap, since the browser fires
+  no `focusin` for a field that already has focus.
+- **Changes made from outside the keyboard are always reported to the host.**
+  `KeyboardInteropService.OnValueChanged` gained an `external` flag: the shim reports hardware typing,
+  spin-button / ArrowUp / ArrowDown steps and app code setting the bound value regardless of
+  `ShowValuePreview`, because the keypad state depends on them (below). `ReportValueChanges` now gates
+  only the keyboard's *own* edits and caret moves (which only the preview bar consumes), so the
+  "no overhead when the preview is off" property still holds for on-screen typing.
+  `KeyboardInteropService.CurrentValue` is therefore always current after an outside change.
+
+### Fixed
+- **The value preview and the keypads now follow spin buttons, arrow keys and app changes**
+  ([#9](https://github.com/sardar97/mudkeyboard/issues/9)). Blazor updates an `<input>` by assigning
+  `element.value`, which fires no `input` event — so when a `MudNumericField`'s ▲/▼ spin button (or
+  ArrowUp/ArrowDown, or app code) changed the value while the docked keyboard was open, the value-preview
+  bar kept showing the old value and the keypad's "first digit replaces the value" rule stayed armed, so
+  the next digit wiped the value the spin button had just produced (5 → ▲ → 6 → tap 1 → `1`). The shim now
+  shadows `value` on the focused element with an accessor that forwards to the native setter and reports
+  every programmatic write (removed again when the field is no longer being edited); the host then
+  updates the preview, drops the pending replace and re-seeds the pence-first money accumulator from the
+  field, so the next digit appends to what is really there (6 → tap 1 → `61`; a money field spun to
+  `7.00` then `5` → `70.05`). `OriginalValue` (what Cancel reverts to) is unaffected.
+- **Tapping into a numeric field no longer disarms "first digit replaces the value".** The caret snap on
+  pointer-up reported the (unchanged) value back to the host, which treated it as an edit — so with the
+  preview bar on (the default), the first digit tapped into a pre-filled field appended instead of
+  replacing (`30` → tap 3·0·0 → `30300`). Only a real value change cancels the replace now.
+- **A clamped `MudNumericField` shows the clamped text every time it is closed, not just the first**
+  ([#8](https://github.com/sardar97/mudkeyboard/issues/8)). Typing `300` into a `Max="30"` field and
+  pressing ⏎ clamps the bound value to 30 and shows `30`; doing it again could leave `300` on screen
+  while the bound value stayed 30, because the field's text settled on the *same* string Blazor had last
+  rendered and the DOM (typed into directly by the shim) was never rewritten. After closing a
+  `role="spinbutton"` field the shim now watches its `aria-valuetext` / `aria-valuenow` — the settled
+  text MudBlazor does re-render — for a moment and copies it into the field whenever the two disagree.
+  Display-only: it fires no events and never touches a field that is focused or being edited again.
+
+### Documentation
+_Documentation-site (`src/MudKeyboard.Docs`) and demo-app changes only — no further change to the published library/package._
+- **Docked keyboard page — built-in behaviour.** Documents that spin buttons never open the keyboard,
+  that outside changes resume editing (and drive the preview), and the settled-text sync on close. The
+  same notes are mirrored in `skill.md` / `llms-full.txt`; the "what's new" badges now advertise 1.3.0.
+- **Demo apps (Server + WASM).** New *Raw MudNumericField · Min/Max clamp + spin buttons (GitHub #8, #9)*
+  section with the reporters' exact fields, for regression checks.
+- **README.** `ShowValuePreview` is documented with its real default (`true`).
+
 ## [1.2.0] — 2026-06-29
 
 ### Added
@@ -209,6 +265,7 @@ First public preview.
 - Multi-targeting for `net8.0`, `net9.0` and `net10.0`, with `IsAotCompatible` enabled (trim/AOT
   analyzers run on every build) and XML documentation shipped in the package.
 
+[1.3.0]: https://github.com/sardar97/mudkeyboard/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/sardar97/mudkeyboard/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/sardar97/mudkeyboard/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/sardar97/mudkeyboard/compare/v1.0.0...v1.0.1

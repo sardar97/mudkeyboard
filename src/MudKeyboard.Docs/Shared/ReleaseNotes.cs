@@ -61,9 +61,35 @@ public static class ReleaseNotes
     public static IReadOnlyList<ReleaseNote> All { get; } =
     [
         new ReleaseNote(
+            Version: "1.3.0",
+            Date: "2026-09-11",
+            Status: ReleaseStatus.Latest,
+            Groups:
+            [
+                new ChangeGroup("Changed",
+                [
+                    new ChangeItem("MudBlazor 9.9.0 is now the minimum",
+                        "The package's MudBlazor dependency floor moves from 9.5.0 to 9.9.0, with the Microsoft.AspNetCore.Components.Web floors at 8.0.31 / 9.0.20 / 10.0.12 per target framework."),
+                    new ChangeItem("A numeric field's spin buttons never open the docked keyboard",
+                        "Pressing a MudNumericField ▲/▼ spin button makes MudBlazor focus the field, which used to pop the keyboard up for a field the user never meant to type into. The focus-capture shim now recognises a spin-button press and ignores the focus it causes — the button just steps the value. If the keyboard was open for a different field, that edit is committed and the keyboard closes. Tapping the (already focused) field itself opens the keyboard."),
+                    new ChangeItem("Changes made from outside the keyboard are always reported to the host",
+                        "KeyboardInteropService.OnValueChanged gained an external flag: hardware typing, spin-button / arrow-key steps and app code setting the bound value are reported regardless of ShowValuePreview, because the keypad state depends on them. ReportValueChanges now gates only the keyboard's own edits and caret moves, so on-screen typing still has no reporting overhead when the preview is off."),
+                ]),
+                new ChangeGroup("Fixed",
+                [
+                    new ChangeItem("The value preview and the keypads follow spin buttons, arrow keys and app changes (#9)",
+                        "Blazor updates an input by assigning element.value, which fires no 'input' event — so when a MudNumericField spin button (or ArrowUp/ArrowDown, or app code) changed the value while the docked keyboard was open, the preview bar kept showing the old value and the keypad's \"first digit replaces the value\" rule stayed armed, so the next digit wiped the value the spin button had just produced (5 → ▲ → 6 → tap 1 → 1). The shim now shadows value on the focused element with an accessor that forwards to the native setter and reports every programmatic write; the host updates the preview, drops the pending replace and re-seeds the money accumulator from the field, so the next digit appends to what is really there (6 → tap 1 → 61)."),
+                    new ChangeItem("Tapping into a numeric field no longer disarms \"first digit replaces the value\"",
+                        "The caret snap on pointer-up reported the unchanged value back to the host, which treated it as an edit — so with the preview bar on (the default) the first digit tapped into a pre-filled field appended instead of replacing (30 → tap 3·0·0 → 30300). Only a real value change cancels the replace now."),
+                    new ChangeItem("A clamped MudNumericField shows the clamped text every time it is closed (#8)",
+                        "Typing 300 into a Max=30 field and pressing Enter clamps the bound value to 30 and shows 30; doing it again could leave 300 on screen while the bound value stayed 30, because the field's text settled on the same string Blazor had last rendered and the DOM (typed into directly by the shim) was never rewritten. After closing a numeric field the shim now watches its aria-valuetext / aria-valuenow — the settled text MudBlazor does re-render — for a moment and copies it into the field whenever the two disagree. Display-only: no events, and never while the field is focused or being edited again."),
+                ]),
+            ]),
+
+        new ReleaseNote(
             Version: "1.2.0",
             Date: "2026-06-29",
-            Status: ReleaseStatus.Latest,
+            Status: ReleaseStatus.Stable,
             Groups:
             [
                 new ChangeGroup("Added",
